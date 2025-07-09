@@ -464,7 +464,7 @@ class FileSystemNotes(BaseNotes):
 
     @property
     def _index_path(self):
-        return os.path.join(self.storage_path, ".sbnote")
+        return os.path.join(self.storage_path, "index")
 
 
 
