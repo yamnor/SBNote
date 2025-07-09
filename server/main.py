@@ -412,12 +412,12 @@ def migrate_to_frontmatter():
 # region Attachments
 # Get Attachment
 @router.get(
-    "/api/attachments/{filename}",
+    "/api/files/{filename}",
 )
 # Include a secondary route used to create relative URLs that can be used
-# outside the context of SBNote (e.g. "/attachments/image.jpg").
+# outside the context of SBNote (e.g. "/files/image.jpg").
 @router.get(
-    "/attachments/{filename}",
+    "/files/{filename}",
     include_in_schema=False,
 )
 def get_attachment(filename: str):
@@ -439,7 +439,7 @@ if global_config.auth_type != AuthType.READ_ONLY:
 
     # Create Attachment
     @router.post(
-        "/api/attachments",
+        "/api/files",
         dependencies=auth_deps,
         response_model=AttachmentCreateResponse,
     )

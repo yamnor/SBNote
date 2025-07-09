@@ -19,7 +19,7 @@ class FileSystemAttachments(BaseAttachments):
             raise NotADirectoryError(
                 f"'{self.base_path}' is not a valid directory."
             )
-        self.storage_path = os.path.join(self.base_path, "attachments")
+        self.storage_path = os.path.join(self.base_path, "files")
         os.makedirs(self.storage_path, exist_ok=True)
 
     def create(self, file: UploadFile) -> AttachmentCreateResponse:
@@ -55,4 +55,4 @@ class FileSystemAttachments(BaseAttachments):
 
     def _url_for_filename(self, filename: str) -> str:
         """Return the URL for the given filename."""
-        return f"attachments/{urllib.parse.quote(filename)}"
+        return f"files/{urllib.parse.quote(filename)}"

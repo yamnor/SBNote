@@ -6,7 +6,7 @@ A self-hosted, database-less note-taking web app that utilises a flat folder of 
 
 SBNote organizes files in the following structure within the `SBNOTE_PATH` directory:
 - `notes/` - Contains all markdown files
-- `attachments/` - Contains uploaded attachments
+- `files/` - Contains uploaded attachments
 - `index/` - Contains search index files
 
 ## Design Principle
