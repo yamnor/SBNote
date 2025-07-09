@@ -194,7 +194,7 @@ export async function createAttachment(file) {
   try {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await api.post("api/attachments", formData, {
+    const response = await api.post("api/files", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
