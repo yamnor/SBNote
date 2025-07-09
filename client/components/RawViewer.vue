@@ -1,9 +1,9 @@
 <template>
   <div class="w-full h-full relative">
     <div
-      ref="monacoContainer"
+      ref="editorContainer"
       class="w-full h-full"
-      style="min-width: 100px; min-height: 100px; display: block; visibility: visible;"
+      style="min-width: 100px; min-height: 100px;"
     ></div>
   </div>
 </template>
@@ -13,10 +13,90 @@
 .w-full.h-full {
   min-height: 0;
 }
+
+/* CodeMirror custom styles */
+:deep(.cm-editor) {
+  height: 100%;
+  font-family: "Noto Sans Mono", "Consolas", "Lucida Console", Monaco, "Andale Mono", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+:deep(.cm-editor .cm-scroller) {
+  font-family: inherit;
+}
+
+:deep(.cm-editor .cm-content) {
+  padding: 1rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+:deep(.cm-editor .cm-line) {
+  padding: 0;
+}
+
+:deep(.cm-editor .cm-gutters) {
+  background-color: var(--theme-background-subtle);
+  border-right: 1px solid var(--theme-border);
+  color: var(--theme-text-muted);
+}
+
+:deep(.cm-editor .cm-lineNumbers) {
+  color: var(--theme-text-muted);
+}
+
+:deep(.cm-editor .cm-activeLineGutter) {
+  background-color: var(--theme-background-subtle);
+}
+
+:deep(.cm-editor .cm-selectionBackground) {
+  background-color: var(--theme-brand-light);
+}
+
+:deep(.cm-editor .cm-cursor) {
+  border-left-color: var(--theme-text);
+}
+
+:deep(.cm-editor .cm-tooltip) {
+  background-color: var(--theme-background-surface);
+  border: 1px solid var(--theme-border);
+  color: var(--theme-text);
+}
+
+:deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete) {
+  background-color: var(--theme-background-surface);
+  border: 1px solid var(--theme-border);
+}
+
+:deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete ul) {
+  background-color: var(--theme-background-surface);
+}
+
+:deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete li) {
+  color: var(--theme-text);
+}
+
+:deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete li[aria-selected]) {
+  background-color: var(--theme-brand-light);
+  color: var(--theme-text);
+}
 </style>
 
 <script setup>
 import { onMounted, onUnmounted, ref, nextTick, watch } from "vue";
+import { EditorView, basicSetup } from "codemirror";
+import { EditorState } from "@codemirror/state";
+import { javascript } from "@codemirror/lang-javascript";
+import { python } from "@codemirror/lang-python";
+import { cpp } from "@codemirror/lang-cpp";
+import { java } from "@codemirror/lang-java";
+import { html } from "@codemirror/lang-html";
+import { css } from "@codemirror/lang-css";
+import { json } from "@codemirror/lang-json";
+import { xml } from "@codemirror/lang-xml";
+import { yaml } from "@codemirror/lang-yaml";
+import { markdown } from "@codemirror/lang-markdown";
 
 const props = defineProps({
   fileContent: {
@@ -35,15 +115,120 @@ const props = defineProps({
 
 const emit = defineEmits(['editor-ready', 'editor-error']);
 
-const monacoContainer = ref();
+const editorContainer = ref();
 const editor = ref(null);
 const isInitialized = ref(false);
-const cleanupTimeout = ref(null);
 
-// Simple initialization function
+// Utility functions moved from Raw.vue
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function formatDate(timestamp) {
+  return new Date(timestamp).toLocaleString();
+}
+
+function detectLanguage(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  const languageMap = {
+    'js': 'javascript',
+    'ts': 'typescript',
+    'jsx': 'javascript',
+    'tsx': 'typescript',
+    'html': 'html',
+    'htm': 'html',
+    'css': 'css',
+    'scss': 'scss',
+    'sass': 'sass',
+    'less': 'less',
+    'json': 'json',
+    'xml': 'xml',
+    'yaml': 'yaml',
+    'yml': 'yaml',
+    'py': 'python',
+    'rb': 'ruby',
+    'php': 'php',
+    'java': 'java',
+    'c': 'c',
+    'cpp': 'cpp',
+    'cc': 'cpp',
+    'cxx': 'cpp',
+    'h': 'cpp',
+    'hpp': 'cpp',
+    'cs': 'csharp',
+    'go': 'go',
+    'rs': 'rust',
+    'swift': 'swift',
+    'kt': 'kotlin',
+    'scala': 'scala',
+    'sql': 'sql',
+    'sh': 'shell',
+    'bash': 'shell',
+    'zsh': 'shell',
+    'fish': 'shell',
+    'ps1': 'powershell',
+    'md': 'markdown',
+    'txt': 'plaintext',
+    'log': 'plaintext',
+    'ini': 'ini',
+    'conf': 'ini',
+    'toml': 'toml',
+    'lock': 'json'
+  };
+  return languageMap[ext] || 'plaintext';
+}
+
+function isTextFile(content) {
+  // Check if content contains null bytes or other binary indicators
+  if (content.includes('\0')) {
+    return false;
+  }
+  
+  // Check if content is mostly printable ASCII/UTF-8 characters
+  const printableChars = content.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').length;
+  const totalChars = content.length;
+  const printableRatio = printableChars / totalChars;
+  
+  return printableRatio > 0.95;
+}
+
+// Language mapping for CodeMirror - representative languages only
+const languageMap = {
+  'javascript': javascript(),
+  'typescript': javascript({ typescript: true }),
+  'jsx': javascript({ jsx: true }),
+  'tsx': javascript({ typescript: true, jsx: true }),
+  'python': python(),
+  'cpp': cpp(),
+  'c': cpp(),
+  'java': java(),
+  'html': html(),
+  'css': css(),
+  'scss': css(),
+  'sass': css(),
+  'less': css(),
+  'json': json(),
+  'xml': xml(),
+  'yaml': yaml(),
+  'yml': yaml(),
+  'markdown': markdown(),
+  'md': markdown(),
+  'plaintext': null
+};
+
+// Get language support for CodeMirror
+function getLanguageSupport(language) {
+  return languageMap[language] || null;
+}
+
+// Initialize CodeMirror editor
 async function initializeEditor() {
   // Don't initialize if already done or no container
-  if (isInitialized.value || !monacoContainer.value) {
+  if (isInitialized.value || !editorContainer.value) {
     return;
   }
   
@@ -53,7 +238,7 @@ async function initializeEditor() {
   }
   
   // Check container dimensions
-  const rect = monacoContainer.value.getBoundingClientRect();
+  const rect = editorContainer.value.getBoundingClientRect();
   
   if (rect.width === 0 || rect.height === 0) {
     // Wait for next frame and try again
@@ -66,70 +251,70 @@ async function initializeEditor() {
   }
   
   try {
-    // Import Monaco Editor
-    const monaco = await import('monaco-editor');
+    // Get language support
+    const languageSupport = getLanguageSupport(props.language);
+    // Create extensions array, filter out null
+    const extensions = [
+      basicSetup,
+      EditorView.theme({
+        "&": {
+          height: "100%"
+        },
+        ".cm-scroller": {
+          fontFamily: "Noto Sans Mono, Consolas, Lucida Console, Monaco, Andale Mono, monospace"
+        },
+        ".cm-content": {
+          padding: "1rem",
+          whiteSpace: "pre-wrap",
+          wordWrap: "break-word"
+        },
+        ".cm-line": {
+          padding: "0"
+        },
+        ".cm-gutters": {
+          backgroundColor: "var(--theme-background-subtle)",
+          borderRight: "1px solid var(--theme-border)",
+          color: "var(--theme-text-muted)"
+        },
+        ".cm-lineNumbers": {
+          color: "var(--theme-text-muted)"
+        },
+        ".cm-activeLineGutter": {
+          backgroundColor: "var(--theme-background-subtle)"
+        },
+        ".cm-selectionBackground": {
+          backgroundColor: "var(--theme-brand-light)"
+        },
+        ".cm-cursor": {
+          borderLeftColor: "var(--theme-text)"
+        }
+      }),
+      EditorView.updateListener.of((update) => {
+        // Handle content changes if needed
+      })
+    ];
+    if (languageSupport) {
+      extensions.push(languageSupport);
+    }
+    // Create editor state
+    const state = EditorState.create({
+      doc: props.fileContent,
+      extensions
+    });
     
-    // Ensure container is visible and has proper dimensions
-    monacoContainer.value.style.display = 'block';
-    monacoContainer.value.style.visibility = 'visible';
-    
-    // Create editor with WebGL-safe settings
-    const newEditor = monaco.editor.create(monacoContainer.value, {
-      value: props.fileContent,
-      language: props.language,
-      theme: 'vs-dark',
-      readOnly: true,
-      automaticLayout: true,
-      minimap: { enabled: false },
-      scrollBeyondLastLine: false,
-      fontSize: 14,
-      lineNumbers: 'on',
-      wordWrap: 'on',
-      folding: false,
-      lineDecorationsWidth: 10,
-      lineNumbersMinChars: 3,
-      renderLineHighlight: 'none', // Disable line highlighting to reduce WebGL usage
-      selectOnLineNumbers: true,
-      roundedSelection: false,
-      scrollbar: {
-        vertical: 'visible',
-        horizontal: 'visible',
-        verticalScrollbarSize: 17,
-        horizontalScrollbarSize: 17,
-        useShadows: false
-      },
-      renderWhitespace: 'none',
-      renderControlCharacters: false,
-      renderIndentGuides: false,
-      guides: { indentation: false },
-      // Additional WebGL-safe settings
-      renderValidationDecorations: 'off',
-      renderOverviewRuler: false,
-      overviewRulerBorder: false,
-      hideCursorInOverviewRuler: true,
-      overviewRulerLanes: 0,
-      fixedOverflowWidgets: true,
-      // Memory management settings
-      largeFileOptimizations: true,
-      maxTokenizationLineLength: 20000,
-      maxTokenizationLineNumber: 1000
+    // Create editor view
+    const newEditor = new EditorView({
+      state,
+      parent: editorContainer.value
     });
     
     editor.value = newEditor;
     isInitialized.value = true;
     
-    // Force layout to ensure proper WebGL context initialization
-    cleanupTimeout.value = setTimeout(() => {
-      if (newEditor && typeof newEditor.isDisposed === 'function' && !newEditor.isDisposed()) {
-        newEditor.layout();
-      } else if (newEditor && typeof newEditor.layout === 'function') {
-        newEditor.layout();
-      }
-    }, 100);
-    
     emit('editor-ready', newEditor);
     
   } catch (error) {
+    console.error('Failed to initialize CodeMirror editor:', error);
     emit('editor-error', error);
     
     // Reset state on error
@@ -146,12 +331,16 @@ watch(() => props.fileContent, (newContent) => {
   } else if (newContent && isInitialized.value && editor.value) {
     // Update content if editor is already initialized
     try {
-      if (typeof editor.value.isDisposed === 'function' && editor.value.isDisposed()) {
-        return;
-      }
-      editor.value.setValue(newContent);
+      const transaction = editor.value.state.update({
+        changes: {
+          from: 0,
+          to: editor.value.state.doc.length,
+          insert: newContent
+        }
+      });
+      editor.value.dispatch(transaction);
     } catch (error) {
-      // Silent error handling
+      console.error('Failed to update editor content:', error);
     }
   }
 });
@@ -160,16 +349,57 @@ watch(() => props.fileContent, (newContent) => {
 watch(() => props.language, async (newLanguage) => {
   if (isInitialized.value && editor.value) {
     try {
-      if (typeof editor.value.isDisposed === 'function' && editor.value.isDisposed()) {
-        return;
+      const languageSupport = getLanguageSupport(newLanguage);
+      const extensions = [
+        basicSetup,
+        EditorView.theme({
+          "&": {
+            height: "100%"
+          },
+          ".cm-scroller": {
+            fontFamily: "Noto Sans Mono, Consolas, Lucida Console, Monaco, Andale Mono, monospace"
+          },
+          ".cm-content": {
+            padding: "1rem",
+            whiteSpace: "pre-wrap",
+            wordWrap: "break-word"
+          },
+          ".cm-line": {
+            padding: "0"
+          },
+          ".cm-gutters": {
+            backgroundColor: "var(--theme-background-subtle)",
+            borderRight: "1px solid var(--theme-border)",
+            color: "var(--theme-text-muted)"
+          },
+          ".cm-lineNumbers": {
+            color: "var(--theme-text-muted)"
+          },
+          ".cm-activeLineGutter": {
+            backgroundColor: "var(--theme-background-subtle)"
+          },
+          ".cm-selectionBackground": {
+            backgroundColor: "var(--theme-brand-light)"
+          },
+          ".cm-cursor": {
+            borderLeftColor: "var(--theme-text)"
+          }
+        }),
+        EditorView.updateListener.of((update) => {
+          // Handle content changes if needed
+        })
+      ];
+      if (languageSupport) {
+        extensions.push(languageSupport);
       }
-      const monaco = await import('monaco-editor');
-      const model = editor.value.getModel();
-      if (model) {
-        monaco.editor.setModelLanguage(model, newLanguage);
-      }
+      // Recreate editor with new language support
+      const newState = EditorState.create({
+        doc: editor.value.state.doc,
+        extensions
+      });
+      editor.value.setState(newState);
     } catch (error) {
-      // Silent error handling
+      console.error('Failed to update editor language:', error);
     }
   }
 });
@@ -184,49 +414,26 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  // Clear any pending timeouts
-  if (cleanupTimeout.value) {
-    clearTimeout(cleanupTimeout.value);
-    cleanupTimeout.value = null;
-  }
-  
-  // Dispose editor with multiple safety checks
+  // Destroy editor
   if (editor.value) {
     try {
-      // Check if editor is already disposed
-      if (typeof editor.value.isDisposed === 'function' && editor.value.isDisposed()) {
-        // Editor already disposed
-      } else {
-        // Get the model and dispose it first
-        const model = editor.value.getModel();
-        if (model) {
-          try {
-            model.dispose();
-          } catch (modelError) {
-            // Silent error handling
-          }
-        }
-        
-        // Dispose the editor
-        editor.value.dispose();
-      }
+      editor.value.destroy();
     } catch (error) {
-      // Silent error handling
+      console.error('Failed to destroy editor:', error);
     } finally {
       editor.value = null;
     }
   }
   
-  // Reset all state
+  // Reset state
   isInitialized.value = false;
-  
-  // Force garbage collection hint (optional)
-  if (window.gc) {
-    try {
-      window.gc();
-    } catch (e) {
-      // Ignore if gc is not available
-    }
-  }
+});
+
+// Expose utility functions for parent component
+defineExpose({
+  formatFileSize,
+  formatDate,
+  detectLanguage,
+  isTextFile
 });
 </script> 

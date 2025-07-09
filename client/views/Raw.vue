@@ -59,9 +59,10 @@
       </div>
     </div>
 
-    <!-- Monaco Editor container -->
+    <!-- CodeMirror Editor container -->
     <div v-else class="h-screen relative pt-16" style="min-height: 400px;">
       <RawViewer
+        ref="rawViewerRef"
         :file-content="fileContent"
         :language="language"
         :is-loading="isLoading"
@@ -138,84 +139,8 @@ const noteTitle = computed(() => {
   return noteData.value?.title || filename.value;
 });
 
-// Utility functions
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function formatDate(timestamp) {
-  return new Date(timestamp).toLocaleString();
-}
-
-
-
-function detectLanguage(filename) {
-  const ext = filename.split('.').pop().toLowerCase();
-  const languageMap = {
-    'js': 'javascript',
-    'ts': 'typescript',
-    'jsx': 'javascript',
-    'tsx': 'typescript',
-    'html': 'html',
-    'htm': 'html',
-    'css': 'css',
-    'scss': 'scss',
-    'sass': 'sass',
-    'less': 'less',
-    'json': 'json',
-    'xml': 'xml',
-    'yaml': 'yaml',
-    'yml': 'yaml',
-    'py': 'python',
-    'rb': 'ruby',
-    'php': 'php',
-    'java': 'java',
-    'c': 'c',
-    'cpp': 'cpp',
-    'cc': 'cpp',
-    'cxx': 'cpp',
-    'h': 'cpp',
-    'hpp': 'cpp',
-    'cs': 'csharp',
-    'go': 'go',
-    'rs': 'rust',
-    'swift': 'swift',
-    'kt': 'kotlin',
-    'scala': 'scala',
-    'sql': 'sql',
-    'sh': 'shell',
-    'bash': 'shell',
-    'zsh': 'shell',
-    'fish': 'shell',
-    'ps1': 'powershell',
-    'md': 'markdown',
-    'txt': 'plaintext',
-    'log': 'plaintext',
-    'ini': 'ini',
-    'conf': 'ini',
-    'toml': 'toml',
-    'lock': 'json'
-  };
-  return languageMap[ext] || 'plaintext';
-}
-
-function isTextFile(content) {
-  // Check if content contains null bytes or other binary indicators
-  if (content.includes('\0')) {
-    return false;
-  }
-  
-  // Check if content is mostly printable ASCII/UTF-8 characters
-  const printableChars = content.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').length;
-  const totalChars = content.length;
-  const printableRatio = printableChars / totalChars;
-  
-  return printableRatio > 0.95;
-}
+// Reference to RawViewer component for utility functions
+const rawViewerRef = ref();
 
 async function loadFile() {
   if (!filename.value) {
@@ -261,7 +186,7 @@ async function loadFile() {
     }
 
     // Check if it's a binary file
-    if (!isTextFile(textContent)) {
+    if (!rawViewerRef.value?.isTextFile(textContent)) {
       updateEditorState({
         isBinary: true,
         fileSize: uint8Array.length,
@@ -276,7 +201,7 @@ async function loadFile() {
       fileSize: uint8Array.length,
       lastModified: lastModifiedHeader ? new Date(lastModifiedHeader).getTime() : null,
       isBinary: false,
-      language: detectLanguage(attachmentFilename)
+      language: rawViewerRef.value?.detectLanguage(attachmentFilename) || 'plaintext'
     });
 
     // Wait for DOM update
