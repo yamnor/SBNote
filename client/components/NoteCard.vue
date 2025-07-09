@@ -32,9 +32,6 @@
           {{ contentPreview }}
         </div>
       </div>
-      <p class="text-gray-600 text-xs mt-auto">
-        {{ formatDate(note.lastModified) }}
-      </p>
     </div>
 
     <!-- Note Preview Modal -->
