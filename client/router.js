@@ -86,9 +86,9 @@ router.afterEach((to) => {
   } else if (to.name === "slide") {
     title = "Slide - " + title;
   } else if (to.name === "mol") {
-    title = "Molecular Structure - " + title;
+    title = "Molecule - " + title;
   } else if (to.name === "code") {
-    title = "Code Editor - " + title;
+    title = "Code - " + title;
   }
   document.title = title;
 });

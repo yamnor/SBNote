@@ -110,11 +110,8 @@ async function loadNoteData() {
     const note = await getNote(filenameWithExtension);
     noteData.value = note;
     
-    // Extract XYZ filename from note content
-    const xyzFilename = extractXyzFilename(note.content);
-    if (!xyzFilename) {
-      throw new Error('XYZ file not found in note content');
-    }
+    // Generate XYZ filename from markdown filename
+    const xyzFilename = getXyzFilename(props.filename);
     
     await loadMolecule(xyzFilename);
   } catch (err) {
@@ -125,21 +122,10 @@ async function loadNoteData() {
   }
 }
 
-function extractXyzFilename(content) {
-  // Look for XYZ file link in the note content
-  // Format: [XYZ File](/files/filename.xyz)
-  const match = content.match(/\[XYZ File\]\(\/files\/([^)]+\.xyz)\)/);
-  if (match) {
-    return match[1];
-  }
-  
-  // Alternative: look for direct file path
-  const directMatch = content.match(/\/files\/([^\s]+\.xyz)/);
-  if (directMatch) {
-    return directMatch[1];
-  }
-  
-  return null;
+function getXyzFilename(markdownFilename) {
+  // Markdownファイル名から拡張子を除いて、.xyzを追加
+  const baseName = markdownFilename.replace(/\.md$/, '');
+  return `${baseName}.xyz`;
 }
 
 async function loadMolecule(xyzFilename) {

@@ -170,10 +170,17 @@ class FileSystemNotes(BaseNotes):
         # Create markdown content with original filename on first line and image link on third line
         content = f"{data.original_filename}\n\n![{data.original_filename}](/files/{data.filename})"
         
-        # Generate random filename for the note
-        filename = generate_random_filename()
+        # Use the same filename as the attachment (without extension)
+        filename = os.path.splitext(data.filename)[0]
+        
+        # Ensure filename is unique for markdown file
         while os.path.exists(os.path.join(self.storage_path, filename + MARKDOWN_EXT)):
-            filename = generate_random_filename()
+            # Add suffix if duplicate
+            base_name = filename
+            counter = 1
+            while os.path.exists(os.path.join(self.storage_path, f"{base_name}_{counter}{MARKDOWN_EXT}")):
+                counter += 1
+            filename = f"{base_name}_{counter}"
         
         filepath = os.path.join(self.storage_path, filename + MARKDOWN_EXT)
         created_time = datetime.now()
@@ -210,10 +217,17 @@ class FileSystemNotes(BaseNotes):
         # Create markdown content with original filename on first line and xyz file link on third line
         content = f"{data.original_filename}\n\n[XYZ File](/files/{data.filename})"
         
-        # Generate random filename for the note
-        filename = generate_random_filename()
+        # Use the same filename as the attachment (without extension)
+        filename = os.path.splitext(data.filename)[0]
+        
+        # Ensure filename is unique for markdown file
         while os.path.exists(os.path.join(self.storage_path, filename + MARKDOWN_EXT)):
-            filename = generate_random_filename()
+            # Add suffix if duplicate
+            base_name = filename
+            counter = 1
+            while os.path.exists(os.path.join(self.storage_path, f"{base_name}_{counter}{MARKDOWN_EXT}")):
+                counter += 1
+            filename = f"{base_name}_{counter}"
         
         filepath = os.path.join(self.storage_path, filename + MARKDOWN_EXT)
         created_time = datetime.now()

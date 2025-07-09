@@ -191,9 +191,11 @@ if global_config.auth_type != AuthType.READ_ONLY:
         dependencies=auth_deps,
         response_model=Note,
     )
-    def import_image(image_data: NoteImageImport):
+    def import_image(image_data: NoteImageImport, attachment_filename: str):
         """Import an image file and create a note with the image link."""
         try:
+            # Add the attachment filename to the data
+            image_data.filename = attachment_filename
             return note_storage.import_image(image_data)
         except ValueError:
             raise HTTPException(
@@ -211,9 +213,11 @@ if global_config.auth_type != AuthType.READ_ONLY:
         dependencies=auth_deps,
         response_model=Note,
     )
-    def import_xyz(xyz_data: NoteXyzImport):
+    def import_xyz(xyz_data: NoteXyzImport, attachment_filename: str):
         """Import a XYZ file as a new note."""
         try:
+            # Add the attachment filename to the data
+            xyz_data.filename = attachment_filename
             return note_storage.import_xyz(xyz_data)
         except ValueError:
             raise HTTPException(

@@ -48,7 +48,7 @@
       
       <!-- View Style Section (only for note pages) -->
       <div v-if="showFileMenu && canModify" class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
-        View Style:
+        Edit Style:
       </div>
       
       <!-- Single View (Edit mode only) -->
@@ -58,7 +58,7 @@
         @click="onTogglePreviewStyle"
         :class="{ 'bg-gray-100 dark:bg-gray-700': globalStore.previewStyle === 'tab' }"
       >
-        Single View
+        Tab Style
       </DropdownMenuItem>
       
       <!-- Split View (Edit mode only) -->
@@ -68,7 +68,7 @@
         @click="onTogglePreviewStyle"
         :class="{ 'bg-gray-100 dark:bg-gray-700': globalStore.previewStyle === 'vertical' }"
       >
-        Split View
+        Split Style
       </DropdownMenuItem>
 
       <!-- Divider -->

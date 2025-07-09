@@ -143,9 +143,12 @@ export async function importImage(file, tags = []) {
     
     // Then create a note with the image link
     const response = await api.post("api/notes/import-image", {
-      filename: uploadResponse.data.filename,
       original_filename: uploadResponse.data.originalFilename,
       tags: tags,
+    }, {
+      params: {
+        attachment_filename: uploadResponse.data.filename
+      }
     });
     return new Note(response.data);
   } catch (error) {
@@ -166,9 +169,12 @@ export async function importXyz(file, tags = []) {
     
     // Then create a note with the xyz file link
     const response = await api.post("api/notes/import-xyz", {
-      filename: uploadResponse.data.filename,
       original_filename: uploadResponse.data.originalFilename,
       tags: tags,
+    }, {
+      params: {
+        attachment_filename: uploadResponse.data.filename
+      }
     });
     return new Note(response.data);
   } catch (error) {
