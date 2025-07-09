@@ -645,7 +645,8 @@ function addImageBlobHook(file, callback) {
   postAttachment(file)
     .then((data) => {
       if (data) {
-        const altText = data.filename;
+        // Use original filename as alt text for better accessibility
+        const altText = data.originalFilename || data.filename;
         callback(data.url, altText);
       }
     })

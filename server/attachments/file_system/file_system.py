@@ -1,6 +1,8 @@
 import os
 import shutil
 import urllib.parse
+import string
+import random
 from datetime import datetime
 
 from fastapi import UploadFile
@@ -10,6 +12,12 @@ from helpers import get_env, is_valid_filename
 
 from ..base import BaseAttachments
 from ..models import AttachmentCreateResponse
+
+
+def generate_random_filename(length: int = 8) -> str:
+    """Generate a random filename with specified length."""
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
 
 
 class FileSystemAttachments(BaseAttachments):
@@ -24,14 +32,25 @@ class FileSystemAttachments(BaseAttachments):
 
     def create(self, file: UploadFile) -> AttachmentCreateResponse:
         """Create a new attachment."""
-        is_valid_filename(file.filename)
-        try:
-            self._save_file(file)
-        except FileExistsError:
-            file.filename = self._datetime_suffix_filename(file.filename)
-            self._save_file(file)
+        # Store original filename for alt attribute BEFORE generating random name
+        original_filename = file.filename
+        
+        # Generate random filename with original extension
+        random_filename = self._generate_random_filename_with_extension(original_filename)
+        
+        # Ensure filename is unique
+        while os.path.exists(os.path.join(self.storage_path, random_filename)):
+            random_filename = self._generate_random_filename_with_extension(original_filename)
+        
+        # Update file object with new filename
+        file.filename = random_filename
+        
+        self._save_file(file)
+        
         return AttachmentCreateResponse(
-            filename=file.filename, url=self._url_for_filename(file.filename)
+            filename=random_filename, 
+            url=self._url_for_filename(random_filename),
+            original_filename=original_filename
         )
 
     def get(self, filename: str) -> FileResponse:
@@ -46,6 +65,12 @@ class FileSystemAttachments(BaseAttachments):
         filepath = os.path.join(self.storage_path, file.filename)
         with open(filepath, "xb") as f:
             shutil.copyfileobj(file.file, f)
+
+    def _generate_random_filename_with_extension(self, original_filename: str) -> str:
+        """Generate a random filename with the original file extension."""
+        name, ext = os.path.splitext(original_filename)
+        random_name = generate_random_filename()
+        return f"{random_name}{ext}"
 
     def _datetime_suffix_filename(self, filename: str) -> str:
         """Add a timestamp suffix to the filename."""
