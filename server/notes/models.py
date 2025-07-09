@@ -42,13 +42,11 @@ class NoteImport(CustomBaseModel):
 
 
 class NoteImageImport(CustomBaseModel):
-    filename: str
     original_filename: str
     tags: Optional[List[str]] = Field(default_factory=list)
 
 
 class NoteXyzImport(CustomBaseModel):
-    filename: str
     original_filename: str
     tags: Optional[List[str]] = Field(default_factory=list)
 

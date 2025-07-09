@@ -119,9 +119,8 @@ function goToNote() {
 }
 
 function goToCode() {
-  // Navigate to the code view using basename with .xyz extension
-  const basename = props.filename.replace(/\.md$/, '');
-  router.push({ name: 'code', params: { filename: `${basename}.xyz` } });
+  // Navigate to the code view using basename
+  router.push({ name: 'code', params: { filename: props.filename } });
 }
 
 async function loadNoteData() {
@@ -129,15 +128,15 @@ async function loadNoteData() {
     isLoading.value = true;
     error.value = null;
     
-    // Get note data to extract XYZ file information
+    // Get note data to extract attachment file information
     const filenameWithExtension = props.filename + '.md';
     const note = await getNote(filenameWithExtension);
     noteData.value = note;
     
-    // Generate XYZ filename from markdown filename
-    const xyzFilename = getXyzFilename(props.filename);
+    // Generate attachment filename with extension from note data
+    const attachmentFilename = getAttachmentFilename(props.filename, note.attachment_extension);
     
-    await loadMolecule(xyzFilename);
+    await loadMolecule(attachmentFilename);
   } catch (err) {
     console.error('Failed to load note data:', err);
     error.value = err.message || 'Failed to load molecule data';
@@ -146,21 +145,24 @@ async function loadNoteData() {
   }
 }
 
-function getXyzFilename(markdownFilename) {
-  // Markdownファイル名から拡張子を除いて、.xyzを追加
-  const baseName = markdownFilename.replace(/\.md$/, '');
-  return `${baseName}.xyz`;
+function getAttachmentFilename(basename, attachmentExtension) {
+  // Generate attachment filename with extension from note data
+  if (attachmentExtension) {
+    return `${basename}.${attachmentExtension}`;
+  }
+  // Fallback to .xyz if no extension is found
+  return `${basename}.xyz`;
 }
 
-async function loadMolecule(xyzFilename) {
+async function loadMolecule(attachmentFilename) {
   try {
-    // Fetch XYZ file content
-    const response = await fetch(`/files/${xyzFilename}`);
+    // Fetch attachment file content
+    const response = await fetch(`/files/${encodeURIComponent(attachmentFilename)}`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch XYZ file: ${response.statusText}`);
+      throw new Error(`Failed to fetch attachment file: ${response.statusText}`);
     }
     
-    const xyzContent = await response.text();
+    const fileContent = await response.text();
     
     // Initialize 3Dmol viewer
     if (!window.$3Dmol) {
@@ -179,8 +181,22 @@ async function loadMolecule(xyzFilename) {
       defaultcolors: window.$3Dmol.rasmolElementColors
     });
     
-    // Load XYZ data
-    viewer.addModel(xyzContent, 'xyz');
+    // Determine file format from extension
+    const fileExtension = attachmentFilename.split('.').pop().toLowerCase();
+    
+    // Load file data based on format
+    if (fileExtension === 'xyz') {
+      viewer.addModel(fileContent, 'xyz');
+    } else if (fileExtension === 'pdb') {
+      viewer.addModel(fileContent, 'pdb');
+    } else if (fileExtension === 'mol') {
+      viewer.addModel(fileContent, 'mol');
+    } else if (fileExtension === 'sdf') {
+      viewer.addModel(fileContent, 'sdf');
+    } else {
+      // Default to XYZ format
+      viewer.addModel(fileContent, 'xyz');
+    }
     
     // Set view style
     viewer.setStyle({}, {

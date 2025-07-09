@@ -16,12 +16,12 @@ class BaseNotes(ABC):
         pass
 
     @abstractmethod
-    def import_image(self, data: NoteImageImport) -> Note:
+    def import_image(self, data: NoteImageImport, filename: str) -> Note:
         """Import an image file and create a note with the image link."""
         pass
 
     @abstractmethod
-    def import_xyz(self, data: NoteXyzImport) -> Note:
+    def import_xyz(self, data: NoteXyzImport, filename: str) -> Note:
         """Import an xyz file and create a note with the xyz file link."""
         pass
 

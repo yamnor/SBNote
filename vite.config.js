@@ -1,13 +1,13 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
-import monacoEditorPlugin from 'vite-plugin-monaco-editor';
+import { default as monacoEditorPlugin } from 'vite-plugin-monaco-editor';
 
 const devApiUrl = "http://127.0.0.1:8000";
 
 export default defineConfig({
   plugins: [
     vue(),
-    monacoEditorPlugin({
+    monacoEditorPlugin.default({
       publicPath: 'monaco-editor'
     })
   ],

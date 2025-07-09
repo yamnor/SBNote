@@ -154,6 +154,15 @@ function formatDate(timestamp) {
   return new Date(timestamp).toLocaleString();
 }
 
+function getAttachmentFilename(basename, attachmentExtension) {
+  // Generate attachment filename with extension from note data
+  if (attachmentExtension) {
+    return `${basename}.${attachmentExtension}`;
+  }
+  // Fallback to .xyz if no extension is found
+  return `${basename}.xyz`;
+}
+
 function detectLanguage(filename) {
   const ext = filename.split('.').pop().toLowerCase();
   const languageMap = {
@@ -229,11 +238,14 @@ async function loadFile() {
     isLoading.value = true;
     error.value = null;
 
-    // Load note data for title
+    // Load note data for title and get attachment extension
     await loadNoteData();
 
+    // Generate attachment filename with extension
+    const attachmentFilename = getAttachmentFilename(filename.value, noteData.value?.attachment_extension);
+
     // Fetch file content
-    const response = await fetch(`/files/${encodeURIComponent(filename.value)}`);
+    const response = await fetch(`/files/${encodeURIComponent(attachmentFilename)}`);
     
     if (!response.ok) {
       if (response.status === 404) {
@@ -280,7 +292,7 @@ async function loadFile() {
       fileSize: uint8Array.length,
       lastModified: lastModifiedHeader ? new Date(lastModifiedHeader).getTime() : null,
       isBinary: false,
-      language: detectLanguage(filename.value)
+      language: detectLanguage(attachmentFilename)
     });
 
     // Wait for DOM update and initialize Monaco Editor
@@ -298,11 +310,10 @@ async function loadFile() {
 
 async function loadNoteData() {
   try {
-    // Get basename without .xyz extension
-    const basename = props.filename.replace(/\.xyz$/, '');
-    const filenameWithExtension = basename + '.md';
+    // Add .md extension to get note data
+    const filenameWithExtension = props.filename + '.md';
     
-    // Get note data to extract title
+    // Get note data to extract title and attachment extension
     const note = await getNote(filenameWithExtension);
     noteData.value = note;
   } catch (err) {
@@ -317,15 +328,13 @@ function retryLoad() {
 }
 
 function goToMol() {
-  // Navigate to the mol view using basename without extension
-  const basename = props.filename.replace(/\.xyz$/, '');
-  router.push({ name: 'mol', params: { filename: basename } });
+  // Navigate to the mol view using basename
+  router.push({ name: 'mol', params: { filename: props.filename } });
 }
 
 function goToNote() {
-  // Navigate to the note view using basename without extension
-  const basename = props.filename.replace(/\.xyz$/, '');
-  router.push({ name: 'note', params: { filename: basename } });
+  // Navigate to the note view using basename
+  router.push({ name: 'note', params: { filename: props.filename } });
 }
 
 async function initializeMonacoEditor() {

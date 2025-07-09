@@ -37,7 +37,7 @@ const router = createRouter({
       name: "code",
       component: () => import("./views/Code.vue"),
       props: (route) => ({ 
-        filename: route.params.filename 
+        filename: route.params.filename.replace(/\.md$/, '') 
       }),
     },
     {

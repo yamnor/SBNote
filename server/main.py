@@ -1,6 +1,6 @@
 from typing import List, Literal
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, UploadFile, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, UploadFile, Request, Query
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -191,20 +191,33 @@ if global_config.auth_type != AuthType.READ_ONLY:
         dependencies=auth_deps,
         response_model=Note,
     )
-    def import_image(image_data: NoteImageImport, attachment_filename: str):
+    def import_image(image_data: NoteImageImport, attachment_filename: str = Query(...)):
         """Import an image file and create a note with the image link."""
         try:
-            # Add the attachment filename to the data
-            image_data.filename = attachment_filename
-            return note_storage.import_image(image_data)
-        except ValueError:
+            # Create a new data object with filename included
+            import_data = NoteImageImport(
+                original_filename=image_data.original_filename,
+                tags=image_data.tags or []
+            )
+            
+            # Pass filename as a separate parameter to the storage layer
+            return note_storage.import_image(import_data, attachment_filename)
+        except ValueError as e:
+            logger.error(f"ValueError in import_image: {e}")
             raise HTTPException(
                 status_code=400,
                 detail=api_messages.invalid_note_title,
             )
-        except FileExistsError:
+        except FileExistsError as e:
+            logger.error(f"FileExistsError in import_image: {e}")
             raise HTTPException(
                 status_code=409, detail=api_messages.note_exists
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in import_image: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Import failed: {str(e)}",
             )
 
     # Import XYZ
@@ -213,20 +226,33 @@ if global_config.auth_type != AuthType.READ_ONLY:
         dependencies=auth_deps,
         response_model=Note,
     )
-    def import_xyz(xyz_data: NoteXyzImport, attachment_filename: str):
+    def import_xyz(xyz_data: NoteXyzImport, attachment_filename: str = Query(...)):
         """Import a XYZ file as a new note."""
         try:
-            # Add the attachment filename to the data
-            xyz_data.filename = attachment_filename
-            return note_storage.import_xyz(xyz_data)
-        except ValueError:
+            # Create a new data object with filename included
+            import_data = NoteXyzImport(
+                original_filename=xyz_data.original_filename,
+                tags=xyz_data.tags or []
+            )
+            
+            # Pass filename as a separate parameter to the storage layer
+            return note_storage.import_xyz(import_data, attachment_filename)
+        except ValueError as e:
+            logger.error(f"ValueError in import_xyz: {e}")
             raise HTTPException(
                 status_code=400,
                 detail=api_messages.invalid_note_title,
             )
-        except FileExistsError:
+        except FileExistsError as e:
+            logger.error(f"FileExistsError in import_xyz: {e}")
             raise HTTPException(
                 status_code=409, detail=api_messages.note_exists
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in import_xyz: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Import failed: {str(e)}",
             )
 
     # Update Note
