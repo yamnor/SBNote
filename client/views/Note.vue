@@ -453,7 +453,16 @@ async function init() {
       .catch((error) => {
         console.error('Failed to load note:', error);
         if (error.response?.status === 404) {
-          loadingIndicator.value.setFailed("Note not found", FileX);
+          if (!globalStore.isAuthenticated) {
+            // If not authenticated and getting 404, redirect to login
+            router.push({
+              name: "login",
+              query: { [params.redirect]: route.fullPath },
+            });
+          } else {
+            // If authenticated and getting 404, note doesn't exist
+            loadingIndicator.value.setFailed("Note not found", FileX);
+          }
         } else {
           loadingIndicator.value.setFailed();
           apiErrorHandler(error);

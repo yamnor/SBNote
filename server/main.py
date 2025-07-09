@@ -103,10 +103,17 @@ if global_config.auth_type not in [AuthType.NONE, AuthType.READ_ONLY]:
     "/api/notes/{filename}",
     response_model=Note,
 )
-def get_note(filename: str):
+def get_note(filename: str, request: Request):
     """Get a specific note."""
     try:
-        return note_storage.get(filename)
+        note = note_storage.get(filename)
+        
+        # Check visibility access control
+        if note.visibility == 'private' and not is_authenticated(request):
+            # Return 404 for private notes when not authenticated
+            raise HTTPException(404, api_messages.note_not_found)
+        
+        return note
     except ValueError:
         raise HTTPException(
             status_code=400, detail=api_messages.invalid_note_title
