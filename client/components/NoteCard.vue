@@ -7,8 +7,8 @@
       style="touch-action: manipulation;"
       :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"
     >
-      <!-- Recent edit indicator in bottom-left corner -->
-      <div v-if="isRecentlyEdited" class="absolute bottom-1 left-1">
+      <!-- Recent edit indicator in top-left corner -->
+      <div v-if="isRecentlyEdited" class="absolute top-1 left-1">
         <div class="w-2 h-2 rounded-full" style="background-color: var(--theme-brand-accent);"></div>
       </div>
       

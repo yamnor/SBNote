@@ -14,8 +14,8 @@
     >
     </div>
     
-    <!-- Recent note modification indicator in bottom-left corner -->
-    <div v-if="hasRecentlyModifiedNote" class="absolute bottom-1 left-1">
+    <!-- Recent note modification indicator in top-left corner -->
+    <div v-if="hasRecentlyModifiedNote" class="absolute top-1 left-1">
       <div class="w-2 h-2 rounded-full" style="background-color: var(--theme-brand-accent);"></div>
     </div>
     
