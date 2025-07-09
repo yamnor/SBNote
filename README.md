@@ -2,6 +2,13 @@
 
 A self-hosted, database-less note-taking web app that utilises a flat folder of markdown files for storage. SBNote is a fork of [flatnote](https://github.com/Dullage/flatnote) with enhanced features for organizing content through tags and scraps.
 
+## File Structure
+
+SBNote organizes files in the following structure within the `SBNOTE_PATH` directory:
+- `notes/` - Contains all markdown files
+- `attachments/` - Contains uploaded attachments
+- `index/` - Contains search index files
+
 ## Design Principle
 
 SBNote is designed to be a distraction-free note-taking app that emphasizes content organization through a unique scrap-based workflow. This means:
@@ -60,7 +67,7 @@ services:
     volumes:
       - "./data:/data"
       # Optional. Allows you to save the search index in a different location: 
-      # - "./index:/data/.sbnote"
+      # - "./index:/data/index"
     ports:
       - "8080:8080"
     restart: unless-stopped
