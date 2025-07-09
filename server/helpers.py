@@ -97,7 +97,8 @@ def create_markdown_with_frontmatter(
     content: str, 
     tags: list = None, 
     created: datetime = None,
-    category: str = "note"
+    category: str = "note",
+    visibility: str = "private"
 ) -> str:
     """Create markdown content with frontmatter."""
     # Format created time without microseconds
@@ -124,6 +125,7 @@ tags:
 {tags_yaml}
 created_date: {created_time.strftime('%Y-%m-%d %H:%M:%S')}
 category: {category}
+visibility: {visibility}
 ---
 
 {content}"""

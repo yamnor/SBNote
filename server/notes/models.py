@@ -25,6 +25,7 @@ class Note(CustomBaseModel):
     tags: Optional[List[str]] = Field(default_factory=list)
     filename: Optional[str] = Field(None)
     category: Optional[str] = Field("note")
+    visibility: Optional[str] = Field("private")
 
 
 class NoteUpdate(CustomBaseModel):

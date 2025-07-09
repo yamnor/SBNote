@@ -27,7 +27,7 @@ from ..base import BaseNotes
 from ..models import Note, NoteCreate, NoteUpdate, SearchResult
 
 MARKDOWN_EXT = ".md"
-INDEX_SCHEMA_VERSION = "7"
+INDEX_SCHEMA_VERSION = "8"
 
 # Use StandardAnalyzer for more flexible matching
 StemmingFoldingAnalyzer = StandardAnalyzer() | CharsetFilter(accent_map)
@@ -49,6 +49,7 @@ class IndexSchema(SchemaClass):
     content = TEXT(analyzer=StemmingFoldingAnalyzer)
     tags = KEYWORD(lowercase=False, field_boost=2.0)
     category = KEYWORD(lowercase=False, field_boost=1.5)
+    visibility = KEYWORD(lowercase=False, field_boost=1.5)
 
 
 class FileSystemNotes(BaseNotes):
@@ -86,7 +87,8 @@ class FileSystemNotes(BaseNotes):
             content=data.content or "",
             tags=data.tags or [],
             created=created_time,
-            category="note"
+            category="note",
+            visibility="private"
         )
         
         self._write_file(filepath, markdown_content)
@@ -145,6 +147,7 @@ class FileSystemNotes(BaseNotes):
             tags=metadata.get('tags', []),
             filename=filename,
             category=metadata.get('category', 'note'),
+            visibility=metadata.get('visibility', 'private'),
         )
 
     def update(self, filename: str, data: NoteUpdate) -> Note:
@@ -214,6 +217,7 @@ class FileSystemNotes(BaseNotes):
             tags=metadata.get('tags', []),
             filename=filename,
             category=metadata.get('category', 'note'),
+            visibility=metadata.get('visibility', 'private'),
         )
 
     def delete(self, filename: str) -> None:
@@ -229,7 +233,7 @@ class FileSystemNotes(BaseNotes):
     def search(
         self,
         term: str,
-        sort: Literal["score", "title", "last_modified", "created_date", "category"] = "score",
+        sort: Literal["score", "title", "last_modified", "created_date", "category", "visibility"] = "score",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
         content_limit: int = None,
@@ -246,7 +250,7 @@ class FileSystemNotes(BaseNotes):
                 query = Every()
                 
                 # Determine sort field
-                sort_field = sort if sort in ["title", "last_modified", "created_date", "category"] else None
+                sort_field = sort if sort in ["title", "last_modified", "created_date", "category", "visibility"] else None
                 
                 # Determine sort direction
                 reverse = order == "desc"
@@ -306,7 +310,7 @@ class FileSystemNotes(BaseNotes):
             # Note: For the 'sort' option, "score" is converted to None as
             # that is the default for searches anyway and it's quicker for
             # Whoosh if you specify None.
-            sort = sort if sort in ["title", "last_modified", "created_date", "category"] else None
+            sort = sort if sort in ["title", "last_modified", "created_date", "category", "visibility"] else None
 
             # Determine Sort Direction
             # Note: Confusingly, when sorting by 'score', reverse = True means
@@ -335,7 +339,7 @@ class FileSystemNotes(BaseNotes):
 
     def list_notes(
         self,
-        sort: Literal["title", "last_modified", "created_date", "category"] = "last_modified",
+        sort: Literal["title", "last_modified", "created_date", "category", "visibility"] = "last_modified",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
     ) -> list[Note]:
@@ -346,7 +350,7 @@ class FileSystemNotes(BaseNotes):
             query = Every()
             
             # Determine sort field
-            sort_field = sort if sort in ["title", "last_modified", "created_date", "category"] else "last_modified"
+            sort_field = sort if sort in ["title", "last_modified", "created_date", "category", "visibility"] else "last_modified"
             
             # Determine sort direction
             reverse = order == "desc"
@@ -380,7 +384,7 @@ class FileSystemNotes(BaseNotes):
     def get_notes_by_tag(
         self,
         tag_name: str,
-        sort: Literal["title", "last_modified", "created_date", "category"] = "last_modified",
+        sort: Literal["title", "last_modified", "created_date", "category", "visibility"] = "last_modified",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
     ) -> list[Note]:
@@ -395,7 +399,7 @@ class FileSystemNotes(BaseNotes):
                 query = Every()
                 
                 # Determine sort field
-                sort_field = sort if sort in ["title", "last_modified", "created_date", "category"] else "last_modified"
+                sort_field = sort if sort in ["title", "last_modified", "created_date", "category", "visibility"] else "last_modified"
                 
                 # Determine sort direction
                 reverse = order == "desc"
@@ -502,6 +506,7 @@ class FileSystemNotes(BaseNotes):
             tags=metadata.get('tags', []),
             filename=filename,
             category=metadata.get('category', 'note'),
+            visibility=metadata.get('visibility', 'private'),
         )
 
     def _load_index(self) -> Index:
@@ -562,6 +567,7 @@ class FileSystemNotes(BaseNotes):
             content=note.content,
             tags=tag_string,
             category=getattr(note, 'category', 'note'),
+            visibility=getattr(note, 'visibility', 'private'),
         )
 
     def _list_all_note_filenames(self) -> List[str]:
@@ -749,7 +755,7 @@ class FileSystemNotes(BaseNotes):
         """Return a list of field names to search based on the given term. If
         the term includes a phrase then only search title and content. If the
         term does not include a phrase then also search tags."""
-        fields = ["title", "content", "category"]
+        fields = ["title", "content", "category", "visibility"]
         if '"' not in term:
             # If the term does not include a phrase then also search tags
             fields.append("tags")
