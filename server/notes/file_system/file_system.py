@@ -27,7 +27,7 @@ from ..base import BaseNotes
 from ..models import Note, NoteCreate, NoteUpdate, SearchResult
 
 MARKDOWN_EXT = ".md"
-INDEX_SCHEMA_VERSION = "5"
+INDEX_SCHEMA_VERSION = "6"
 
 # Use StandardAnalyzer for more flexible matching
 StemmingFoldingAnalyzer = StandardAnalyzer() | CharsetFilter(accent_map)
@@ -42,6 +42,7 @@ def generate_random_filename(length: int = 8) -> str:
 class IndexSchema(SchemaClass):
     filename = ID(unique=True, stored=True)
     last_modified = DATETIME(stored=True, sortable=True)
+    created_date = DATETIME(stored=True, sortable=True)
     title = TEXT(
         field_boost=2.0, analyzer=StemmingFoldingAnalyzer, sortable=True
     )
@@ -124,14 +125,14 @@ class FileSystemNotes(BaseNotes):
         
         # Parse created date from frontmatter
         created_time = None
-        if 'created' in metadata:
+        if 'created_date' in metadata:
             try:
-                created_time = datetime.strptime(metadata['created'], '%Y-%m-%d %H:%M:%S').timestamp()
+                created_time = datetime.strptime(metadata['created_date'], '%Y-%m-%d %H:%M:%S').timestamp()
             except (ValueError, TypeError):
                 # Fallback to file creation time if parsing fails
                 created_time = os.path.getctime(filepath)
         else:
-            # Fallback to file creation time if no created field
+            # Fallback to file creation time if no created_date field
             created_time = os.path.getctime(filepath)
         
         return Note(
@@ -167,12 +168,12 @@ class FileSystemNotes(BaseNotes):
         # Create new markdown with updated frontmatter
         # createdはdatetime型で渡す必要がある
         created_dt = None
-        if 'created' in metadata and metadata['created']:
-            if isinstance(metadata['created'], datetime):
-                created_dt = metadata['created']
+        if 'created_date' in metadata and metadata['created_date']:
+            if isinstance(metadata['created_date'], datetime):
+                created_dt = metadata['created_date']
             else:
                 try:
-                    created_dt = datetime.strptime(metadata['created'], '%Y-%m-%d %H:%M:%S')
+                    created_dt = datetime.strptime(metadata['created_date'], '%Y-%m-%d %H:%M:%S')
                 except Exception:
                     created_dt = datetime.fromtimestamp(os.path.getctime(filepath))
         else:
@@ -192,14 +193,14 @@ class FileSystemNotes(BaseNotes):
         
         # Parse created date from frontmatter
         created_time = None
-        if 'created' in metadata:
+        if 'created_date' in metadata:
             try:
-                created_time = datetime.strptime(metadata['created'], '%Y-%m-%d %H:%M:%S').timestamp()
+                created_time = datetime.strptime(metadata['created_date'], '%Y-%m-%d %H:%M:%S').timestamp()
             except (ValueError, TypeError):
                 # Fallback to file creation time if parsing fails
                 created_time = os.path.getctime(filepath)
         else:
-            # Fallback to file creation time if no created field
+            # Fallback to file creation time if no created_date field
             created_time = os.path.getctime(filepath)
         
         return Note(
@@ -224,7 +225,7 @@ class FileSystemNotes(BaseNotes):
     def search(
         self,
         term: str,
-        sort: Literal["score", "title", "last_modified"] = "score",
+        sort: Literal["score", "title", "last_modified", "created_date"] = "score",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
         content_limit: int = None,
@@ -241,7 +242,7 @@ class FileSystemNotes(BaseNotes):
                 query = Every()
                 
                 # Determine sort field
-                sort_field = sort if sort in ["title", "last_modified"] else None
+                sort_field = sort if sort in ["title", "last_modified", "created_date"] else None
                 
                 # Determine sort direction
                 reverse = order == "desc"
@@ -301,7 +302,7 @@ class FileSystemNotes(BaseNotes):
             # Note: For the 'sort' option, "score" is converted to None as
             # that is the default for searches anyway and it's quicker for
             # Whoosh if you specify None.
-            sort = sort if sort in ["title", "last_modified"] else None
+            sort = sort if sort in ["title", "last_modified", "created_date"] else None
 
             # Determine Sort Direction
             # Note: Confusingly, when sorting by 'score', reverse = True means
@@ -330,7 +331,7 @@ class FileSystemNotes(BaseNotes):
 
     def list_notes(
         self,
-        sort: Literal["title", "last_modified"] = "last_modified",
+        sort: Literal["title", "last_modified", "created_date"] = "last_modified",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
     ) -> list[Note]:
@@ -341,7 +342,7 @@ class FileSystemNotes(BaseNotes):
             query = Every()
             
             # Determine sort field
-            sort_field = sort if sort in ["title", "last_modified"] else "last_modified"
+            sort_field = sort if sort in ["title", "last_modified", "created_date"] else "last_modified"
             
             # Determine sort direction
             reverse = order == "desc"
@@ -375,7 +376,7 @@ class FileSystemNotes(BaseNotes):
     def get_notes_by_tag(
         self,
         tag_name: str,
-        sort: Literal["title", "last_modified"] = "last_modified",
+        sort: Literal["title", "last_modified", "created_date"] = "last_modified",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
     ) -> list[Note]:
@@ -390,7 +391,7 @@ class FileSystemNotes(BaseNotes):
                 query = Every()
                 
                 # Determine sort field
-                sort_field = sort if sort in ["title", "last_modified"] else "last_modified"
+                sort_field = sort if sort in ["title", "last_modified", "created_date"] else "last_modified"
                 
                 # Determine sort direction
                 reverse = order == "desc"
@@ -477,10 +478,23 @@ class FileSystemNotes(BaseNotes):
         content = self._read_file(filepath)
         metadata, body = parse_markdown_with_frontmatter(content)
         
+        # Parse created date from frontmatter
+        created_time = None
+        if 'created_date' in metadata:
+            try:
+                created_time = datetime.strptime(metadata['created_date'], '%Y-%m-%d %H:%M:%S').timestamp()
+            except (ValueError, TypeError):
+                # Fallback to file creation time if parsing fails
+                created_time = os.path.getctime(filepath)
+        else:
+            # Fallback to file creation time if no created_date field
+            created_time = os.path.getctime(filepath)
+        
         return Note(
             title=metadata.get('title', self._strip_ext(filename)),
             content=body,
             last_modified=os.path.getmtime(filepath),
+            created=created_time,
             tags=metadata.get('tags', []),
             filename=filename,
         )
@@ -538,6 +552,7 @@ class FileSystemNotes(BaseNotes):
         writer.update_document(
             filename=note.filename or note.title + MARKDOWN_EXT,
             last_modified=datetime.fromtimestamp(note.last_modified),
+            created_date=datetime.fromtimestamp(note.created) if note.created else datetime.fromtimestamp(note.last_modified),
             title=note.title,
             content=note.content,
             tags=tag_string,

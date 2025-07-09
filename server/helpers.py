@@ -121,7 +121,7 @@ def create_markdown_with_frontmatter(
 title: {title_str}
 tags:
 {tags_yaml}
-created: {created_time.strftime('%Y-%m-%d %H:%M:%S')}
+created_date: {created_time.strftime('%Y-%m-%d %H:%M:%S')}
 ---
 
 {content}"""
