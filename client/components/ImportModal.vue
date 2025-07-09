@@ -33,9 +33,6 @@
               </DialogTitle>
               
               <div class="mt-2">
-                <p class="text-sm text-theme-text-muted mb-4">
-                  Select a file to import. Markdown files will be imported as notes, images will be uploaded and a note with the image link will be created.
-                </p>
                 
                 <!-- File Type Selection -->
                 <div class="mt-4">
