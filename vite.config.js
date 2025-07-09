@@ -1,10 +1,16 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import monacoEditorPlugin from 'vite-plugin-monaco-editor';
 
 const devApiUrl = "http://127.0.0.1:8000";
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    monacoEditorPlugin({
+      publicPath: 'monaco-editor'
+    })
+  ],
   root: "client",
   base: "",
   build: {
@@ -21,6 +27,9 @@ export default defineConfig({
             }
             if (id.includes('@toast-ui/editor')) {
               return 'editor-vendor';
+            }
+            if (id.includes('monaco-editor')) {
+              return 'monaco-vendor';
             }
             if (id.includes('primevue')) {
               return 'primevue-vendor';
@@ -62,6 +71,9 @@ export default defineConfig({
           }
           if (id.includes('/views/LogIn.vue')) {
             return 'login-view';
+          }
+          if (id.includes('/views/Code.vue')) {
+            return 'code-view';
           }
         },
       },

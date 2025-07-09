@@ -33,6 +33,14 @@ const router = createRouter({
       }),
     },
     {
+      path: "/code/:filename",
+      name: "code",
+      component: () => import("./views/Code.vue"),
+      props: (route) => ({ 
+        filename: route.params.filename 
+      }),
+    },
+    {
       path: "/new",
       name: "new",
       component: () => import("./views/Note.vue"),
@@ -79,6 +87,8 @@ router.afterEach((to) => {
     title = "Slide - " + title;
   } else if (to.name === "mol") {
     title = "Molecular Structure - " + title;
+  } else if (to.name === "code") {
+    title = "Code Editor - " + title;
   }
   document.title = title;
 });

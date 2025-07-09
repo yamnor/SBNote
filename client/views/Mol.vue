@@ -1,10 +1,10 @@
 <template>
   <div class="fixed inset-0 z-50 bg-white dark:bg-gray-900">
     <!-- Header -->
-    <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-theme-border">
+    <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
       <div class="flex items-center space-x-3">
         <div>
-          <h1 class="text-lg font-semibold text-theme-text">{{ noteTitle }}</h1>
+          <h1 class="text-lg font-semibold text-theme-text-muted">{{ noteTitle }}</h1>
         </div>
       </div>
       
@@ -18,10 +18,10 @@
         <!-- Note button -->
         <button
           @click="goToNote"
-          class="flex items-center justify-center w-9 h-9 rounded-lg bg-theme-button hover:bg-theme-brand hover:text-white text-theme-text transition-colors shadow-sm"
+          class="flex items-center justify-center w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors"
           title="Go to note"
         >
-          <StickyNote class="w-4 h-4" />
+          <Info class="w-8 h-8" />
         </button>
       </div>
     </div>
@@ -64,7 +64,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { ArrowLeft, FileX, Loader2, RefreshCw, StickyNote } from 'lucide-vue-next';
+import { ArrowLeft, FileX, Loader2, RefreshCw, Info } from 'lucide-vue-next';
 import { getNote } from '../api.js';
 
 const props = defineProps({
