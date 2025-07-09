@@ -15,11 +15,11 @@
           <span class="text-sm">Loading molecule...</span>
         </div>
         
-        <!-- Code button -->
+        <!-- Raw button -->
         <button
           @click="goToCode"
           class="flex items-center justify-center w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors"
-          title="Go to code view"
+          title="Go to raw view"
         >
           <FileText class="w-8 h-8" />
         </button>

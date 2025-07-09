@@ -15,7 +15,7 @@
           <span class="text-sm">Loading file...</span>
         </div>
         
-        <!-- Code button (current view) -->
+        <!-- Raw button (current view) -->
         <button
           class="flex items-center justify-center w-8 h-8 text-theme-brand text-theme-text transition-colors"
           title="Current view"
@@ -27,7 +27,7 @@
         <button
           @click="goToMol"
           class="flex items-center justify-center w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors"
-          title="Go to mol view"
+          title="Go to molecule view"
         >
           <Eye class="w-8 h-8" />
         </button>

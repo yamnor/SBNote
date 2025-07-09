@@ -33,7 +33,7 @@ const router = createRouter({
       }),
     },
     {
-      path: "/code/:filename",
+      path: "/raw/:filename",
       name: "code",
       component: () => import("./views/Code.vue"),
       props: (route) => ({ 
@@ -88,7 +88,7 @@ router.afterEach((to) => {
   } else if (to.name === "mol") {
     title = "Molecule - " + title;
   } else if (to.name === "code") {
-    title = "Code - " + title;
+    title = "Raw - " + title;
   }
   document.title = title;
 });
