@@ -17,14 +17,6 @@ const router = createRouter({
       props: (route) => ({ redirect: route.query[constants.params.redirect] }),
     },
     {
-      path: "/:filename",
-      name: "note",
-      component: () => import("./views/Note.vue"),
-      props: (route) => ({ 
-        filename: route.params.filename.replace(/\.md$/, '') 
-      }),
-    },
-    {
       path: "/slide/:filename",
       name: "slide",
       component: () => import("./views/Slide.vue"),
@@ -53,6 +45,14 @@ const router = createRouter({
       props: (route) => ({
         tagName: route.params.tagName,
         sortBy: Number(route.query[constants.params.sortBy]) || undefined,
+      }),
+    },
+    {
+      path: "/:filename",
+      name: "note",
+      component: () => import("./views/Note.vue"),
+      props: (route) => ({ 
+        filename: route.params.filename.replace(/\.md$/, '') 
       }),
     },
   ],

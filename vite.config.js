@@ -76,7 +76,7 @@ export default defineConfig({
         target: devApiUrl,
         changeOrigin: true,
       },
-      "/attachments/": {
+      "/files/": {
         target: devApiUrl,
         changeOrigin: true,
       },
