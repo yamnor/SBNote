@@ -118,6 +118,18 @@ export async function createNote(title, content, tags = []) {
   }
 }
 
+export async function importNote(content, tags = []) {
+  try {
+    const response = await api.post("api/notes/import", {
+      content: content,
+      tags: tags,
+    });
+    return new Note(response.data);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
 export async function getNote(filename) {
   try {
     const response = await api.get(`api/notes/${encodeURIComponent(filename)}`);

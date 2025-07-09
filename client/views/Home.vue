@@ -256,6 +256,29 @@ function cancelDeleteTag() {
   showDeleteModal.value = false;
 }
 
+// Refresh home data (tags and selected tag notes)
+async function refreshHomeData() {
+  try {
+    // Refresh tags list
+    const tagsData = await fetchTagsWithCounts(getTagsWithCounts);
+    tagsWithCounts.value = tagsData;
+    
+    // If there's a selected tag, refresh its notes
+    if (selectedTag.value) {
+      try {
+        const notes = await fetchNotesByTag(getNotesByTag, selectedTag.value, "lastModified", "desc", 10);
+        displayedNotes.value = notes;
+      } catch (error) {
+        console.error('Failed to refresh selected tag notes:', error);
+        // If the selected tag no longer exists, clear the selection
+        selectedTag.value = null;
+        displayedNotes.value = [];
+      }
+    }
+  } catch (error) {
+    console.error('Failed to refresh home data:', error);
+  }
+}
 
 
 async function init() {
@@ -333,6 +356,11 @@ onMounted(() => {
   window.addEventListener('tag-delete', (event) => {
     handleDeleteTag(event.detail);
   });
+  
+  // Listen for file import events to refresh data
+  window.addEventListener('file-imported', () => {
+    refreshHomeData();
+  });
 });
 
 onUnmounted(() => {
@@ -343,6 +371,7 @@ onUnmounted(() => {
   // Clean up event listeners
   window.removeEventListener('tag-rename', handleRenameTag);
   window.removeEventListener('tag-delete', handleDeleteTag);
+  window.removeEventListener('file-imported', refreshHomeData);
 });
 </script>
 

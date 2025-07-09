@@ -35,6 +35,11 @@ class NoteUpdate(CustomBaseModel):
     visibility: Optional[str] = Field(None)
 
 
+class NoteImport(CustomBaseModel):
+    content: str
+    tags: Optional[List[str]] = Field(default_factory=list)
+
+
 class SearchResult(CustomBaseModel):
     title: str
     content: Optional[str] = Field(None)

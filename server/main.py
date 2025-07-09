@@ -13,7 +13,7 @@ from global_config import AuthType, GlobalConfig, GlobalConfigResponseModel
 from helpers import replace_base_href
 from logger import logger
 from notes.base import BaseNotes
-from notes.models import Note, NoteCreate, NoteUpdate, SearchResult
+from notes.models import Note, NoteCreate, NoteUpdate, SearchResult, NoteImport
 
 
 def is_authenticated(request: Request) -> bool:
@@ -157,6 +157,26 @@ if global_config.auth_type != AuthType.READ_ONLY:
         """Create a new note."""
         try:
             return note_storage.create(note)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=api_messages.invalid_note_title,
+            )
+        except FileExistsError:
+            raise HTTPException(
+                status_code=409, detail=api_messages.note_exists
+            )
+
+    # Import Note
+    @router.post(
+        "/api/notes/import",
+        dependencies=auth_deps,
+        response_model=Note,
+    )
+    def import_note(note: NoteImport):
+        """Import a markdown file as a new note."""
+        try:
+            return note_storage.import_note(note)
         except ValueError:
             raise HTTPException(
                 status_code=400,

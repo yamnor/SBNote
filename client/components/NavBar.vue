@@ -142,6 +142,14 @@
         New Note
       </DropdownMenuItem>
       
+      <!-- Import Markdown -->
+      <DropdownMenuItem 
+        :icon="Upload"
+        @click="showImportModal"
+      >
+        Import Markdown
+      </DropdownMenuItem>
+      
       <!-- Divider -->
       <div v-if="((route.name === 'tag' && route.params.tagName && route.params.tagName !== '_untagged') || (route.name === 'home' && selectedTag && selectedTag !== '_untagged'))" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
@@ -336,7 +344,8 @@ import {
   Presentation,
   Lock,
   Users,
-  Globe
+  Globe,
+  Upload
 } from "lucide-vue-next";
 
 import SearchInput from "../components/SearchInput.vue";
@@ -411,7 +420,9 @@ const emit = defineEmits([
   "changeVisibility",
   // Tag edit events
   "renameTag",
-  "deleteTag"
+  "deleteTag",
+  // Import events
+  "showImportModal"
 ]);
 
 const showNewButton = computed(() => {
@@ -568,6 +579,10 @@ function showReadme() {
   // Switch to view mode for README.md
   globalStore.setEditMode(false);
   router.push({ name: 'note', params: { filename: 'README.md' } });
+}
+
+function showImportModal() {
+  emit("showImportModal");
 }
 
 // Method to focus the search input

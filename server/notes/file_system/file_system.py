@@ -24,7 +24,7 @@ from helpers import get_env, parse_markdown_with_frontmatter, create_markdown_wi
 from logger import logger
 
 from ..base import BaseNotes
-from ..models import Note, NoteCreate, NoteUpdate, SearchResult
+from ..models import Note, NoteCreate, NoteUpdate, NoteImport, SearchResult
 
 MARKDOWN_EXT = ".md"
 INDEX_SCHEMA_VERSION = "9"
@@ -104,6 +104,58 @@ class FileSystemNotes(BaseNotes):
         return Note(
             title=data.title,
             content=data.content,
+            last_modified=os.path.getmtime(filepath),
+            created=created_time.timestamp(),
+            tags=data.tags or [],
+            filename=filename + MARKDOWN_EXT,
+        )
+
+    def import_note(self, data: NoteImport) -> Note:
+        """Import a markdown file as a new note."""
+        # Parse content to remove frontmatter
+        metadata, body = parse_markdown_with_frontmatter(data.content)
+        
+        # Generate title from first line of content if not provided
+        title = metadata.get('title', '')
+        if not title:
+            # Extract title from first non-empty line
+            lines = body.strip().split('\n')
+            for line in lines:
+                line = line.strip()
+                if line:
+                    # Remove markdown formatting
+                    title = line.lstrip('#').strip()
+                    break
+        
+        if not title:
+            title = "Imported Note"
+        
+        # Generate random filename
+        filename = generate_random_filename()
+        while os.path.exists(os.path.join(self.storage_path, filename + MARKDOWN_EXT)):
+            filename = generate_random_filename()
+        
+        filepath = os.path.join(self.storage_path, filename + MARKDOWN_EXT)
+        created_time = datetime.now()
+        
+        # Create markdown with frontmatter (ignore original frontmatter)
+        markdown_content = create_markdown_with_frontmatter(
+            title=title,
+            content=body,
+            tags=data.tags or [],
+            created=created_time,
+            category="note",
+            visibility="private"
+        )
+        
+        self._write_file(filepath, markdown_content)
+        
+        # Update the search indexes
+        self._sync_index_with_retry()
+        
+        return Note(
+            title=title,
+            content=body,
             last_modified=os.path.getmtime(filepath),
             created=created_time.timestamp(),
             tags=data.tags or [],

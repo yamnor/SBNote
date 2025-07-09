@@ -30,10 +30,19 @@
         :selectedTag="homeSelectedTag"
         @renameTag="onRenameTag"
         @deleteTag="onDeleteTag"
+        @showImportModal="onShowImportModal"
       />
     </div>
     <RouterView />
     <Toast ref="toast" />
+    
+    <!-- Import Modal -->
+    <ImportModal
+      v-model="showImportModal"
+      :selectedTag="homeSelectedTag"
+      @close="onImportModalClose"
+      @imported="onImportFile"
+    />
   </Loading>
 </template>
 
@@ -42,12 +51,13 @@
 import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { RouterView, useRoute } from "vue-router";
 
-import { apiErrorHandler, getConfig, getNotes, getAuthStatus } from "./api.js";
+import { apiErrorHandler, getConfig, getNotes, getAuthStatus, importNote } from "./api.js";
 import { useGlobalStore } from "./globalStore.js";
 import NavBar from "./components/NavBar.vue";
 import { loadStoredToken, getStoredToken, clearStoredToken } from "./tokenStorage.js";
 import Loading from "./components/Loading.vue";
 import Toast from "./components/Toast.vue";
+import ImportModal from "./components/ImportModal.vue";
 import router from "./router.js";
 
 const globalStore = useGlobalStore();
@@ -79,6 +89,9 @@ const noteFileMenuState = ref({
 
 // Home view state
 const homeSelectedTag = ref(null);
+
+// Import modal state
+const showImportModal = ref(false);
 
 // Global keyboard shortcuts
 let globalKeydownHandler = null;
@@ -287,6 +300,39 @@ function onRenameTag(tagName) {
 function onDeleteTag(tagName) {
   // Emit event to Home view
   window.dispatchEvent(new CustomEvent('tag-delete', { detail: tagName }));
+}
+
+function onShowImportModal() {
+  showImportModal.value = true;
+}
+
+function onImportModalClose() {
+  showImportModal.value = false;
+}
+
+async function onImportFile(content) {
+  try {
+    // Get current tag if on home page with selected tag
+    const tags = homeSelectedTag.value && homeSelectedTag.value !== '_untagged' 
+      ? [homeSelectedTag.value] 
+      : [];
+    
+    const importedNote = await importNote(content, tags);
+    
+    // Show success message
+    globalStore.toast?.addToast(
+      `Note "${importedNote.title}" imported successfully`,
+      'Import Successful',
+      'success'
+    );
+    
+    // Emit event to refresh Home view data
+    window.dispatchEvent(new CustomEvent('file-imported'));
+    
+  } catch (error) {
+    console.error('Import failed:', error);
+    apiErrorHandler(error);
+  }
 }
 
 // Function to update file menu state from Note view
