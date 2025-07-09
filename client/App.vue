@@ -21,10 +21,12 @@
         :isNewNote="noteFileMenuState.isNewNote"
         :autoSaveState="noteFileMenuState.autoSaveState"
         :unsavedChanges="noteFileMenuState.unsavedChanges"
+        :currentVisibility="noteFileMenuState.currentVisibility"
         @closeNote="onCloseNote"
         @copyLink="onCopyLink"
         @deleteNote="onDeleteNote"
         @togglePreviewStyle="onTogglePreviewStyle"
+        @changeVisibility="onChangeVisibility"
         :selectedTag="homeSelectedTag"
         @renameTag="onRenameTag"
         @deleteTag="onDeleteTag"
@@ -71,7 +73,8 @@ const noteFileMenuState = ref({
   canModify: false,
   isNewNote: false,
   autoSaveState: { isAutoSaving: false },
-  unsavedChanges: false
+  unsavedChanges: false,
+  currentVisibility: 'private'
 });
 
 // Home view state
@@ -268,6 +271,11 @@ function onDeleteNote() {
 function onTogglePreviewStyle(newStyle) {
   // Emit event to Note view
   window.dispatchEvent(new CustomEvent('note-toggle-preview-style', { detail: newStyle }));
+}
+
+function onChangeVisibility(visibility) {
+  // Emit event to Note view
+  window.dispatchEvent(new CustomEvent('note-change-visibility', { detail: visibility }));
 }
 
 // Tag edit event handlers

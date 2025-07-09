@@ -8,6 +8,8 @@ class Note {
     this.content = note?.content;
     this.tags = note?.tags;
     this.filename = note?.filename;
+    this.visibility = note?.visibility;
+    this.category = note?.category;
   }
 
   get lastModifiedAsDate() {

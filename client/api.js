@@ -127,13 +127,20 @@ export async function getNote(filename) {
   }
 }
 
-export async function updateNote(filename, newTitle, newContent, tags = []) {
+export async function updateNote(filename, newTitle, newContent, tags = [], visibility = null) {
   try {
-    const response = await api.patch(`api/notes/${encodeURIComponent(filename)}`, {
+    const requestData = {
       newTitle: newTitle,
       newContent: newContent,
       tags: tags,
-    });
+    };
+    
+    // Add visibility if provided
+    if (visibility !== null) {
+      requestData.visibility = visibility;
+    }
+    
+    const response = await api.patch(`api/notes/${encodeURIComponent(filename)}`, requestData);
     return new Note(response.data);
   } catch (error) {
     return Promise.reject(error);

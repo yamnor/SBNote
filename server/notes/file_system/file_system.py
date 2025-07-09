@@ -73,7 +73,7 @@ class FileSystemNotes(BaseNotes):
         self.main_index = self._load_index("main")
         self.public_index = self._load_index("public")
         logger.info("Initializing indexes...")
-        self._sync_index_with_retry(optimize=True)
+        self._sync_index_with_retry(optimize=True, clean=True)
         logger.info("Index initialization completed")
 
     def create(self, data: NoteCreate) -> Note:
@@ -179,6 +179,10 @@ class FileSystemNotes(BaseNotes):
         if data.tags is not None:
             metadata['tags'] = data.tags
         
+        # Update visibility if provided
+        if data.visibility is not None:
+            metadata['visibility'] = data.visibility
+        
         # Create new markdown with updated frontmatter
         # createdはdatetime型で渡す必要がある
         created_dt = None
@@ -197,7 +201,9 @@ class FileSystemNotes(BaseNotes):
             title=metadata.get('title', self._strip_ext(filename)),
             content=body,
             tags=metadata.get('tags', []),
-            created=created_dt
+            created=created_dt,
+            category=metadata.get('category', 'note'),
+            visibility=metadata.get('visibility', 'private')
         )
         
         self._write_file(filepath, markdown_content, overwrite=True)

@@ -252,6 +252,44 @@
       <!-- Divider -->
       <div v-show="canModify" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
+      <!-- Visibility Section -->
+      <div v-show="canModify" class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
+        Visibility:
+      </div>
+      
+      <!-- Private -->
+      <DropdownMenuItem 
+        v-show="canModify"
+        :icon="Lock"
+        @click="onChangeVisibility('private')"
+        :class="{ 'bg-gray-100 dark:bg-gray-700': currentVisibility === 'private' }"
+      >
+        Private
+      </DropdownMenuItem>
+      
+      <!-- Limited -->
+      <DropdownMenuItem 
+        v-show="canModify"
+        :icon="Users"
+        @click="onChangeVisibility('limited')"
+        :class="{ 'bg-gray-100 dark:bg-gray-700': currentVisibility === 'limited' }"
+      >
+        Limited
+      </DropdownMenuItem>
+      
+      <!-- Public -->
+      <DropdownMenuItem 
+        v-show="canModify"
+        :icon="Globe"
+        @click="onChangeVisibility('public')"
+        :class="{ 'bg-gray-100 dark:bg-gray-700': currentVisibility === 'public' }"
+      >
+        Public
+      </DropdownMenuItem>
+      
+      <!-- Divider -->
+      <div v-show="canModify" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      
       <!-- Delete Note (Edit mode only) -->
       <DropdownMenuItem 
         v-show="canModify && !isNewNote"
@@ -282,7 +320,10 @@ import {
   Columns2,
   Tag,
   BookOpen,
-  Presentation
+  Presentation,
+  Lock,
+  Users,
+  Globe
 } from "lucide-vue-next";
 
 import SearchInput from "../components/SearchInput.vue";
@@ -327,8 +368,15 @@ const props = defineProps({
   selectedTag: {
     type: String,
     default: null
+  },
+  // Visibility props
+  currentVisibility: {
+    type: String,
+    default: 'private'
   }
 });
+
+
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -347,6 +395,7 @@ const emit = defineEmits([
   "copyLink",
   "deleteNote",
   "togglePreviewStyle",
+  "changeVisibility",
   // Tag edit events
   "renameTag",
   "deleteTag"
@@ -491,6 +540,10 @@ function onTogglePreviewStyle() {
   const newStyle = globalStore.previewStyle === 'vertical' ? 'tab' : 'vertical';
   globalStore.setPreviewStyle(newStyle);
   emit("togglePreviewStyle", newStyle);
+}
+
+function onChangeVisibility(visibility) {
+  emit("changeVisibility", visibility);
 }
 
 function onSlideView() {

@@ -606,6 +606,12 @@ function togglePreviewStyleHandler(event) {
   // No additional logic needed as the computed property will automatically update
 }
 
+// Change Visibility (for NavBar event)
+function changeVisibilityHandler(event) {
+  const visibility = event.detail;
+  changeNoteVisibility(visibility);
+}
+
 function deleteConfirmedHandler() {
   // Add .md extension for API call
   const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
@@ -614,6 +620,41 @@ function deleteConfirmedHandler() {
       router.push({ name: "home" });
     })
     .catch((error) => {
+      apiErrorHandler(error);
+    });
+}
+
+function changeNoteVisibility(visibility) {
+  if (!canModify.value || isNewNote.value) {
+    return;
+  }
+  
+  // Add .md extension for API call
+  const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
+  
+  // Update note with new visibility
+  updateNote(filenameWithExtension, newTitle.value, note.value.content, newTags.value, visibility)
+    .then(async (data) => {
+      // Update note state
+      updateNoteState({
+        note: data
+      });
+      
+      // Update file menu state to reflect new visibility
+      updateFileMenuState();
+      
+      // Show success toast
+      globalStore.toast?.addToast(
+        `Note visibility changed to ${visibility}`,
+        'Visibility Updated',
+        'success'
+      );
+      
+      // Reload tag counts to reflect changes
+      await loadTagCounts();
+    })
+    .catch((error) => {
+      console.error('Failed to change note visibility:', error);
       apiErrorHandler(error);
     });
 }
@@ -903,7 +944,8 @@ function updateFileMenuState() {
       canModify: canModify.value,
       isNewNote: isNewNote.value,
       autoSaveState: autoSaveState.value,
-      unsavedChanges: uiState.value.unsavedChanges
+      unsavedChanges: uiState.value.unsavedChanges,
+      currentVisibility: note.value.visibility || 'private'
     });
   }
   
@@ -1029,6 +1071,7 @@ onMounted(async () => {
   window.addEventListener('note-copy-link', copyLinkHandler);
   window.addEventListener('note-delete', deleteHandler);
   window.addEventListener('note-toggle-preview-style', togglePreviewStyleHandler);
+  window.addEventListener('note-change-visibility', changeVisibilityHandler);
   
   // Update file menu state in App.vue
   updateFileMenuState();
@@ -1040,5 +1083,6 @@ onUnmounted(() => {
   window.removeEventListener('note-copy-link', copyLinkHandler);
   window.removeEventListener('note-delete', deleteHandler);
   window.removeEventListener('note-toggle-preview-style', togglePreviewStyleHandler);
+  window.removeEventListener('note-change-visibility', changeVisibilityHandler);
 });
 </script>
