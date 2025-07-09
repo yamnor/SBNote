@@ -60,12 +60,14 @@
     </div>
 
     <!-- Monaco Editor container -->
-    <div v-else class="h-screen relative pt-16">
-      <div
-        ref="monacoContainer"
-        class="w-full h-full"
-        :class="{ 'opacity-50': isLoading }"
-      ></div>
+    <div v-else class="h-screen relative pt-16" style="min-height: 400px;">
+      <RawViewer
+        :file-content="fileContent"
+        :language="language"
+        :is-loading="isLoading"
+        @editor-ready="onEditorReady"
+        @editor-error="onEditorError"
+      />
       
       <!-- Loading overlay -->
       <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50">
@@ -102,6 +104,7 @@ import { useRoute } from "vue-router";
 
 import { apiErrorHandler } from "../api.js";
 import { useNoteAttachment } from "../composables/useNoteAttachment.js";
+import RawViewer from "../components/RawViewer.vue";
 
 const props = defineProps({
   filename: String,
@@ -109,11 +112,9 @@ const props = defineProps({
 
 const route = useRoute();
 const router = useRouter();
-const monacoContainer = ref();
 
 // State management
 const editorState = ref({
-  editor: null,
   fileContent: "",
   fileSize: 0,
   lastModified: null,
@@ -278,9 +279,8 @@ async function loadFile() {
       language: detectLanguage(attachmentFilename)
     });
 
-    // Wait for DOM update and initialize Monaco Editor
+    // Wait for DOM update
     await nextTick();
-    await initializeMonacoEditor();
 
   } catch (err) {
     console.error('Failed to load file:', err);
@@ -297,6 +297,16 @@ function retryLoad() {
   loadFile();
 }
 
+function onEditorReady(editor) {
+  // Editor is ready
+}
+
+function onEditorError(error) {
+  // Handle editor-specific errors if needed
+}
+
+
+
 function goToMolView() {
   // Navigate to the mol view using basename
   router.push({ name: 'mol', params: { filename: props.filename } });
@@ -307,80 +317,7 @@ function goToNote() {
   router.push({ name: 'note', params: { filename: props.filename } });
 }
 
-async function initializeMonacoEditor() {
-  console.log('Initializing Monaco Editor...');
-  console.log('monacoContainer.value:', monacoContainer.value);
-  
-  if (!monacoContainer.value) {
-    console.error('Monaco container not found');
-    return;
-  }
 
-  try {
-    // Import Monaco Editor dynamically
-    const monaco = await import('monaco-editor');
-    
-    // Dispose existing editor if any
-    if (editorState.value.editor) {
-      editorState.value.editor.dispose();
-    }
-
-    // Create new editor
-    const editor = monaco.editor.create(monacoContainer.value, {
-      value: fileContent.value,
-      language: language.value,
-      theme: 'vs-dark',
-      readOnly: true,
-      automaticLayout: true,
-      minimap: {
-        enabled: true
-      },
-      scrollBeyondLastLine: false,
-      fontSize: 14,
-      lineNumbers: 'on',
-      wordWrap: 'on',
-      folding: true,
-      lineDecorationsWidth: 10,
-      lineNumbersMinChars: 3,
-      renderLineHighlight: 'all',
-      selectOnLineNumbers: true,
-      roundedSelection: false,
-      scrollbar: {
-        vertical: 'visible',
-        horizontal: 'visible',
-        verticalScrollbarSize: 17,
-        horizontalScrollbarSize: 17,
-        useShadows: false
-      }
-    });
-
-    // Store editor reference
-    updateEditorState({ editor });
-    
-    console.log('Monaco Editor initialized successfully');
-
-    // Handle window resize
-    const handleResize = () => {
-      editor.layout();
-    };
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup function
-    const cleanup = () => {
-      window.removeEventListener('resize', handleResize);
-      if (editor) {
-        editor.dispose();
-      }
-    };
-
-    // Store cleanup function
-    editorState.value.cleanup = cleanup;
-
-  } catch (error) {
-    console.error('Failed to initialize Monaco Editor:', error);
-    throw new Error("Failed to initialize editor");
-  }
-}
 
 function updateEditorState(updates) {
   Object.assign(editorState.value, updates);
@@ -400,9 +337,16 @@ watch(noteData, (newNoteData) => {
 }, { immediate: true });
 
 onUnmounted(() => {
-  // Cleanup Monaco Editor
-  if (editorState.value.cleanup) {
-    editorState.value.cleanup();
+  // Clear any pending operations
+  if (editorState.value) {
+    // Reset editor state
+    editorState.value = {
+      fileContent: "",
+      fileSize: 0,
+      lastModified: null,
+      isBinary: false,
+      language: "plaintext"
+    };
   }
 });
 </script> 
