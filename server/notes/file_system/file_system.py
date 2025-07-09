@@ -57,11 +57,14 @@ class FileSystemNotes(BaseNotes):
     )
 
     def __init__(self):
-        self.storage_path = get_env("SBNOTE_PATH", mandatory=True)
-        if not os.path.exists(self.storage_path):
+        self.base_path = get_env("SBNOTE_PATH", mandatory=True)
+        if not os.path.exists(self.base_path):
             raise NotADirectoryError(
-                f"'{self.storage_path}' is not a valid directory."
+                f"'{self.base_path}' is not a valid directory."
             )
+        # Create notes subdirectory for markdown files
+        self.storage_path = os.path.join(self.base_path, "notes")
+        os.makedirs(self.storage_path, exist_ok=True)
         self.index = self._load_index()
         self._sync_index_with_retry(optimize=True)
 
@@ -464,7 +467,7 @@ class FileSystemNotes(BaseNotes):
 
     @property
     def _index_path(self):
-        return os.path.join(self.storage_path, "index")
+        return os.path.join(self.base_path, "index")
 
 
 
