@@ -12,6 +12,13 @@
         <div class="w-2 h-2 rounded-full" style="background-color: var(--theme-brand-accent);"></div>
       </div>
       
+      <!-- Category icon in bottom-left corner -->
+      <div class="absolute bottom-1 left-1">
+        <div class="w-5 h-5 flex items-center justify-center text-gray-500">
+          <component :is="categoryIcon" class="w-4 h-4" />
+        </div>
+      </div>
+      
       <!-- Tag count badge in bottom-right corner -->
       <div v-if="note.tags && note.tags.length > 0" class="absolute bottom-1 right-1">
         <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-gray-200 text-gray-600">
@@ -47,6 +54,7 @@
 import { computed, ref } from "vue";
 import { useGlobalStore } from "../globalStore.js";
 import NotePreviewModal from "./NotePreviewModal.vue";
+import { FileText, FileImage, FileDigit } from "lucide-vue-next";
 
 const props = defineProps({
   note: {
@@ -79,6 +87,22 @@ const isRecentlyEdited = computed(() => {
   const diffInHours = (now - lastModified) / (1000 * 60 * 60);
   
   return diffInHours < 1;
+});
+
+// Get category icon based on note category
+const categoryIcon = computed(() => {
+  const category = props.note.category || 'note';
+  
+  switch (category.toLowerCase()) {
+    case 'image':
+    case 'img':
+      return FileImage;
+    case 'xyz':
+      return FileDigit;
+    case 'note':
+    default:
+      return FileText;
+  }
 });
 
 // Format date

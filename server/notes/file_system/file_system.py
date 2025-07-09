@@ -531,6 +531,8 @@ class FileSystemNotes(BaseNotes):
                     last_modified=hit["last_modified"].timestamp(),
                     tags=metadata.get('tags', []),
                     filename=filename,
+                    category=metadata.get('category', 'note'),
+                    visibility=metadata.get('visibility', 'private'),
                 ))
             
             return notes
@@ -584,6 +586,8 @@ class FileSystemNotes(BaseNotes):
                             last_modified=hit["last_modified"].timestamp(),
                             tags=metadata.get('tags', []),
                             filename=filename,
+                            category=metadata.get('category', 'note'),
+                            visibility=metadata.get('visibility', 'private'),
                         ))
                 
                 # Apply limit after filtering
@@ -626,6 +630,8 @@ class FileSystemNotes(BaseNotes):
                     last_modified=hit["last_modified"].timestamp(),
                     tags=metadata.get('tags', []),
                     filename=filename,
+                    category=metadata.get('category', 'note'),
+                    visibility=metadata.get('visibility', 'private'),
                 ))
             
             return notes
