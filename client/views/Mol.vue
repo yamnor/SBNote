@@ -43,46 +43,24 @@
       </div>
     </div>
 
-    <!-- Error message -->
-    <div v-if="error" class="h-screen flex items-center justify-center p-8">
-      <div class="text-center">
-        <FileX class="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
-        <h2 class="text-xl font-semibold text-theme-text mb-2">Failed to load molecule</h2>
-        <p class="text-theme-text-muted mb-4">{{ error }}</p>
-        <button
-          @click="retryLoad"
-          class="inline-flex items-center px-4 py-2 bg-theme-brand text-white rounded-lg hover:bg-theme-brand-dark transition-colors"
-        >
-          <RefreshCw class="w-4 h-4 mr-2" />
-          Retry
-        </button>
-      </div>
-    </div>
-
-    <!-- 3Dmol viewer container -->
-    <div v-else class="h-screen relative">
-      <div
-        ref="molViewer"
-        class="w-full h-full"
-        :class="{ 'opacity-50': isLoading }"
-      ></div>
-      
-      <!-- Loading overlay -->
-      <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50">
-        <div class="text-center">
-          <Loader2 class="w-8 h-8 mx-auto text-theme-brand animate-spin mb-2" />
-          <p class="text-sm text-theme-text-muted">Loading molecular structure...</p>
-        </div>
-      </div>
+    <!-- MolViewer component -->
+    <div class="h-screen">
+      <MolViewer 
+        :attachment-filename="attachmentFilename"
+        @error="handleViewerError"
+        @loading="handleViewerLoading"
+        @loaded="handleViewerLoaded"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ArrowLeft, FileX, Loader2, RefreshCw, Info, FileText, Eye, Grip, FileText as FileTextIcon } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
+import MolViewer from '../components/MolViewer.vue';
 
 const props = defineProps({
   filename: String,
@@ -92,11 +70,12 @@ const router = useRouter();
 const route = useRoute();
 
 // State
-const molViewer = ref(null);
-let viewer = null;
+const attachmentFilename = ref(null);
+const isLoading = ref(false);
+const error = ref(null);
 
 // Use composable for note data and attachment handling
-const { noteData, isLoading, error, loadNoteDataAndAttachment } = useNoteAttachment();
+const { noteData, loadNoteDataAndAttachment } = useNoteAttachment();
 
 // Computed
 const noteTitle = computed(() => {
@@ -126,88 +105,30 @@ function goToRawView() {
 async function loadNoteData() {
   try {
     // Use composable to load note data and get attachment filename
-    const { attachmentFilename } = await loadNoteDataAndAttachment(props.filename);
-    
-    await loadMolecule(attachmentFilename);
+    const { attachmentFilename: filename } = await loadNoteDataAndAttachment(props.filename);
+    attachmentFilename.value = filename;
   } catch (err) {
     console.error('Failed to load note data:', err);
     error.value = err.message || 'Failed to load molecule data';
   }
 }
 
-async function loadMolecule(attachmentFilename) {
-  try {
-    // Fetch attachment file content
-    const response = await fetch(`/files/${encodeURIComponent(attachmentFilename)}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch attachment file: ${response.statusText}`);
-    }
-    
-    const fileContent = await response.text();
-    
-    // Initialize 3Dmol viewer
-    if (!window.$3Dmol) {
-      throw new Error('3Dmol.js library not loaded');
-    }
-    
-    // Clear previous viewer
-    if (viewer) {
-      viewer.clear();
-    }
-    
-    // Create new viewer
-    viewer = window.$3Dmol.createViewer(molViewer.value, {
-      backgroundColor: 'white',
-      antialias: true,
-      defaultcolors: window.$3Dmol.rasmolElementColors
-    });
-    
-    // Determine file format from extension
-    const fileExtension = attachmentFilename.split('.').pop().toLowerCase();
-    
-    // Load file data based on format
-    if (fileExtension === 'xyz') {
-      viewer.addModel(fileContent, 'xyz');
-    } else if (fileExtension === 'pdb') {
-      viewer.addModel(fileContent, 'pdb');
-    } else if (fileExtension === 'mol') {
-      viewer.addModel(fileContent, 'mol');
-    } else if (fileExtension === 'sdf') {
-      viewer.addModel(fileContent, 'sdf');
-    } else {
-      // Default to XYZ format
-      viewer.addModel(fileContent, 'xyz');
-    }
-    
-    // Set view style
-    viewer.setStyle({}, {
-      stick: { radius: 0.15 },
-      sphere: { radius: 0.5 }
-    });
-    
-    // Center and zoom the molecule
-    viewer.zoomTo();
-    viewer.render();
-    
-  } catch (err) {
-    console.error('Failed to load molecule:', err);
-    throw new Error(`Failed to load molecular structure: ${err.message}`);
-  }
+// MolViewer event handlers
+function handleViewerError(errorMessage) {
+  error.value = errorMessage;
 }
 
-function retryLoad() {
-  loadNoteData();
+function handleViewerLoading(loading) {
+  isLoading.value = loading;
+}
+
+function handleViewerLoaded() {
+  // Molecule loaded successfully
+  console.log('Molecule loaded successfully');
 }
 
 // Lifecycle
 onMounted(async () => {
-  // Check if 3Dmol.js is loaded (from CDN)
-  if (!window.$3Dmol) {
-    error.value = '3Dmol.js library not loaded. Please refresh the page.';
-    isLoading.value = false;
-    return;
-  }
-  
   await loadNoteData();
 });
 
@@ -219,22 +140,9 @@ watch(noteData, (newNoteData) => {
     document.title = "Molecule - SBNote";
   }
 }, { immediate: true });
-
-onUnmounted(() => {
-  // Clean up viewer
-  if (viewer) {
-    viewer.clear();
-    viewer = null;
-  }
-});
 </script>
 
 <style scoped>
-/* Ensure the viewer container takes full height */
-.w-full.h-full {
-  min-height: 0;
-}
-
 /* Ensure full screen coverage */
 .fixed.inset-0 {
   position: fixed;
