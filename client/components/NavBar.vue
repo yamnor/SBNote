@@ -46,6 +46,43 @@
       <!-- Divider -->
       <div v-if="globalStore.isAuthenticated && !isReadmePage" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
+      <!-- View Style Section (only for note pages) -->
+      <div v-if="showFileMenu && canModify" class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
+        View Style:
+      </div>
+      
+      <!-- Single View (Edit mode only) -->
+      <DropdownMenuItem 
+        v-if="showFileMenu && canModify"
+        :icon="Square"
+        @click="onTogglePreviewStyle"
+        :class="{ 'bg-gray-100 dark:bg-gray-700': globalStore.previewStyle === 'tab' }"
+      >
+        Single View
+      </DropdownMenuItem>
+      
+      <!-- Split View (Edit mode only) -->
+      <DropdownMenuItem 
+        v-if="showFileMenu && canModify"
+        :icon="Columns2"
+        @click="onTogglePreviewStyle"
+        :class="{ 'bg-gray-100 dark:bg-gray-700': globalStore.previewStyle === 'vertical' }"
+      >
+        Split View
+      </DropdownMenuItem>
+      
+      <!-- Slide View (only for notes with 'slide' tag) -->
+      <DropdownMenuItem 
+        v-if="hasSlideTag"
+        :icon="Presentation"
+        @click="onSlideView"
+      >
+        Slide View
+      </DropdownMenuItem>
+      
+      <!-- Divider -->
+      <div v-if="globalStore.isAuthenticated && !isReadmePage" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      
       <!-- Login Item -->
       <RouterLink
         v-if="!globalStore.isAuthenticated && globalStore.config.authType === 'password'"
@@ -226,31 +263,7 @@
         Slide View
       </DropdownMenuItem>
       
-      <!-- Divider -->
-      <div v-show="canModify" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
-      
-      <!-- Single View (Edit mode only) -->
-      <DropdownMenuItem 
-        v-show="canModify"
-        :icon="Square"
-        @click="onTogglePreviewStyle"
-        :class="{ 'bg-gray-100 dark:bg-gray-700': globalStore.previewStyle === 'tab' }"
-      >
-        Single View
-      </DropdownMenuItem>
-      
-      <!-- Split View (Edit mode only) -->
-      <DropdownMenuItem 
-        v-show="canModify"
-        :icon="Columns2"
-        @click="onTogglePreviewStyle"
-        :class="{ 'bg-gray-100 dark:bg-gray-700': globalStore.previewStyle === 'vertical' }"
-      >
-        Split View
-      </DropdownMenuItem>
-      
-      <!-- Divider -->
-      <div v-show="canModify" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+
       
       <!-- Visibility Section -->
       <div v-show="canModify" class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
