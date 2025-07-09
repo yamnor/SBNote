@@ -41,16 +41,16 @@
         </div>
 
         <!-- Note Information Display -->
-        <div class="text-xs text-gray-500 flex flex-col gap-1 p-1 justify-end note-content-width">
-          <div class="flex flex-row gap-4 justify-end">
-            <span v-if="note.lastModifiedAsString">Modified: {{ note.lastModifiedAsString }}</span>
-          </div>
-          <div class="flex flex-row gap-4 justify-end">
-            <span v-if="note.createdAsString">Created: {{ note.createdAsString }}</span>
-          </div>
-          <div class="flex flex-row gap-4 justify-end">
-            <span v-if="note.category">Category: {{ note.category }}</span>
-            <span v-if="note.visibility">Visibility: {{ note.visibility }}</span>
+        <div class="text-xs text-gray-500 flex flex-col gap-1 p-1 note-content-width">
+          <div class="flex flex-row justify-between">
+            <div class="flex flex-col">
+              <span v-if="note.category">Category: {{ note.category }}</span>
+              <span v-if="note.visibility">Visibility: {{ note.visibility }}</span>
+            </div>
+            <div class="flex flex-col items-end">
+              <span v-if="note.lastModifiedAsString">Modified: {{ note.lastModifiedAsString }}</span>
+              <span v-if="note.createdAsString">Created: {{ note.createdAsString }}</span>
+            </div>
           </div>
         </div>
 

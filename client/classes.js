@@ -17,7 +17,17 @@ class Note {
   }
 
   get lastModifiedAsString() {
-    return this.lastModified ? this.lastModifiedAsDate.toLocaleString() : '';
+    if (!this.lastModified) return '';
+    const date = this.lastModifiedAsDate;
+    return date.toLocaleDateString('en-US', {
+      year: '2-digit',
+      month: '2-digit',
+      day: '2-digit'
+    }) + ' ' + date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
   }
 
   get createdAsDate() {
@@ -25,7 +35,17 @@ class Note {
   }
 
   get createdAsString() {
-    return this.created ? this.createdAsDate.toLocaleString() : '';
+    if (!this.created) return '';
+    const date = this.createdAsDate;
+    return date.toLocaleDateString('en-US', {
+      year: '2-digit',
+      month: '2-digit',
+      day: '2-digit'
+    }) + ' ' + date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
   }
 }
 
