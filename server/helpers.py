@@ -86,6 +86,13 @@ def parse_markdown_with_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
         else:
             metadata['tags'] = []
         
+        # Ensure attachment_extension is always a string
+        if 'attachment_extension' in metadata:
+            if not isinstance(metadata['attachment_extension'], str):
+                metadata['attachment_extension'] = str(metadata['attachment_extension'])
+        else:
+            metadata['attachment_extension'] = ''
+        
         return metadata, body
     except Exception:
         # If frontmatter parsing fails, treat entire content as body
@@ -98,7 +105,8 @@ def create_markdown_with_frontmatter(
     tags: list = None, 
     created: datetime = None,
     category: str = "note",
-    visibility: str = "private"
+    visibility: str = "private",
+    attachment_extension: str = None
 ) -> str:
     """Create markdown content with frontmatter."""
     # Format created time without microseconds
@@ -119,6 +127,11 @@ def create_markdown_with_frontmatter(
     # Ensure title is treated as string by wrapping in quotes if it looks like a number
     title_str = f'"{title}"' if str(title).isdigit() else title
     
+    # Add attachment_extension to frontmatter if provided
+    attachment_extension_yaml = ""
+    if attachment_extension:
+        attachment_extension_yaml = f"attachment_extension: {attachment_extension}\n"
+    
     frontmatter_content = f"""---
 title: {title_str}
 tags:
@@ -126,7 +139,7 @@ tags:
 created_date: {created_time.strftime('%Y-%m-%d %H:%M:%S')}
 category: {category}
 visibility: {visibility}
----
+{attachment_extension_yaml}---
 
 {content}"""
     

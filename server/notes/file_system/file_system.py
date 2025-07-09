@@ -27,7 +27,7 @@ from ..base import BaseNotes
 from ..models import Note, NoteCreate, NoteUpdate, NoteImport, NoteImageImport, NoteXyzImport, SearchResult
 
 MARKDOWN_EXT = ".md"
-INDEX_SCHEMA_VERSION = "9"
+INDEX_SCHEMA_VERSION = "10"
 
 # Use StandardAnalyzer for more flexible matching
 StemmingFoldingAnalyzer = StandardAnalyzer() | CharsetFilter(accent_map)
@@ -50,6 +50,7 @@ class IndexSchema(SchemaClass):
     tags = KEYWORD(lowercase=False, field_boost=2.0)
     category = KEYWORD(lowercase=False, field_boost=1.5)
     visibility = KEYWORD(lowercase=False, field_boost=1.5)
+    attachment_extension = KEYWORD(lowercase=False, field_boost=1.0)
 
 
 class FileSystemNotes(BaseNotes):
@@ -185,6 +186,9 @@ class FileSystemNotes(BaseNotes):
         filepath = os.path.join(self.storage_path, filename + MARKDOWN_EXT)
         created_time = datetime.now()
         
+        # Extract attachment extension (without dot)
+        attachment_extension = os.path.splitext(data.filename)[1].lstrip('.')
+        
         # Create markdown with frontmatter
         markdown_content = create_markdown_with_frontmatter(
             title=title,
@@ -192,7 +196,8 @@ class FileSystemNotes(BaseNotes):
             tags=data.tags or [],
             created=created_time,
             category="image",
-            visibility="private"
+            visibility="private",
+            attachment_extension=attachment_extension
         )
         
         self._write_file(filepath, markdown_content)
@@ -207,6 +212,7 @@ class FileSystemNotes(BaseNotes):
             created=created_time.timestamp(),
             tags=data.tags or [],
             filename=filename + MARKDOWN_EXT,
+            attachment_extension=attachment_extension,
         )
 
     def import_xyz(self, data: NoteXyzImport) -> Note:
@@ -232,6 +238,9 @@ class FileSystemNotes(BaseNotes):
         filepath = os.path.join(self.storage_path, filename + MARKDOWN_EXT)
         created_time = datetime.now()
         
+        # Extract attachment extension (without dot)
+        attachment_extension = os.path.splitext(data.filename)[1].lstrip('.')
+        
         # Create markdown with frontmatter
         markdown_content = create_markdown_with_frontmatter(
             title=title,
@@ -239,7 +248,8 @@ class FileSystemNotes(BaseNotes):
             tags=data.tags or [],
             created=created_time,
             category="xyz",
-            visibility="private"
+            visibility="private",
+            attachment_extension=attachment_extension
         )
         
         self._write_file(filepath, markdown_content)
@@ -254,6 +264,7 @@ class FileSystemNotes(BaseNotes):
             created=created_time.timestamp(),
             tags=data.tags or [],
             filename=filename + MARKDOWN_EXT,
+            attachment_extension=attachment_extension,
         )
 
     def get(self, filename: str) -> Note:
@@ -303,6 +314,7 @@ class FileSystemNotes(BaseNotes):
             filename=filename,
             category=metadata.get('category', 'note'),
             visibility=metadata.get('visibility', 'private'),
+            attachment_extension=metadata.get('attachment_extension', ''),
         )
 
     def update(self, filename: str, data: NoteUpdate) -> Note:
@@ -382,6 +394,7 @@ class FileSystemNotes(BaseNotes):
             filename=filename,
             category=metadata.get('category', 'note'),
             visibility=metadata.get('visibility', 'private'),
+            attachment_extension=metadata.get('attachment_extension', ''),
         )
 
     def delete(self, filename: str) -> None:
@@ -393,6 +406,14 @@ class FileSystemNotes(BaseNotes):
         
         # Update the search index
         self._sync_index_with_retry()
+
+    def _pre_process_search_term(self, term: str) -> str:
+        """Pre-process search terms to handle special prefixes."""
+        # Handle ext: prefix for attachment_extension searches
+        if term.startswith('ext:'):
+            extension = term[4:].strip()
+            return f'attachment_extension:{extension}'
+        return term
 
     def search(
         self,
@@ -452,8 +473,10 @@ class FileSystemNotes(BaseNotes):
                 
                 return tuple(self._search_result_from_hit(hit, content_limit) for hit in filtered_results)
         
-        # Regular search processing
+        # Pre-process search term
         term = self._pre_process_search_term(term)
+        
+        # Regular search processing
         with index_to_use.searcher() as searcher:
             # Parse Query
             if term == "*":
@@ -562,6 +585,7 @@ class FileSystemNotes(BaseNotes):
                     filename=filename,
                     category=metadata.get('category', 'note'),
                     visibility=metadata.get('visibility', 'private'),
+                    attachment_extension=metadata.get('attachment_extension', ''),
                 ))
             
             return notes
@@ -728,6 +752,7 @@ class FileSystemNotes(BaseNotes):
             filename=filename,
             category=metadata.get('category', 'note'),
             visibility=metadata.get('visibility', 'private'),
+            attachment_extension=metadata.get('attachment_extension', ''),
         )
 
     def _load_index(self, index_name: str) -> Index:
@@ -796,6 +821,7 @@ class FileSystemNotes(BaseNotes):
             tags=tag_string,
             category=getattr(note, 'category', 'note'),
             visibility=getattr(note, 'visibility', 'private'),
+            attachment_extension=getattr(note, 'attachment_extension', ''),
         )
 
     def _list_all_note_filenames(self) -> List[str]:
@@ -1029,14 +1055,23 @@ class FileSystemNotes(BaseNotes):
         )
 
     def _fieldnames_for_term(self, term: str) -> List[str]:
-        """Return a list of field names to search based on the given term. If
-        the term includes a phrase then only search title and content. If the
-        term does not include a phrase then also search tags."""
-        fields = ["title", "content", "category", "visibility"]
-        if '"' not in term:
-            # If the term does not include a phrase then also search tags
-            fields.append("tags")
-        return fields
+        """Return the field names to search in based on the term."""
+        # Check for field-specific searches
+        if term.startswith('title:'):
+            return ['title']
+        elif term.startswith('content:'):
+            return ['content']
+        elif term.startswith('tags:'):
+            return ['tags']
+        elif term.startswith('category:'):
+            return ['category']
+        elif term.startswith('visibility:'):
+            return ['visibility']
+        elif term.startswith('attachment_extension:'):
+            return ['attachment_extension']
+        else:
+            # Default search fields
+            return ['title', 'content', 'tags', 'category', 'attachment_extension']
 
     @staticmethod
     def _get_matched_fields(matched_terms):

@@ -26,6 +26,7 @@ class Note(CustomBaseModel):
     filename: Optional[str] = Field(None)
     category: Optional[str] = Field("note")
     visibility: Optional[str] = Field("private")
+    attachment_extension: Optional[str] = Field("")
 
 
 class NoteUpdate(CustomBaseModel):
