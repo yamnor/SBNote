@@ -970,6 +970,9 @@ function updateFileMenuState() {
   // Update current note tags globally for NavBar component
   const currentTags = canModify.value ? newTags.value : (note.value.tags || []);
   window.currentNoteTags = currentTags;
+  
+  // Update current note category globally for NavBar component
+  window.currentNoteCategory = note.value.category || 'note';
 }
 
 function saveDefaultEditorMode() {

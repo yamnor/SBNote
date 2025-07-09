@@ -25,6 +25,14 @@ const router = createRouter({
       }),
     },
     {
+      path: "/mol/:filename",
+      name: "mol",
+      component: () => import("./views/Mol.vue"),
+      props: (route) => ({ 
+        filename: route.params.filename.replace(/\.md$/, '') 
+      }),
+    },
+    {
       path: "/new",
       name: "new",
       component: () => import("./views/Note.vue"),
@@ -69,6 +77,8 @@ router.afterEach((to) => {
     }
   } else if (to.name === "slide") {
     title = "Slide - " + title;
+  } else if (to.name === "mol") {
+    title = "Molecular Structure - " + title;
   }
   document.title = title;
 });

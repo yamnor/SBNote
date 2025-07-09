@@ -263,7 +263,7 @@
       </DropdownMenuItem>
       
       <!-- Divider -->
-      <div v-if="showSlideView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <div v-if="showSlideView || showMolView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
       <!-- Slide View (only for notes with 'slide' tag) -->
       <DropdownMenuItem 
@@ -272,6 +272,15 @@
         @click="onSlideView"
       >
         Slide View
+      </DropdownMenuItem>
+      
+      <!-- Mol View (only for notes with 'xyz' category) -->
+      <DropdownMenuItem 
+        v-if="showMolView"
+        :icon="Atom"
+        @click="onMolView"
+      >
+        Mol View
       </DropdownMenuItem>
       
 
@@ -348,7 +357,8 @@ import {
   Lock,
   Users,
   Globe,
-  Upload
+  Upload,
+  Atom
 } from "lucide-vue-next";
 
 import SearchInput from "../components/SearchInput.vue";
@@ -447,6 +457,11 @@ const isReadmePage = computed(() => {
 const showSlideView = computed(() => {
   // Check if we're on a note page
   return route.name === 'note' && route.params.filename;
+});
+
+const showMolView = computed(() => {
+  // Check if we're on a note page and the note has 'xyz' category
+  return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'xyz';
 });
 
 // Load available tags for new note dropdown
@@ -576,6 +591,11 @@ function onChangeVisibility(visibility) {
 function onSlideView() {
   // Navigate to slide view
   router.push({ name: 'slide', params: { filename: route.params.filename } });
+}
+
+function onMolView() {
+  // Navigate to mol view
+  router.push({ name: 'mol', params: { filename: route.params.filename } });
 }
 
 function showReadme() {

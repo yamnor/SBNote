@@ -18,6 +18,7 @@
     "@toast-ui/editor": "3.2.2",
     "@toast-ui/editor-plugin-chart": "^3.0.1",
     "@toast-ui/editor-plugin-code-syntax-highlight": "3.1.0",
+    "3dmol": "^2.5.1",
     "axios": "1.8.4",
     "katex": "^0.16.22",
     "lucide-vue-next": "^0.525.0",
