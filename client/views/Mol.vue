@@ -79,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ArrowLeft, FileX, Loader2, RefreshCw, Info, FileText, Eye } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
@@ -210,6 +210,15 @@ onMounted(async () => {
   
   await loadNoteData();
 });
+
+// Watch for note data changes to update browser title
+watch(noteData, (newNoteData) => {
+  if (newNoteData?.title) {
+    document.title = `${newNoteData.title} - SBNote`;
+  } else {
+    document.title = "Molecule - SBNote";
+  }
+}, { immediate: true });
 
 onUnmounted(() => {
   // Clean up viewer

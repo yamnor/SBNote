@@ -86,9 +86,19 @@ router.afterEach((to) => {
   } else if (to.name === "slide") {
     title = "Slide - " + title;
   } else if (to.name === "mol") {
-    title = "Molecule - " + title;
+    if (to.params.filename) {
+      // For molecule view, we'll update the title dynamically in the Mol component
+      title = "Molecule - " + title;
+    } else {
+      title = "Molecule - " + title;
+    }
   } else if (to.name === "code") {
-    title = "Raw - " + title;
+    if (to.params.filename) {
+      // For raw view, we'll update the title dynamically in the Code component
+      title = "Raw - " + title;
+    } else {
+      title = "Raw - " + title;
+    }
   }
   document.title = title;
 });

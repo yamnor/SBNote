@@ -96,7 +96,7 @@
 
 <script setup>
 import { FileX, AlertTriangle, Loader2, RefreshCw, FileText, Eye, Info } from "lucide-vue-next";
-import { computed, onMounted, onUnmounted, ref, nextTick } from "vue";
+import { computed, onMounted, onUnmounted, ref, nextTick, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useRoute } from "vue-router";
 
@@ -389,6 +389,15 @@ function updateEditorState(updates) {
 onMounted(async () => {
   await loadFile();
 });
+
+// Watch for note data changes to update browser title
+watch(noteData, (newNoteData) => {
+  if (newNoteData?.title) {
+    document.title = `${newNoteData.title} - SBNote`;
+  } else {
+    document.title = "Raw - SBNote";
+  }
+}, { immediate: true });
 
 onUnmounted(() => {
   // Cleanup Monaco Editor
