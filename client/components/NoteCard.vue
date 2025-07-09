@@ -13,9 +13,12 @@
       </div>
       
       <!-- Category icon in bottom-left corner -->
-      <div class="absolute bottom-1 left-1">
+      <div class="absolute bottom-1 left-1 flex flex-row items-center gap-1">
         <div class="w-5 h-5 flex items-center justify-center text-gray-500">
           <component :is="categoryIcon" class="w-4 h-4" />
+        </div>
+        <div class="w-5 h-5 flex items-center justify-center text-gray-400">
+          <component :is="visibilityIcon" class="w-4 h-4" />
         </div>
       </div>
       
@@ -54,7 +57,7 @@
 import { computed, ref } from "vue";
 import { useGlobalStore } from "../globalStore.js";
 import NotePreviewModal from "./NotePreviewModal.vue";
-import { FileText, FileImage, FileDigit } from "lucide-vue-next";
+import { FileText, FileImage, FileDigit, Lock, Users, Globe } from "lucide-vue-next";
 
 const props = defineProps({
   note: {
@@ -102,6 +105,21 @@ const categoryIcon = computed(() => {
     case 'note':
     default:
       return FileText;
+  }
+});
+
+// Get visibility icon based on note visibility
+const visibilityIcon = computed(() => {
+  const visibility = props.note.visibility || 'private';
+  
+  switch (visibility) {
+    case 'public':
+      return Globe;
+    case 'limited':
+      return Users;
+    case 'private':
+    default:
+      return Lock;
   }
 });
 
