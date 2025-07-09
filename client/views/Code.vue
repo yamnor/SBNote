@@ -1,66 +1,107 @@
 <template>
-  <div class="w-full mx-auto flex flex-col overflow-visible h-full">
-    <Loading ref="loadingIndicator" class="flex-1 overflow-visible">
-      <div class="flex flex-col h-full">
-        <!-- Monaco Editor Container -->
-        <div class="flex-1 editor-container">
-          <div ref="monacoContainer" class="w-full h-screen"></div>
-        </div>
-
-        <!-- File Information Display -->
-        <div class="text-xs text-gray-500 flex flex-col gap-1 p-1 file-info">
-          <div class="flex flex-row justify-between">
-            <div class="flex flex-col">
-              <span>File: {{ filename }}</span>
-              <span v-if="fileSize">Size: {{ formatFileSize(fileSize) }}</span>
-            </div>
-            <div class="flex flex-col items-end">
-              <span v-if="lastModified">Modified: {{ formatDate(lastModified) }}</span>
-            </div>
-          </div>
+  <div class="fixed inset-0 z-50 bg-white dark:bg-gray-900">
+    <!-- Header -->
+    <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-theme-background backdrop-blur-sm">
+      <div class="flex items-center space-x-3">
+        <div>
+          <h1 class="text-lg font-semibold text-theme-text-muted">{{ noteTitle }}</h1>
         </div>
       </div>
-    </Loading>
+      
+      <div class="flex items-center space-x-8">
+        <!-- Loading indicator -->
+        <div v-if="isLoading" class="flex items-center space-x-2 text-theme-text-muted">
+          <Loader2 class="w-4 h-4 animate-spin" />
+          <span class="text-sm">Loading file...</span>
+        </div>
+        
+        <!-- Code button (current view) -->
+        <button
+          class="flex items-center justify-center w-8 h-8 text-theme-brand text-theme-text transition-colors"
+          title="Current view"
+        >
+          <FileText class="w-8 h-8" />
+        </button>
+        
+        <!-- Mol button -->
+        <button
+          @click="goToMol"
+          class="flex items-center justify-center w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors"
+          title="Go to mol view"
+        >
+          <Eye class="w-8 h-8" />
+        </button>
+        
+        <!-- Note button -->
+        <button
+          @click="goToNote"
+          class="flex items-center justify-center w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors"
+          title="Go to note"
+        >
+          <Info class="w-8 h-8" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Error message -->
+    <div v-if="error" class="h-screen flex items-center justify-center p-8">
+      <div class="text-center">
+        <FileX class="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
+        <h2 class="text-xl font-semibold text-theme-text mb-2">Failed to load file</h2>
+        <p class="text-theme-text-muted mb-4">{{ error }}</p>
+        <button
+          @click="retryLoad"
+          class="inline-flex items-center px-4 py-2 bg-theme-brand text-white rounded-lg hover:bg-theme-brand-dark transition-colors"
+        >
+          <RefreshCw class="w-4 h-4 mr-2" />
+          Retry
+        </button>
+      </div>
+    </div>
+
+    <!-- Monaco Editor container -->
+    <div v-else class="h-screen relative pt-16">
+      <div
+        ref="monacoContainer"
+        class="w-full h-full"
+        :class="{ 'opacity-50': isLoading }"
+      ></div>
+      
+      <!-- Loading overlay -->
+      <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50">
+        <div class="text-center">
+          <Loader2 class="w-8 h-8 mx-auto text-theme-brand animate-spin mb-2" />
+          <p class="text-sm text-theme-text-muted">Loading file content...</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
-<style>
-/* Main container styling */
-.w-full.mx-auto.flex.h-full.flex-col {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 100%;
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+<style scoped>
+/* Ensure the viewer container takes full height */
+.w-full.h-full {
+  min-height: 0;
 }
 
-/* Editor container styling */
-.editor-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: visible;
-}
-
-/* File info styling */
-.file-info {
-  max-width: var(--layout-width-note);
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+/* Ensure full screen coverage */
+.fixed.inset-0 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 </style>
 
 <script setup>
-import { FileX, AlertTriangle } from "lucide-vue-next";
+import { FileX, AlertTriangle, Loader2, RefreshCw, FileText, Eye, Info } from "lucide-vue-next";
 import { computed, onMounted, onUnmounted, ref, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useRoute } from "vue-router";
 
 import { apiErrorHandler } from "../api.js";
-import Loading from "../components/Loading.vue";
+import { getNote } from "../api.js";
 
 const props = defineProps({
   filename: String,
@@ -68,7 +109,6 @@ const props = defineProps({
 
 const route = useRoute();
 const router = useRouter();
-const loadingIndicator = ref();
 const monacoContainer = ref();
 
 // State management
@@ -81,6 +121,13 @@ const editorState = ref({
   language: "plaintext"
 });
 
+// New state for loading and error handling
+const isLoading = ref(true);
+const error = ref(null);
+
+// Note data for title
+const noteData = ref(null);
+
 // Computed properties
 const filename = computed(() => props.filename);
 const fileContent = computed(() => editorState.value.fileContent);
@@ -88,6 +135,11 @@ const fileSize = computed(() => editorState.value.fileSize);
 const lastModified = computed(() => editorState.value.lastModified);
 const isBinary = computed(() => editorState.value.isBinary);
 const language = computed(() => editorState.value.language);
+
+// Computed title
+const noteTitle = computed(() => {
+  return noteData.value?.title || filename.value;
+});
 
 // Utility functions
 function formatFileSize(bytes) {
@@ -168,23 +220,27 @@ function isTextFile(content) {
 
 async function loadFile() {
   if (!filename.value) {
-    loadingIndicator.value.setFailed("No filename provided");
+    error.value = "No filename provided";
+    isLoading.value = false;
     return;
   }
 
-  loadingIndicator.value.setLoading();
-
   try {
+    isLoading.value = true;
+    error.value = null;
+
+    // Load note data for title
+    await loadNoteData();
+
     // Fetch file content
     const response = await fetch(`/files/${encodeURIComponent(filename.value)}`);
     
     if (!response.ok) {
       if (response.status === 404) {
-        loadingIndicator.value.setFailed("File not found", FileX);
+        throw new Error("File not found");
       } else {
-        loadingIndicator.value.setFailed(`Failed to load file: ${response.statusText}`);
+        throw new Error(`Failed to load file: ${response.statusText}`);
       }
-      return;
     }
 
     // Get file metadata
@@ -215,8 +271,7 @@ async function loadFile() {
         fileSize: uint8Array.length,
         lastModified: lastModifiedHeader ? new Date(lastModifiedHeader).getTime() : null
       });
-      loadingIndicator.value.setFailed("Binary file - cannot display as text", AlertTriangle);
-      return;
+      throw new Error("Binary file - cannot display as text");
     }
 
     // Update state
@@ -228,18 +283,49 @@ async function loadFile() {
       language: detectLanguage(filename.value)
     });
 
-    // Set loaded first to ensure DOM is available
-    loadingIndicator.value.setLoaded();
-    
     // Wait for DOM update and initialize Monaco Editor
     await nextTick();
     await initializeMonacoEditor();
 
-  } catch (error) {
-    console.error('Failed to load file:', error);
-    loadingIndicator.value.setFailed("Failed to load file");
-    apiErrorHandler(error);
+  } catch (err) {
+    console.error('Failed to load file:', err);
+    error.value = err.message || "Failed to load file";
+    apiErrorHandler(err);
+  } finally {
+    isLoading.value = false;
   }
+}
+
+async function loadNoteData() {
+  try {
+    // Get basename without .xyz extension
+    const basename = props.filename.replace(/\.xyz$/, '');
+    const filenameWithExtension = basename + '.md';
+    
+    // Get note data to extract title
+    const note = await getNote(filenameWithExtension);
+    noteData.value = note;
+  } catch (err) {
+    console.error('Failed to load note data:', err);
+    // Don't throw error for note data loading failure, just use filename as title
+    noteData.value = null;
+  }
+}
+
+function retryLoad() {
+  loadFile();
+}
+
+function goToMol() {
+  // Navigate to the mol view using basename without extension
+  const basename = props.filename.replace(/\.xyz$/, '');
+  router.push({ name: 'mol', params: { filename: basename } });
+}
+
+function goToNote() {
+  // Navigate to the note view using basename without extension
+  const basename = props.filename.replace(/\.xyz$/, '');
+  router.push({ name: 'note', params: { filename: basename } });
 }
 
 async function initializeMonacoEditor() {
@@ -313,7 +399,7 @@ async function initializeMonacoEditor() {
 
   } catch (error) {
     console.error('Failed to initialize Monaco Editor:', error);
-    loadingIndicator.value.setFailed("Failed to initialize editor");
+    throw new Error("Failed to initialize editor");
   }
 }
 

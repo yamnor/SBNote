@@ -1,19 +1,36 @@
 <template>
   <div class="fixed inset-0 z-50 bg-white dark:bg-gray-900">
     <!-- Header -->
-    <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+    <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-white/90 backdrop-blur-sm">
       <div class="flex items-center space-x-3">
         <div>
           <h1 class="text-lg font-semibold text-theme-text-muted">{{ noteTitle }}</h1>
         </div>
       </div>
       
-      <div class="flex items-center space-x-2">
+      <div class="flex items-center space-x-8">
         <!-- Loading indicator -->
         <div v-if="isLoading" class="flex items-center space-x-2 text-theme-text-muted">
           <Loader2 class="w-4 h-4 animate-spin" />
           <span class="text-sm">Loading molecule...</span>
         </div>
+        
+        <!-- Code button -->
+        <button
+          @click="goToCode"
+          class="flex items-center justify-center w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors"
+          title="Go to code view"
+        >
+          <FileText class="w-8 h-8" />
+        </button>
+        
+        <!-- Mol button (current view) -->
+        <button
+          class="flex items-center justify-center w-8 h-8 text-theme-brand text-theme-text transition-colors"
+          title="Current view"
+        >
+          <Eye class="w-8 h-8" />
+        </button>
         
         <!-- Note button -->
         <button
@@ -64,7 +81,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { ArrowLeft, FileX, Loader2, RefreshCw, Info } from 'lucide-vue-next';
+import { ArrowLeft, FileX, Loader2, RefreshCw, Info, FileText, Eye } from 'lucide-vue-next';
 import { getNote } from '../api.js';
 
 const props = defineProps({
@@ -96,8 +113,15 @@ function goBack() {
 }
 
 function goToNote() {
-  // Navigate to the note view
-  router.push({ name: 'note', params: { filename: props.filename } });
+  // Navigate to the note view using basename without extension
+  const basename = props.filename.replace(/\.md$/, '');
+  router.push({ name: 'note', params: { filename: basename } });
+}
+
+function goToCode() {
+  // Navigate to the code view using basename with .xyz extension
+  const basename = props.filename.replace(/\.md$/, '');
+  router.push({ name: 'code', params: { filename: `${basename}.xyz` } });
 }
 
 async function loadNoteData() {
