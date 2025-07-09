@@ -15,6 +15,28 @@ from logger import logger
 from notes.base import BaseNotes
 from notes.models import Note, NoteCreate, NoteUpdate, SearchResult
 
+
+def is_authenticated(request: Request) -> bool:
+    """Check if the user is authenticated based on the request."""
+    if not auth:
+        return True  # No auth configured, consider as authenticated
+    
+    try:
+        # Check if Authorization header exists
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            # Try to validate the token directly
+            try:
+                auth._validate_token(token)
+                return True
+            except Exception:
+                return False
+        else:
+            return False
+    except Exception:
+        return False
+
 global_config = GlobalConfig()
 auth: BaseAuth = global_config.load_auth()
 note_storage: BaseNotes = global_config.load_note_storage()
@@ -92,6 +114,7 @@ def get_note(filename: str):
     response_model=List[Note],
 )
 def get_notes_list(
+    request: Request,
     sort: Literal["title", "lastModified", "createdDate", "category", "visibility"] = "lastModified",
     order: Literal["asc", "desc"] = "desc",
     limit: int = None,
@@ -101,7 +124,10 @@ def get_notes_list(
         sort = "last_modified"
     elif sort == "createdDate":
         sort = "created_date"
-    return note_storage.list_notes(sort=sort, order=sort, limit=limit)
+    
+    # Use public index if not authenticated, main index if authenticated
+    use_public_index = not is_authenticated(request)
+    return note_storage.list_notes(sort=sort, order=order, limit=limit, use_public_index=use_public_index)
 
 
 if global_config.auth_type != AuthType.READ_ONLY:
@@ -174,6 +200,7 @@ if global_config.auth_type != AuthType.READ_ONLY:
     response_model=List[SearchResult],
 )
 def search(
+    request: Request,
     term: str,
     sort: Literal["score", "title", "lastModified", "createdDate", "category", "visibility"] = "score",
     order: Literal["asc", "desc"] = "desc",
@@ -185,21 +212,27 @@ def search(
         sort = "last_modified"
     elif sort == "createdDate":
         sort = "created_date"
-    return note_storage.search(term, sort=sort, order=order, limit=limit, content_limit=content_limit)
+    
+    # Use public index if not authenticated, main index if authenticated
+    use_public_index = not is_authenticated(request)
+    return note_storage.search(term, sort=sort, order=order, limit=limit, content_limit=content_limit, use_public_index=use_public_index)
 
 
 @router.get(
     "/api/tags",
     response_model=List[str],
 )
-def get_tags():
+def get_tags(request: Request):
     """Get a list of all indexed tags."""
     try:
+        # Use public index if not authenticated, main index if authenticated
+        use_public_index = not is_authenticated(request)
+        
         # Get all tags from storage
-        all_tags = note_storage.get_tags()
+        all_tags = note_storage.get_tags(use_public_index=use_public_index)
         
         # Check if there are any notes without tags
-        all_notes = note_storage.list_notes(limit=None)
+        all_notes = note_storage.list_notes(limit=None, use_public_index=use_public_index)
         has_notes_without_tags = any(not note.tags for note in all_notes)
         
         # Add "_untagged" tag if there are notes without tags
@@ -213,11 +246,14 @@ def get_tags():
 
 
 @router.get("/api/tags/with-counts")
-def get_tags_with_counts():
+def get_tags_with_counts(request: Request):
     """Get a list of all tags with their note counts and recent note info."""
     try:
+        # Use public index if not authenticated, main index if authenticated
+        use_public_index = not is_authenticated(request)
+        
         # Get all notes to calculate tag counts
-        all_notes = note_storage.list_notes(limit=None)
+        all_notes = note_storage.list_notes(limit=None, use_public_index=use_public_index)
         tag_counts = {}
         tag_notes = {}
         tag_recent_modified = {}  # Track most recent modified time for each tag
@@ -250,7 +286,7 @@ def get_tags_with_counts():
                     untagged_recent_modified = note.last_modified
         
         # Get all tags and add counts, but only include tags with count > 0
-        all_tags = note_storage.get_tags()
+        all_tags = note_storage.get_tags(use_public_index=use_public_index)
         result = []
         
         for tag in all_tags:
@@ -283,6 +319,7 @@ def get_tags_with_counts():
     response_model=List[Note],
 )
 def get_notes_by_tag(
+    request: Request,
     tag_name: str,
     sort: Literal["title", "lastModified", "createdDate", "category", "visibility"] = "lastModified",
     order: Literal["asc", "desc"] = "desc",
@@ -295,9 +332,12 @@ def get_notes_by_tag(
         elif sort == "createdDate":
             sort = "created_date"
         
+        # Use public index if not authenticated, main index if authenticated
+        use_public_index = not is_authenticated(request)
+        
         # Special handling for "_untagged" tag - return notes without tags
         if tag_name == "_untagged":
-            all_notes = note_storage.list_notes(sort=sort, order=order, limit=None)
+            all_notes = note_storage.list_notes(sort=sort, order=order, limit=None, use_public_index=use_public_index)
             notes_without_tags = [note for note in all_notes if not note.tags]
             
             # Apply limit
@@ -306,7 +346,7 @@ def get_notes_by_tag(
             
             return notes_without_tags
         
-        return note_storage.get_notes_by_tag(tag_name, sort=sort, order=order, limit=limit)
+        return note_storage.get_notes_by_tag(tag_name, sort=sort, order=order, limit=limit, use_public_index=use_public_index)
     except Exception as e:
         logger.error(f"Error getting notes by tag {tag_name}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get notes for tag {tag_name}")
@@ -375,13 +415,13 @@ if global_config.auth_type != AuthType.READ_ONLY:
 
 @router.post("/api/rebuild-index", dependencies=auth_deps)
 def rebuild_index():
-    """Rebuild the search index completely."""
+    """Rebuild both search indexes (main and public) completely."""
     try:
-        note_storage._sync_index_with_retry(clean=True)
-        return {"message": "Index rebuilt successfully"}
+        note_storage._sync_index_with_retry(clean=True, optimize=True)
+        return {"message": "Both indexes (main and public) rebuilt successfully"}
     except Exception as e:
-        logger.error(f"Failed to rebuild index: {e}")
-        raise HTTPException(500, "Failed to rebuild index")
+        logger.error(f"Failed to rebuild indexes: {e}")
+        raise HTTPException(500, "Failed to rebuild indexes")
 
 
 # endregion

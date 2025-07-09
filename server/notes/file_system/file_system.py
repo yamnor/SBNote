@@ -27,7 +27,7 @@ from ..base import BaseNotes
 from ..models import Note, NoteCreate, NoteUpdate, SearchResult
 
 MARKDOWN_EXT = ".md"
-INDEX_SCHEMA_VERSION = "8"
+INDEX_SCHEMA_VERSION = "9"
 
 # Use StandardAnalyzer for more flexible matching
 StemmingFoldingAnalyzer = StandardAnalyzer() | CharsetFilter(accent_map)
@@ -68,7 +68,10 @@ class FileSystemNotes(BaseNotes):
         # Create notes subdirectory for markdown files
         self.storage_path = os.path.join(self.base_path, "notes")
         os.makedirs(self.storage_path, exist_ok=True)
-        self.index = self._load_index()
+        
+        # Initialize both indexes
+        self.main_index = self._load_index("main")
+        self.public_index = self._load_index("public")
         self._sync_index_with_retry(optimize=True)
 
     def create(self, data: NoteCreate) -> Note:
@@ -93,7 +96,7 @@ class FileSystemNotes(BaseNotes):
         
         self._write_file(filepath, markdown_content)
         
-        # Update the search index
+        # Update the search indexes
         self._sync_index_with_retry()
         
         return Note(
@@ -160,6 +163,9 @@ class FileSystemNotes(BaseNotes):
         existing_content = self._read_file(filepath)
         metadata, body = parse_markdown_with_frontmatter(existing_content)
         
+        # Store old visibility for index update logic
+        old_visibility = metadata.get('visibility', 'private')
+        
         # Update metadata (file name stays the same, only frontmatter changes)
         if data.new_title is not None:
             metadata['title'] = data.new_title
@@ -194,8 +200,8 @@ class FileSystemNotes(BaseNotes):
         
         self._write_file(filepath, markdown_content, overwrite=True)
         
-        # Update the search index
-        self._sync_index_with_retry()
+        # Update the search indexes with visibility change handling
+        self._sync_index_with_retry(visibility_changed=(old_visibility != metadata.get('visibility', 'private')))
         
         # Parse created date from frontmatter
         created_time = None
@@ -237,15 +243,19 @@ class FileSystemNotes(BaseNotes):
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
         content_limit: int = None,
+        use_public_index: bool = False,
     ) -> Tuple[SearchResult, ...]:
         """Search the index for the given term."""
         self._sync_index_with_retry()
+        
+        # Choose the appropriate index based on use_public_index parameter
+        index_to_use = self.public_index if use_public_index else self.main_index
         
         # Check if this is a search for "_untagged" tag
         original_term = term.strip()
         if original_term == "#_untagged" or original_term == "tags:_untagged":
             # Special handling for _untagged tag - return notes without tags
-            with self.index.searcher() as searcher:
+            with index_to_use.searcher() as searcher:
                 # Get all notes and filter those without tags
                 query = Every()
                 
@@ -286,13 +296,13 @@ class FileSystemNotes(BaseNotes):
         
         # Regular search processing
         term = self._pre_process_search_term(term)
-        with self.index.searcher() as searcher:
+        with index_to_use.searcher() as searcher:
             # Parse Query
             if term == "*":
                 query = Every()
             else:
                 parser = MultifieldParser(
-                    self._fieldnames_for_term(term), self.index.schema
+                    self._fieldnames_for_term(term), index_to_use.schema
                 )
                 parser.add_plugin(DateParserPlugin())
                 
@@ -329,11 +339,12 @@ class FileSystemNotes(BaseNotes):
             )
             return tuple(self._search_result_from_hit(hit, content_limit) for hit in results)
 
-    def get_tags(self) -> list[str]:
+    def get_tags(self, use_public_index: bool = False) -> list[str]:
         """Return a list of all indexed tags. Note: Tags no longer in use will
         only be cleared when the index is next optimized."""
         self._sync_index_with_retry()
-        with self.index.reader() as reader:
+        index_to_use = self.public_index if use_public_index else self.main_index
+        with index_to_use.reader() as reader:
             tags = reader.field_terms("tags")
             return [tag for tag in tags]
 
@@ -342,10 +353,12 @@ class FileSystemNotes(BaseNotes):
         sort: Literal["title", "last_modified", "created_date", "category", "visibility"] = "last_modified",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
+        use_public_index: bool = False,
     ) -> list[Note]:
         """Get a list of all notes."""
         self._sync_index_with_retry()
-        with self.index.searcher() as searcher:
+        index_to_use = self.public_index if use_public_index else self.main_index
+        with index_to_use.searcher() as searcher:
             # Use Every() query to get all documents
             query = Every()
             
@@ -387,13 +400,15 @@ class FileSystemNotes(BaseNotes):
         sort: Literal["title", "last_modified", "created_date", "category", "visibility"] = "last_modified",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
+        use_public_index: bool = False,
     ) -> list[Note]:
         """Get notes that have a specific tag."""
         self._sync_index_with_retry()
+        index_to_use = self.public_index if use_public_index else self.main_index
         
         # Special handling for "_untagged" tag - return notes without tags
         if tag_name == "_untagged":
-            with self.index.searcher() as searcher:
+            with index_to_use.searcher() as searcher:
                 # Get all notes and filter those without tags
                 from whoosh.query import Every
                 query = Every()
@@ -437,13 +452,13 @@ class FileSystemNotes(BaseNotes):
                 return notes
         
         # Regular tag search
-        with self.index.searcher() as searcher:
+        with index_to_use.searcher() as searcher:
             # Search for notes with the specific tag
             from whoosh.query import Term
             query = Term("tags", tag_name)
             
             # Determine sort field
-            sort_field = sort if sort in ["title", "last_modified"] else "last_modified"
+            sort_field = sort if sort in ["title", "last_modified", "created_date", "category", "visibility"] else "last_modified"
             
             # Determine sort direction
             reverse = order == "desc"
@@ -478,6 +493,14 @@ class FileSystemNotes(BaseNotes):
     def _index_path(self):
         return os.path.join(self.base_path, "index")
 
+    @property
+    def _main_index_path(self):
+        return os.path.join(self.base_path, "index", "main")
+
+    @property
+    def _public_index_path(self):
+        return os.path.join(self.base_path, "index", "public")
+
 
 
     def _get_by_filename(self, filename: str) -> Note:
@@ -509,25 +532,32 @@ class FileSystemNotes(BaseNotes):
             visibility=metadata.get('visibility', 'private'),
         )
 
-    def _load_index(self) -> Index:
+    def _load_index(self, index_name: str) -> Index:
         """Load the note index or create new if not exists."""
-        index_dir_exists = os.path.exists(self._index_path)
+        if index_name == "main":
+            index_path = self._main_index_path
+        elif index_name == "public":
+            index_path = self._public_index_path
+        else:
+            raise ValueError(f"Unknown index name: {index_name}")
+        
+        index_dir_exists = os.path.exists(index_path)
         if index_dir_exists and whoosh.index.exists_in(
-            self._index_path, indexname=INDEX_SCHEMA_VERSION
+            index_path, indexname=INDEX_SCHEMA_VERSION
         ):
-            logger.info("Loading existing index")
+            logger.info(f"Loading existing {index_name} index")
             return whoosh.index.open_dir(
-                self._index_path, indexname=INDEX_SCHEMA_VERSION
+                index_path, indexname=INDEX_SCHEMA_VERSION
             )
         else:
             if index_dir_exists:
-                logger.info("Deleting outdated index")
-                self._clear_dir(self._index_path)
+                logger.info(f"Deleting outdated {index_name} index")
+                self._clear_dir(index_path)
             else:
-                os.mkdir(self._index_path)
-            logger.info("Creating new index")
+                os.makedirs(index_path, exist_ok=True)
+            logger.info(f"Creating new {index_name} index")
             return whoosh.index.create_in(
-                self._index_path, IndexSchema, indexname=INDEX_SCHEMA_VERSION
+                index_path, IndexSchema, indexname=INDEX_SCHEMA_VERSION
             )
 
     @classmethod
@@ -579,27 +609,40 @@ class FileSystemNotes(BaseNotes):
             )
         ]
 
-    def _sync_index(self, optimize: bool = False, clean: bool = False) -> None:
-        """Synchronize the index with the notes directory.
-        Specify clean=True to completely rebuild the index"""
+    def _sync_index(self, optimize: bool = False, clean: bool = False, visibility_changed: bool = False) -> None:
+        """Synchronize both indexes with the notes directory.
+        Specify clean=True to completely rebuild the indexes"""
+        
+        # Sync main index (always updated)
+        self._sync_main_index(optimize=optimize, clean=clean)
+        
+        # Sync public index (conditionally updated)
+        if clean or visibility_changed:
+            self._sync_public_index(optimize=optimize, clean=clean)
+        else:
+            # For regular updates, only sync public index if there are changes
+            self._sync_public_index_if_needed(optimize=optimize)
+
+    def _sync_main_index(self, optimize: bool = False, clean: bool = False) -> None:
+        """Synchronize the main index with the notes directory."""
         indexed = set()
-        writer = self.index.writer()
+        writer = self.main_index.writer()
         if clean:
             writer.mergetype = writing.CLEAR  # Clear the index
-        with self.index.searcher() as searcher:
+        with self.main_index.searcher() as searcher:
             for idx_note in searcher.all_stored_fields():
                 idx_filename = idx_note["filename"]
                 idx_filepath = os.path.join(self.storage_path, idx_filename)
                 # Delete missing
                 if not os.path.exists(idx_filepath):
                     writer.delete_by_term("filename", idx_filename)
-                    logger.info(f"'{idx_filename}' removed from index")
+                    logger.info(f"'{idx_filename}' removed from main index")
                 # Update modified
                 elif (
                     datetime.fromtimestamp(os.path.getmtime(idx_filepath))
                     != idx_note["last_modified"]
                 ):
-                    logger.info(f"'{idx_filename}' updated")
+                    logger.info(f"'{idx_filename}' updated in main index")
                     self._add_note_to_index(
                         writer, self._get_by_filename(idx_filename)
                     )
@@ -613,9 +656,49 @@ class FileSystemNotes(BaseNotes):
                 self._add_note_to_index(
                     writer, self._get_by_filename(filename)
                 )
-                logger.info(f"'{filename}' added to index")
+                logger.info(f"'{filename}' added to main index")
         writer.commit(optimize=optimize)
-        logger.info("Index synchronized")
+        logger.info("Main index synchronized")
+
+    def _sync_public_index(self, optimize: bool = False, clean: bool = False) -> None:
+        """Synchronize the public index with public notes only."""
+        writer = self.public_index.writer()
+        if clean:
+            writer.mergetype = writing.CLEAR  # Clear the index
+        
+        # Get all notes and filter for public ones
+        public_notes = []
+        for filename in self._list_all_note_filenames():
+            note = self._get_by_filename(filename)
+            if getattr(note, 'visibility', 'private') == 'public':
+                public_notes.append(note)
+        
+        # Add all public notes to the index
+        for note in public_notes:
+            self._add_note_to_index(writer, note)
+            logger.info(f"'{note.filename}' added to public index")
+        
+        writer.commit(optimize=optimize)
+        logger.info(f"Public index synchronized with {len(public_notes)} notes")
+
+    def _sync_public_index_if_needed(self, optimize: bool = False) -> None:
+        """Sync public index only if there are changes in public notes."""
+        # Check if public index needs updating by comparing with main index
+        with self.main_index.searcher() as main_searcher:
+            with self.public_index.searcher() as public_searcher:
+                main_public_notes = set()
+                for note in main_searcher.all_stored_fields():
+                    if note.get('visibility') == 'public':
+                        main_public_notes.add(note['filename'])
+                
+                public_notes = set()
+                for note in public_searcher.all_stored_fields():
+                    public_notes.add(note['filename'])
+                
+                # If there are differences, sync the public index
+                if main_public_notes != public_notes:
+                    logger.info("Public index out of sync, updating...")
+                    self._sync_public_index(optimize=optimize)
 
     def _sync_index_with_retry(
         self,
@@ -623,6 +706,7 @@ class FileSystemNotes(BaseNotes):
         clean: bool = False,
         max_retries: int = 8,
         retry_delay: float = 0.25,
+        visibility_changed: bool = False,
     ) -> None:
         for _ in range(max_retries):
             try:
