@@ -72,11 +72,11 @@
       </DropdownMenuItem>
 
       <!-- Divider -->
-      <div v-if="hasSlideTag" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <div v-if="showSlideView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
 
       <!-- Slide View (only for notes with 'slide' tag) -->
       <DropdownMenuItem 
-        v-if="hasSlideTag"
+        v-if="showSlideView"
         :icon="Presentation"
         @click="onSlideView"
       >
@@ -263,11 +263,11 @@
       </DropdownMenuItem>
       
       <!-- Divider -->
-      <div v-if="hasSlideTag" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <div v-if="showSlideView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
       <!-- Slide View (only for notes with 'slide' tag) -->
       <DropdownMenuItem 
-        v-if="hasSlideTag"
+        v-if="showSlideView"
         :icon="Presentation"
         @click="onSlideView"
       >
@@ -444,9 +444,9 @@ const isReadmePage = computed(() => {
   return route.name === 'note' && route.params.filename && route.params.filename.toLowerCase() === 'readme.md';
 });
 
-const hasSlideTag = computed(() => {
-  // Check if we're on a note page and the note has a 'slide' tag
-  return route.name === 'note' && route.params.filename && window.currentNoteTags && window.currentNoteTags.includes('slide');
+const showSlideView = computed(() => {
+  // Check if we're on a note page
+  return route.name === 'note' && route.params.filename;
 });
 
 // Load available tags for new note dropdown
