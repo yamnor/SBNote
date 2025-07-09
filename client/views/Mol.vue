@@ -82,7 +82,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ArrowLeft, FileX, Loader2, RefreshCw, Info, FileText, Eye } from 'lucide-vue-next';
-import { getNote } from '../api.js';
+import { useNoteAttachment } from '../composables/useNoteAttachment.js';
 
 const props = defineProps({
   filename: String,
@@ -93,10 +93,10 @@ const route = useRoute();
 
 // State
 const molViewer = ref(null);
-const isLoading = ref(true);
-const error = ref(null);
-const noteData = ref(null);
 let viewer = null;
+
+// Use composable for note data and attachment handling
+const { noteData, isLoading, error, loadNoteDataAndAttachment } = useNoteAttachment();
 
 // Computed
 const noteTitle = computed(() => {
@@ -125,33 +125,14 @@ function goToCode() {
 
 async function loadNoteData() {
   try {
-    isLoading.value = true;
-    error.value = null;
-    
-    // Get note data to extract attachment file information
-    const filenameWithExtension = props.filename + '.md';
-    const note = await getNote(filenameWithExtension);
-    noteData.value = note;
-    
-    // Generate attachment filename with extension from note data
-    const attachmentFilename = getAttachmentFilename(props.filename, note.attachment_extension);
+    // Use composable to load note data and get attachment filename
+    const { attachmentFilename } = await loadNoteDataAndAttachment(props.filename);
     
     await loadMolecule(attachmentFilename);
   } catch (err) {
     console.error('Failed to load note data:', err);
     error.value = err.message || 'Failed to load molecule data';
-  } finally {
-    isLoading.value = false;
   }
-}
-
-function getAttachmentFilename(basename, attachmentExtension) {
-  // Generate attachment filename with extension from note data
-  if (attachmentExtension) {
-    return `${basename}.${attachmentExtension}`;
-  }
-  // Fallback to .xyz if no extension is found
-  return `${basename}.xyz`;
 }
 
 async function loadMolecule(attachmentFilename) {

@@ -101,7 +101,7 @@ import { useRouter } from "vue-router";
 import { useRoute } from "vue-router";
 
 import { apiErrorHandler } from "../api.js";
-import { getNote } from "../api.js";
+import { useNoteAttachment } from "../composables/useNoteAttachment.js";
 
 const props = defineProps({
   filename: String,
@@ -121,12 +121,8 @@ const editorState = ref({
   language: "plaintext"
 });
 
-// New state for loading and error handling
-const isLoading = ref(true);
-const error = ref(null);
-
-// Note data for title
-const noteData = ref(null);
+// Use composable for note data and attachment handling
+const { noteData, isLoading, error, loadNoteDataAndAttachment } = useNoteAttachment();
 
 // Computed properties
 const filename = computed(() => props.filename);
@@ -154,14 +150,7 @@ function formatDate(timestamp) {
   return new Date(timestamp).toLocaleString();
 }
 
-function getAttachmentFilename(basename, attachmentExtension) {
-  // Generate attachment filename with extension from note data
-  if (attachmentExtension) {
-    return `${basename}.${attachmentExtension}`;
-  }
-  // Fallback to .xyz if no extension is found
-  return `${basename}.xyz`;
-}
+
 
 function detectLanguage(filename) {
   const ext = filename.split('.').pop().toLowerCase();
@@ -235,14 +224,8 @@ async function loadFile() {
   }
 
   try {
-    isLoading.value = true;
-    error.value = null;
-
-    // Load note data for title and get attachment extension
-    await loadNoteData();
-
-    // Generate attachment filename with extension
-    const attachmentFilename = getAttachmentFilename(filename.value, noteData.value?.attachment_extension);
+    // Use composable to load note data and get attachment filename
+    const { attachmentFilename } = await loadNoteDataAndAttachment(filename.value);
 
     // Fetch file content
     const response = await fetch(`/files/${encodeURIComponent(attachmentFilename)}`);
@@ -308,20 +291,7 @@ async function loadFile() {
   }
 }
 
-async function loadNoteData() {
-  try {
-    // Add .md extension to get note data
-    const filenameWithExtension = props.filename + '.md';
-    
-    // Get note data to extract title and attachment extension
-    const note = await getNote(filenameWithExtension);
-    noteData.value = note;
-  } catch (err) {
-    console.error('Failed to load note data:', err);
-    // Don't throw error for note data loading failure, just use filename as title
-    noteData.value = null;
-  }
-}
+
 
 function retryLoad() {
   loadFile();
