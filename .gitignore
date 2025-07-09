@@ -246,8 +246,7 @@ dist
 
 # Custom
 .vscode/
-data/
-/notes/
+/data/
 
 .cursor/
 .gitignore
