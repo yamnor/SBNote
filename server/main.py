@@ -19,22 +19,29 @@ from notes.models import Note, NoteCreate, NoteUpdate, SearchResult
 def is_authenticated(request: Request) -> bool:
     """Check if the user is authenticated based on the request."""
     if not auth:
+        logger.info("No auth configured, considering as authenticated")
         return True  # No auth configured, consider as authenticated
     
     try:
         # Check if Authorization header exists
         auth_header = request.headers.get("Authorization")
+        logger.info(f"Auth header: {auth_header}")
+        
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
             # Try to validate the token directly
             try:
                 auth._validate_token(token)
+                logger.info("Token validation successful")
                 return True
-            except Exception:
+            except Exception as e:
+                logger.info(f"Token validation failed: {e}")
                 return False
         else:
+            logger.info("No valid Authorization header found")
             return False
-    except Exception:
+    except Exception as e:
+        logger.info(f"Authentication check failed: {e}")
         return False
 
 global_config = GlobalConfig()
@@ -127,6 +134,7 @@ def get_notes_list(
     
     # Use public index if not authenticated, main index if authenticated
     use_public_index = not is_authenticated(request)
+    logger.info(f"Notes list request - authenticated: {is_authenticated(request)}, use_public_index: {use_public_index}")
     return note_storage.list_notes(sort=sort, order=order, limit=limit, use_public_index=use_public_index)
 
 
@@ -215,6 +223,7 @@ def search(
     
     # Use public index if not authenticated, main index if authenticated
     use_public_index = not is_authenticated(request)
+    logger.info(f"Search request - authenticated: {is_authenticated(request)}, use_public_index: {use_public_index}")
     return note_storage.search(term, sort=sort, order=order, limit=limit, content_limit=content_limit, use_public_index=use_public_index)
 
 
@@ -227,6 +236,7 @@ def get_tags(request: Request):
     try:
         # Use public index if not authenticated, main index if authenticated
         use_public_index = not is_authenticated(request)
+        logger.info(f"Tags request - authenticated: {is_authenticated(request)}, use_public_index: {use_public_index}")
         
         # Get all tags from storage
         all_tags = note_storage.get_tags(use_public_index=use_public_index)

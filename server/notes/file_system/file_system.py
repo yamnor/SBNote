@@ -72,7 +72,9 @@ class FileSystemNotes(BaseNotes):
         # Initialize both indexes
         self.main_index = self._load_index("main")
         self.public_index = self._load_index("public")
+        logger.info("Initializing indexes...")
         self._sync_index_with_retry(optimize=True)
+        logger.info("Index initialization completed")
 
     def create(self, data: NoteCreate) -> Note:
         """Create a new note."""
@@ -358,6 +360,7 @@ class FileSystemNotes(BaseNotes):
         """Get a list of all notes."""
         self._sync_index_with_retry()
         index_to_use = self.public_index if use_public_index else self.main_index
+        logger.info(f"list_notes called with use_public_index={use_public_index}, using {'public' if use_public_index else 'main'} index")
         with index_to_use.searcher() as searcher:
             # Use Every() query to get all documents
             query = Every()
@@ -668,15 +671,19 @@ class FileSystemNotes(BaseNotes):
         
         # Get all notes and filter for public ones
         public_notes = []
+        all_notes = []
         for filename in self._list_all_note_filenames():
             note = self._get_by_filename(filename)
+            all_notes.append(note)
             if getattr(note, 'visibility', 'private') == 'public':
                 public_notes.append(note)
+        
+        logger.info(f"Total notes: {len(all_notes)}, Public notes: {len(public_notes)}")
         
         # Add all public notes to the index
         for note in public_notes:
             self._add_note_to_index(writer, note)
-            logger.info(f"'{note.filename}' added to public index")
+            logger.info(f"'{note.filename}' (visibility: {getattr(note, 'visibility', 'private')}) added to public index")
         
         writer.commit(optimize=optimize)
         logger.info(f"Public index synchronized with {len(public_notes)} notes")
