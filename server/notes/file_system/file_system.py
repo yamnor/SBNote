@@ -267,11 +267,15 @@ class FileSystemNotes(BaseNotes):
         # Parse created date from frontmatter
         created_time = None
         if 'created_date' in metadata:
-            try:
-                created_time = datetime.strptime(metadata['created_date'], '%Y-%m-%d %H:%M:%S').timestamp()
-            except (ValueError, TypeError):
-                # Fallback to file creation time if parsing fails
-                created_time = os.path.getctime(filepath)
+            # Handle both string and datetime objects
+            if isinstance(metadata['created_date'], datetime):
+                created_time = metadata['created_date'].timestamp()
+            else:
+                try:
+                    created_time = datetime.strptime(metadata['created_date'], '%Y-%m-%d %H:%M:%S').timestamp()
+                except (ValueError, TypeError):
+                    # Fallback to file creation time if parsing fails
+                    created_time = os.path.getctime(filepath)
         else:
             # Fallback to file creation time if no created_date field
             created_time = os.path.getctime(filepath)
@@ -525,10 +529,22 @@ class FileSystemNotes(BaseNotes):
                 content = self._read_file(filepath)
                 metadata, body = parse_markdown_with_frontmatter(content)
                 
+                # Parse created date from frontmatter
+                created_time = None
+                if 'created_date' in metadata:
+                    try:
+                        created_time = datetime.strptime(metadata['created_date'], '%Y-%m-%d %H:%M:%S').timestamp()
+                    except (ValueError, TypeError):
+                        # Fallback to file creation time if parsing fails
+                        created_time = os.path.getctime(filepath)
+                else:
+                    # Fallback to file creation time if no created_date field
+                    created_time = os.path.getctime(filepath)
                 notes.append(Note(
                     title=metadata.get('title', self._strip_ext(filename)),
                     content=body,
                     last_modified=hit["last_modified"].timestamp(),
+                    created=created_time,
                     tags=metadata.get('tags', []),
                     filename=filename,
                     category=metadata.get('category', 'note'),
@@ -580,10 +596,20 @@ class FileSystemNotes(BaseNotes):
                     
                     # Only include notes without tags
                     if not metadata.get('tags', []):
+                        # Parse created date from frontmatter
+                        created_time = None
+                        if 'created_date' in metadata:
+                            try:
+                                created_time = datetime.strptime(metadata['created_date'], '%Y-%m-%d %H:%M:%S').timestamp()
+                            except (ValueError, TypeError):
+                                created_time = os.path.getctime(filepath)
+                        else:
+                            created_time = os.path.getctime(filepath)
                         notes.append(Note(
                             title=metadata.get('title', self._strip_ext(filename)),
                             content=body,
                             last_modified=hit["last_modified"].timestamp(),
+                            created=created_time,
                             tags=metadata.get('tags', []),
                             filename=filename,
                             category=metadata.get('category', 'note'),
@@ -624,10 +650,22 @@ class FileSystemNotes(BaseNotes):
                 content = self._read_file(filepath)
                 metadata, body = parse_markdown_with_frontmatter(content)
                 
+                # Parse created date from frontmatter
+                created_time = None
+                if 'created_date' in metadata:
+                    try:
+                        created_time = datetime.strptime(metadata['created_date'], '%Y-%m-%d %H:%M:%S').timestamp()
+                    except (ValueError, TypeError):
+                        # Fallback to file creation time if parsing fails
+                        created_time = os.path.getctime(filepath)
+                else:
+                    # Fallback to file creation time if no created_date field
+                    created_time = os.path.getctime(filepath)
                 notes.append(Note(
                     title=metadata.get('title', self._strip_ext(filename)),
                     content=body,
                     last_modified=hit["last_modified"].timestamp(),
+                    created=created_time,
                     tags=metadata.get('tags', []),
                     filename=filename,
                     category=metadata.get('category', 'note'),
