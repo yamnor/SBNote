@@ -502,7 +502,6 @@ class FileSystemNotes(BaseNotes):
         """Get a list of all notes."""
         self._sync_index_with_retry()
         index_to_use = self.public_index if use_public_index else self.main_index
-        logger.info(f"list_notes called with use_public_index={use_public_index}, using {'public' if use_public_index else 'main'} index")
         with index_to_use.searcher() as searcher:
             # Use Every() query to get all documents
             query = Every()
@@ -821,13 +820,11 @@ class FileSystemNotes(BaseNotes):
                 # Delete missing
                 if not os.path.exists(idx_filepath):
                     writer.delete_by_term("filename", idx_filename)
-                    logger.info(f"'{idx_filename}' removed from main index")
                 # Update modified
                 elif (
                     datetime.fromtimestamp(os.path.getmtime(idx_filepath))
                     != idx_note["last_modified"]
                 ):
-                    logger.info(f"'{idx_filename}' updated in main index")
                     self._add_note_to_index(
                         writer, self._get_by_filename(idx_filename)
                     )
@@ -841,9 +838,7 @@ class FileSystemNotes(BaseNotes):
                 self._add_note_to_index(
                     writer, self._get_by_filename(filename)
                 )
-                logger.info(f"'{filename}' added to main index")
         writer.commit(optimize=optimize)
-        logger.info("Main index synchronized")
 
     def _sync_public_index(self, optimize: bool = False, clean: bool = False) -> None:
         """Synchronize the public index with public notes only."""
@@ -860,15 +855,11 @@ class FileSystemNotes(BaseNotes):
             if getattr(note, 'visibility', 'private') == 'public':
                 public_notes.append(note)
         
-        logger.info(f"Total notes: {len(all_notes)}, Public notes: {len(public_notes)}")
-        
         # Add all public notes to the index
         for note in public_notes:
             self._add_note_to_index(writer, note)
-            logger.info(f"'{note.filename}' (visibility: {getattr(note, 'visibility', 'private')}) added to public index")
         
         writer.commit(optimize=optimize)
-        logger.info(f"Public index synchronized with {len(public_notes)} notes")
 
     def _sync_public_index_if_needed(self, optimize: bool = False) -> None:
         """Sync public index only if there are changes in public notes."""
@@ -886,7 +877,6 @@ class FileSystemNotes(BaseNotes):
                 
                 # If there are differences, sync the public index
                 if main_public_notes != public_notes:
-                    logger.info("Public index out of sync, updating...")
                     self._sync_public_index(optimize=optimize)
 
     def _sync_index_with_retry(

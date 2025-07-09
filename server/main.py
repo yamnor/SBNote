@@ -32,7 +32,6 @@ def is_authenticated(request: Request) -> bool:
             # Try to validate the token directly
             try:
                 auth._validate_token(token)
-                logger.info("Token validation successful")
                 return True
             except Exception as e:
                 logger.info(f"Token validation failed: {e}")
@@ -141,7 +140,6 @@ def get_notes_list(
     
     # Use public index if not authenticated, main index if authenticated
     use_public_index = not is_authenticated(request)
-    logger.info(f"Notes list request - authenticated: {is_authenticated(request)}, use_public_index: {use_public_index}")
     return note_storage.list_notes(sort=sort, order=order, limit=limit, use_public_index=use_public_index)
 
 
@@ -290,7 +288,6 @@ def search(
     
     # Use public index if not authenticated, main index if authenticated
     use_public_index = not is_authenticated(request)
-    logger.info(f"Search request - authenticated: {is_authenticated(request)}, use_public_index: {use_public_index}")
     return note_storage.search(term, sort=sort, order=order, limit=limit, content_limit=content_limit, use_public_index=use_public_index)
 
 
@@ -303,7 +300,6 @@ def get_tags(request: Request):
     try:
         # Use public index if not authenticated, main index if authenticated
         use_public_index = not is_authenticated(request)
-        logger.info(f"Tags request - authenticated: {is_authenticated(request)}, use_public_index: {use_public_index}")
         
         # Get all tags from storage
         all_tags = note_storage.get_tags(use_public_index=use_public_index)
