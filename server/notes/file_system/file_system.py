@@ -24,7 +24,7 @@ from helpers import get_env, parse_markdown_with_frontmatter, create_markdown_wi
 from logger import logger
 
 from ..base import BaseNotes
-from ..models import Note, NoteCreate, NoteUpdate, NoteImport, NoteImageImport, SearchResult
+from ..models import Note, NoteCreate, NoteUpdate, NoteImport, NoteImageImport, NoteXyzImport, SearchResult
 
 MARKDOWN_EXT = ".md"
 INDEX_SCHEMA_VERSION = "9"
@@ -184,7 +184,47 @@ class FileSystemNotes(BaseNotes):
             content=content,
             tags=data.tags or [],
             created=created_time,
-            category="note",
+            category="image",
+            visibility="private"
+        )
+        
+        self._write_file(filepath, markdown_content)
+        
+        # Update the search indexes
+        self._sync_index_with_retry()
+        
+        return Note(
+            title=title,
+            content=content,
+            last_modified=os.path.getmtime(filepath),
+            created=created_time.timestamp(),
+            tags=data.tags or [],
+            filename=filename + MARKDOWN_EXT,
+        )
+
+    def import_xyz(self, data: NoteXyzImport) -> Note:
+        """Import an xyz file and create a note with the xyz file link."""
+        # Generate title from original filename
+        title = data.original_filename
+        
+        # Create markdown content with original filename on first line and xyz file link on third line
+        content = f"{data.original_filename}\n\n[XYZ File](/files/{data.filename})"
+        
+        # Generate random filename for the note
+        filename = generate_random_filename()
+        while os.path.exists(os.path.join(self.storage_path, filename + MARKDOWN_EXT)):
+            filename = generate_random_filename()
+        
+        filepath = os.path.join(self.storage_path, filename + MARKDOWN_EXT)
+        created_time = datetime.now()
+        
+        # Create markdown with frontmatter
+        markdown_content = create_markdown_with_frontmatter(
+            title=title,
+            content=content,
+            tags=data.tags or [],
+            created=created_time,
+            category="xyz",
             visibility="private"
         )
         

@@ -45,6 +45,7 @@
                   >
                     <option value="markdown">Markdown</option>
                     <option value="image">Image (JPEG/PNG)</option>
+                    <option value="xyz">XYZ File</option>
                   </select>
                 </div>
                 
@@ -139,6 +140,8 @@ const fileTypeAccept = computed(() => {
     return '.md,.markdown';
   } else if (selectedFileType.value === 'image') {
     return '.jpg,.jpeg,.png';
+  } else if (selectedFileType.value === 'xyz') {
+    return '.xyz';
   }
   return '';
 });
@@ -168,6 +171,12 @@ function onFileSelected(event) {
     const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
     if (!validImageExtensions.includes(fileExtension)) {
       errorMessage.value = 'Please select an image file (.jpg, .jpeg, or .png)';
+      clearFile();
+      return;
+    }
+  } else if (selectedFileType.value === 'xyz') {
+    if (!file.name.toLowerCase().endsWith('.xyz')) {
+      errorMessage.value = 'Please select an XYZ file (.xyz)';
       clearFile();
       return;
     }
@@ -212,6 +221,8 @@ async function importFile() {
       emit("imported", { type: 'markdown', content });
     } else if (selectedFileType.value === 'image') {
       emit("imported", { type: 'image', file: selectedFile.value });
+    } else if (selectedFileType.value === 'xyz') {
+      emit("imported", { type: 'xyz', file: selectedFile.value });
     }
     closeModal();
   } catch (error) {

@@ -22,7 +22,7 @@
       </DropdownMenuItem>
       
       <!-- Divider -->
-      <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <div v-if="globalStore.isAuthenticated && !isReadmePage" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
       <!-- Mode Toggle Items (hidden for README.md) -->
       <DropdownMenuItem
@@ -44,7 +44,7 @@
       </DropdownMenuItem>
       
       <!-- Divider -->
-      <div v-if="globalStore.isAuthenticated && !isReadmePage" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <div v-if="showFileMenu && canModify" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
       <!-- View Style Section (only for note pages) -->
       <div v-if="showFileMenu && canModify" class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
@@ -70,7 +70,10 @@
       >
         Split View
       </DropdownMenuItem>
-      
+
+      <!-- Divider -->
+      <div v-if="hasSlideTag" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+
       <!-- Slide View (only for notes with 'slide' tag) -->
       <DropdownMenuItem 
         v-if="hasSlideTag"
@@ -81,7 +84,7 @@
       </DropdownMenuItem>
       
       <!-- Divider -->
-      <div v-if="globalStore.isAuthenticated && !isReadmePage" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
       <!-- Login Item -->
       <RouterLink

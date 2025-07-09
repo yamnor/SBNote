@@ -13,7 +13,7 @@ from global_config import AuthType, GlobalConfig, GlobalConfigResponseModel
 from helpers import replace_base_href
 from logger import logger
 from notes.base import BaseNotes
-from notes.models import Note, NoteCreate, NoteUpdate, SearchResult, NoteImport, NoteImageImport
+from notes.models import Note, NoteCreate, NoteUpdate, SearchResult, NoteImport, NoteImageImport, NoteXyzImport
 
 
 def is_authenticated(request: Request) -> bool:
@@ -197,6 +197,26 @@ if global_config.auth_type != AuthType.READ_ONLY:
         """Import an image file and create a note with the image link."""
         try:
             return note_storage.import_image(image_data)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=api_messages.invalid_note_title,
+            )
+        except FileExistsError:
+            raise HTTPException(
+                status_code=409, detail=api_messages.note_exists
+            )
+
+    # Import XYZ
+    @router.post(
+        "/api/notes/import-xyz",
+        dependencies=auth_deps,
+        response_model=Note,
+    )
+    def import_xyz(xyz_data: NoteXyzImport):
+        """Import a XYZ file as a new note."""
+        try:
+            return note_storage.import_xyz(xyz_data)
         except ValueError:
             raise HTTPException(
                 status_code=400,
