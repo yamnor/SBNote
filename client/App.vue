@@ -51,7 +51,7 @@
 import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { RouterView, useRoute } from "vue-router";
 
-import { apiErrorHandler, getConfig, getNotes, getAuthStatus, importNote } from "./api.js";
+import { apiErrorHandler, getConfig, getNotes, getAuthStatus, importNote, importImage } from "./api.js";
 import { useGlobalStore } from "./globalStore.js";
 import NavBar from "./components/NavBar.vue";
 import { loadStoredToken, getStoredToken, clearStoredToken } from "./tokenStorage.js";
@@ -310,14 +310,20 @@ function onImportModalClose() {
   showImportModal.value = false;
 }
 
-async function onImportFile(content) {
+async function onImportFile(importData) {
   try {
     // Get current tag if on home page with selected tag
     const tags = homeSelectedTag.value && homeSelectedTag.value !== '_untagged' 
       ? [homeSelectedTag.value] 
       : [];
     
-    const importedNote = await importNote(content, tags);
+    let importedNote;
+    
+    if (importData.type === 'markdown') {
+      importedNote = await importNote(importData.content, tags);
+    } else if (importData.type === 'image') {
+      importedNote = await importImage(importData.file, tags);
+    }
     
     // Show success message
     globalStore.toast?.addToast(

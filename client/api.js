@@ -130,6 +130,29 @@ export async function importNote(content, tags = []) {
   }
 }
 
+export async function importImage(file, tags = []) {
+  try {
+    // First upload the image file
+    const formData = new FormData();
+    formData.append("file", file);
+    const uploadResponse = await api.post("api/files", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    
+    // Then create a note with the image link
+    const response = await api.post("api/notes/import-image", {
+      filename: uploadResponse.data.filename,
+      original_filename: uploadResponse.data.originalFilename,
+      tags: tags,
+    });
+    return new Note(response.data);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
 export async function getNote(filename) {
   try {
     const response = await api.get(`api/notes/${encodeURIComponent(filename)}`);

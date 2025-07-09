@@ -40,6 +40,12 @@ class NoteImport(CustomBaseModel):
     tags: Optional[List[str]] = Field(default_factory=list)
 
 
+class NoteImageImport(CustomBaseModel):
+    filename: str
+    original_filename: str
+    tags: Optional[List[str]] = Field(default_factory=list)
+
+
 class SearchResult(CustomBaseModel):
     title: str
     content: Optional[str] = Field(None)

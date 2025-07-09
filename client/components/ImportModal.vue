@@ -29,23 +29,37 @@
                 as="h3"
                 class="text-lg font-medium leading-6 text-theme-text mb-4"
               >
-                Import Markdown File
+                Import File
               </DialogTitle>
               
               <div class="mt-2">
                 <p class="text-sm text-theme-text-muted mb-4">
-                  Select a markdown file to import. Frontmatter will be ignored and the content will be imported as a new note.
+                  Select a file to import. Markdown files will be imported as notes, images will be uploaded and a note with the image link will be created.
                 </p>
+                
+                <!-- File Type Selection -->
+                <div class="mt-4">
+                  <label class="block text-sm font-medium text-theme-text mb-2">
+                    File Type
+                  </label>
+                  <select 
+                    v-model="selectedFileType"
+                    class="w-full px-3 py-2 border border-theme-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-theme-brand focus:border-theme-brand bg-theme-background text-theme-text"
+                  >
+                    <option value="markdown">Markdown</option>
+                    <option value="image">Image (JPEG/PNG)</option>
+                  </select>
+                </div>
                 
                 <!-- File Input -->
                 <div class="mt-4">
                   <label class="block text-sm font-medium text-theme-text mb-2">
-                    Select Markdown File
+                    Select File
                   </label>
                   <input
                     ref="fileInput"
                     type="file"
-                    accept=".md,.markdown"
+                    :accept="fileTypeAccept"
                     @change="onFileSelected"
                     class="block w-full text-sm text-theme-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-theme-brand file:text-white hover:file:bg-theme-brand-dark file:cursor-pointer cursor-pointer"
                   />
@@ -103,7 +117,7 @@
 
 <script setup>
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { X, Loader2 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -118,8 +132,19 @@ const isVisible = defineModel({ type: Boolean });
 
 const fileInput = ref();
 const selectedFile = ref(null);
+const selectedFileType = ref('markdown');
 const errorMessage = ref('');
 const isImporting = ref(false);
+
+// Computed property for file input accept attribute
+const fileTypeAccept = computed(() => {
+  if (selectedFileType.value === 'markdown') {
+    return '.md,.markdown';
+  } else if (selectedFileType.value === 'image') {
+    return '.jpg,.jpeg,.png';
+  }
+  return '';
+});
 
 function closeModal() {
   isVisible.value = false;
@@ -134,11 +159,21 @@ function onFileSelected(event) {
     return;
   }
   
-  // Validate file type
-  if (!file.name.toLowerCase().endsWith('.md') && !file.name.toLowerCase().endsWith('.markdown')) {
-    errorMessage.value = 'Please select a markdown file (.md or .markdown)';
-    clearFile();
-    return;
+  // Validate file type based on selected file type
+  if (selectedFileType.value === 'markdown') {
+    if (!file.name.toLowerCase().endsWith('.md') && !file.name.toLowerCase().endsWith('.markdown')) {
+      errorMessage.value = 'Please select a markdown file (.md or .markdown)';
+      clearFile();
+      return;
+    }
+  } else if (selectedFileType.value === 'image') {
+    const validImageExtensions = ['.jpg', '.jpeg', '.png'];
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    if (!validImageExtensions.includes(fileExtension)) {
+      errorMessage.value = 'Please select an image file (.jpg, .jpeg, or .png)';
+      clearFile();
+      return;
+    }
   }
   
   // Validate file size (10MB limit)
@@ -175,8 +210,12 @@ async function importFile() {
   errorMessage.value = '';
   
   try {
-    const content = await readFileContent(selectedFile.value);
-    emit("imported", content);
+    if (selectedFileType.value === 'markdown') {
+      const content = await readFileContent(selectedFile.value);
+      emit("imported", { type: 'markdown', content });
+    } else if (selectedFileType.value === 'image') {
+      emit("imported", { type: 'image', file: selectedFile.value });
+    }
     closeModal();
   } catch (error) {
     console.error('Import failed:', error);

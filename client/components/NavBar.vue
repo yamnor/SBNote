@@ -142,12 +142,12 @@
         New Note
       </DropdownMenuItem>
       
-      <!-- Import Markdown -->
+      <!-- Import File -->
       <DropdownMenuItem 
         :icon="Upload"
         @click="showImportModal"
       >
-        Import Markdown
+        Import File
       </DropdownMenuItem>
       
       <!-- Divider -->
