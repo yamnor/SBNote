@@ -3,22 +3,26 @@
     <!-- Header -->
     <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-theme-border">
       <div class="flex items-center space-x-3">
-        <button
-          @click="goBack"
-          class="flex items-center justify-center w-9 h-9 rounded-lg bg-theme-button hover:bg-theme-brand hover:text-white text-theme-text transition-colors shadow-sm"
-        >
-          <ArrowLeft class="w-4 h-4" />
-        </button>
         <div>
           <h1 class="text-lg font-semibold text-theme-text">{{ noteTitle }}</h1>
-          <p class="text-sm text-theme-text-muted">Molecular Structure Viewer</p>
         </div>
       </div>
       
-      <!-- Loading indicator -->
-      <div v-if="isLoading" class="flex items-center space-x-2 text-theme-text-muted">
-        <Loader2 class="w-4 h-4 animate-spin" />
-        <span class="text-sm">Loading molecule...</span>
+      <div class="flex items-center space-x-2">
+        <!-- Loading indicator -->
+        <div v-if="isLoading" class="flex items-center space-x-2 text-theme-text-muted">
+          <Loader2 class="w-4 h-4 animate-spin" />
+          <span class="text-sm">Loading molecule...</span>
+        </div>
+        
+        <!-- Note button -->
+        <button
+          @click="goToNote"
+          class="flex items-center justify-center w-9 h-9 rounded-lg bg-theme-button hover:bg-theme-brand hover:text-white text-theme-text transition-colors shadow-sm"
+          title="Go to note"
+        >
+          <StickyNote class="w-4 h-4" />
+        </button>
       </div>
     </div>
 
@@ -60,7 +64,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { ArrowLeft, FileX, Loader2, RefreshCw } from 'lucide-vue-next';
+import { ArrowLeft, FileX, Loader2, RefreshCw, StickyNote } from 'lucide-vue-next';
 import { getNote } from '../api.js';
 
 const props = defineProps({
@@ -89,6 +93,11 @@ function goBack() {
   } else {
     router.push({ name: 'home' });
   }
+}
+
+function goToNote() {
+  // Navigate to the note view
+  router.push({ name: 'note', params: { filename: props.filename } });
 }
 
 async function loadNoteData() {

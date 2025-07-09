@@ -72,7 +72,7 @@
       </DropdownMenuItem>
 
       <!-- Divider -->
-      <div v-if="showSlideView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <div v-if="showSlideView || showMolView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
 
       <!-- Slide View (only for notes with 'slide' tag) -->
       <DropdownMenuItem 
@@ -81,6 +81,15 @@
         @click="onSlideView"
       >
         Slide View
+      </DropdownMenuItem>
+      
+      <!-- Mol View (only for notes with 'xyz' category) -->
+      <DropdownMenuItem 
+        v-if="showMolView"
+        :icon="Atom"
+        @click="onMolView"
+      >
+        Mol View
       </DropdownMenuItem>
       
       <!-- Divider -->
@@ -262,26 +271,7 @@
         Copy link
       </DropdownMenuItem>
       
-      <!-- Divider -->
-      <div v-if="showSlideView || showMolView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
-      
-      <!-- Slide View (only for notes with 'slide' tag) -->
-      <DropdownMenuItem 
-        v-if="showSlideView"
-        :icon="Presentation"
-        @click="onSlideView"
-      >
-        Slide View
-      </DropdownMenuItem>
-      
-      <!-- Mol View (only for notes with 'xyz' category) -->
-      <DropdownMenuItem 
-        v-if="showMolView"
-        :icon="Atom"
-        @click="onMolView"
-      >
-        Mol View
-      </DropdownMenuItem>
+
       
 
       
