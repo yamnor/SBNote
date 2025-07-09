@@ -3,8 +3,15 @@
     <!-- Header -->
     <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-theme-background backdrop-blur-sm">
       <div class="flex items-center space-x-3">
-        <div>
-          <h1 class="text-lg font-semibold text-theme-text-muted">{{ noteTitle }}</h1>
+        <div class="flex items-center space-x-2">
+          <FileTextIcon 
+            @click="goToNote" 
+            class="w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors cursor-pointer"
+            title="Go to note"
+          />
+          <h1 class="text-lg font-semibold text-theme-text-muted">
+            {{ noteTitle }}
+          </h1>
         </div>
       </div>
       
@@ -20,26 +27,19 @@
           class="flex items-center justify-center w-8 h-8 text-theme-brand text-theme-text transition-colors"
           title="Current view"
         >
-          <FileText class="w-8 h-8" />
+          <Grip class="w-8 h-8" />
         </button>
         
         <!-- Mol button -->
         <button
-          @click="goToMol"
+          @click="goToMolView"
           class="flex items-center justify-center w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors"
-          title="Go to molecule view"
+          title="Mol View"
         >
           <Eye class="w-8 h-8" />
         </button>
         
-        <!-- Note button -->
-        <button
-          @click="goToNote"
-          class="flex items-center justify-center w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors"
-          title="Go to note"
-        >
-          <Info class="w-8 h-8" />
-        </button>
+
       </div>
     </div>
 
@@ -95,7 +95,7 @@
 </style>
 
 <script setup>
-import { FileX, AlertTriangle, Loader2, RefreshCw, FileText, Eye, Info } from "lucide-vue-next";
+import { FileX, AlertTriangle, Loader2, RefreshCw, FileText, Eye, Info, Grip, FileText as FileTextIcon } from "lucide-vue-next";
 import { computed, onMounted, onUnmounted, ref, nextTick, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useRoute } from "vue-router";
@@ -297,7 +297,7 @@ function retryLoad() {
   loadFile();
 }
 
-function goToMol() {
+function goToMolView() {
   // Navigate to the mol view using basename
   router.push({ name: 'mol', params: { filename: props.filename } });
 }

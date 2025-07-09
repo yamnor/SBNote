@@ -3,8 +3,15 @@
     <!-- Header -->
     <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-white/90 backdrop-blur-sm">
       <div class="flex items-center space-x-3">
-        <div>
-          <h1 class="text-lg font-semibold text-theme-text-muted">{{ noteTitle }}</h1>
+        <div class="flex items-center space-x-2">
+          <FileTextIcon 
+            @click="goToNote" 
+            class="w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors cursor-pointer"
+            title="Go to note"
+          />
+          <h1 class="text-lg font-semibold text-theme-text-muted">
+            {{ noteTitle }}
+          </h1>
         </div>
       </div>
       
@@ -17,11 +24,11 @@
         
         <!-- Raw button -->
         <button
-          @click="goToCode"
+          @click="goToRawView"
           class="flex items-center justify-center w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors"
-          title="Go to raw view"
+          title="Raw View"
         >
-          <FileText class="w-8 h-8" />
+          <Grip class="w-8 h-8" />
         </button>
         
         <!-- Mol button (current view) -->
@@ -32,14 +39,7 @@
           <Eye class="w-8 h-8" />
         </button>
         
-        <!-- Note button -->
-        <button
-          @click="goToNote"
-          class="flex items-center justify-center w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors"
-          title="Go to note"
-        >
-          <Info class="w-8 h-8" />
-        </button>
+
       </div>
     </div>
 
@@ -81,7 +81,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { ArrowLeft, FileX, Loader2, RefreshCw, Info, FileText, Eye } from 'lucide-vue-next';
+import { ArrowLeft, FileX, Loader2, RefreshCw, Info, FileText, Eye, Grip, FileText as FileTextIcon } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
 
 const props = defineProps({
@@ -118,9 +118,9 @@ function goToNote() {
   router.push({ name: 'note', params: { filename: basename } });
 }
 
-function goToCode() {
-  // Navigate to the code view using basename
-  router.push({ name: 'code', params: { filename: props.filename } });
+function goToRawView() {
+  // Navigate to the raw view using basename
+  router.push({ name: 'raw', params: { filename: props.filename } });
 }
 
 async function loadNoteData() {

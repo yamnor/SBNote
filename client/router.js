@@ -34,8 +34,8 @@ const router = createRouter({
     },
     {
       path: "/raw/:filename",
-      name: "code",
-      component: () => import("./views/Code.vue"),
+      name: "raw",
+      component: () => import("./views/Raw.vue"),
       props: (route) => ({ 
         filename: route.params.filename.replace(/\.md$/, '') 
       }),
@@ -76,6 +76,15 @@ const router = createRouter({
 
 router.afterEach((to) => {
   let title = "SBNote";
+  
+  // Define view names for dynamic title updates
+  const viewNames = {
+    note: "Note",
+    slide: "Slide", 
+    mol: "Mol",
+    raw: "Raw"
+  };
+  
   if (to.name === "note") {
     if (to.params.filename) {
       // For existing notes, we'll update the title dynamically in the Note component
@@ -83,23 +92,11 @@ router.afterEach((to) => {
     } else {
       title = "New Note - " + title;
     }
-  } else if (to.name === "slide") {
-    title = "Slide - " + title;
-  } else if (to.name === "mol") {
-    if (to.params.filename) {
-      // For molecule view, we'll update the title dynamically in the Mol component
-      title = "Molecule - " + title;
-    } else {
-      title = "Molecule - " + title;
-    }
-  } else if (to.name === "code") {
-    if (to.params.filename) {
-      // For raw view, we'll update the title dynamically in the Code component
-      title = "Raw - " + title;
-    } else {
-      title = "Raw - " + title;
-    }
+  } else if (viewNames[to.name]) {
+    // For other views (slide/mol/code), we'll update the title dynamically in their components
+    title = viewNames[to.name] + " - " + title;
   }
+  
   document.title = title;
 });
 

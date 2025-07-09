@@ -28,7 +28,7 @@ const router = useRouter();
 const loadingIndicator = ref();
 const revealContainer = ref();
 let deck = null;
-let note = ref({});
+const note = ref({});
 
 // Initialize reveal.js presentation
 async function initializeReveal() {
@@ -158,10 +158,6 @@ async function loadNote() {
     
     note.value = data;
     
-    if (data.title && data.title.trim()) {
-      document.title = `${data.title} - Slide - SBNote`;
-    }
-    
     loadingIndicator.value.setLoaded();
     
     // Wait for DOM to be ready before initializing reveal.js
@@ -183,6 +179,15 @@ async function loadNote() {
 watch(() => props.filename, async () => {
   await loadNote();
 });
+
+// Watch for note data changes to update browser title
+watch(note, (newNote) => {
+  if (newNote?.title) {
+    document.title = `${newNote.title} - SBNote`;
+  } else {
+    document.title = "Slide - SBNote";
+  }
+}, { immediate: true });
 
 // Handle keyboard shortcuts
 function handleKeydown(event) {
