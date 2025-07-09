@@ -24,6 +24,7 @@ class Note(CustomBaseModel):
     created: Optional[float] = Field(None)
     tags: Optional[List[str]] = Field(default_factory=list)
     filename: Optional[str] = Field(None)
+    category: Optional[str] = Field("note")
 
 
 class NoteUpdate(CustomBaseModel):

@@ -92,7 +92,7 @@ def get_note(filename: str):
     response_model=List[Note],
 )
 def get_notes_list(
-    sort: Literal["title", "lastModified", "createdDate"] = "lastModified",
+    sort: Literal["title", "lastModified", "createdDate", "category"] = "lastModified",
     order: Literal["asc", "desc"] = "desc",
     limit: int = None,
 ):
@@ -175,7 +175,7 @@ if global_config.auth_type != AuthType.READ_ONLY:
 )
 def search(
     term: str,
-    sort: Literal["score", "title", "lastModified", "createdDate"] = "score",
+    sort: Literal["score", "title", "lastModified", "createdDate", "category"] = "score",
     order: Literal["asc", "desc"] = "desc",
     limit: int = None,
     content_limit: int = None,
@@ -284,7 +284,7 @@ def get_tags_with_counts():
 )
 def get_notes_by_tag(
     tag_name: str,
-    sort: Literal["title", "lastModified", "createdDate"] = "lastModified",
+    sort: Literal["title", "lastModified", "createdDate", "category"] = "lastModified",
     order: Literal["asc", "desc"] = "desc",
     limit: int = 10,
 ):

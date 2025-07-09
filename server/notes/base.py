@@ -29,7 +29,7 @@ class BaseNotes(ABC):
     def search(
         self,
         term: str,
-        sort: Literal["score", "title", "last_modified", "created_date"] = "score",
+        sort: Literal["score", "title", "last_modified", "created_date", "category"] = "score",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
         content_limit: int = None,
@@ -45,7 +45,7 @@ class BaseNotes(ABC):
     @abstractmethod
     def list_notes(
         self,
-        sort: Literal["title", "last_modified", "created_date"] = "last_modified",
+        sort: Literal["title", "last_modified", "created_date", "category"] = "last_modified",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
     ) -> list[Note]:
@@ -56,7 +56,7 @@ class BaseNotes(ABC):
     def get_notes_by_tag(
         self,
         tag_name: str,
-        sort: Literal["title", "last_modified", "created_date"] = "last_modified",
+        sort: Literal["title", "last_modified", "created_date", "category"] = "last_modified",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
     ) -> list[Note]:
