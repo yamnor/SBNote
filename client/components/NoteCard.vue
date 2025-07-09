@@ -1,0 +1,120 @@
+<template>
+  <div>
+    <div 
+      ref="cardElement"
+      @click="handleClick"
+      class="bg-theme-background-surface p-2 cursor-pointer transition-all duration-200 group hover:shadow-lg h-36 w-full flex flex-col border-t-4 border-theme-brand shadow-sm relative"
+      style="touch-action: manipulation;"
+      :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"
+    >
+      <!-- Recent edit indicator in bottom-left corner -->
+      <div v-if="isRecentlyEdited" class="absolute bottom-1 left-1">
+        <div class="w-2 h-2 rounded-full" style="background-color: var(--theme-brand-accent);"></div>
+      </div>
+      
+      <!-- Tag count badge in bottom-right corner -->
+      <div v-if="note.tags && note.tags.length > 0" class="absolute bottom-1 right-1">
+        <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-gray-200 text-gray-600">
+          {{ note.tags.length }}
+        </span>
+      </div>
+      
+      <div class="flex-1 min-w-0">
+        <h3 class="text-gray-800 text-sm font-medium group-hover:text-gray-900 transition-colors leading-tight line-clamp-3 search-highlights">
+          <span v-if="note.titleHighlights" v-html="note.titleHighlights"></span>
+          <span v-else>{{ note.title }}</span>
+        </h3>
+        <!-- Note content preview -->
+        <div v-if="note.contentHighlights" class="text-gray-500 text-xs mt-1 line-clamp-3 search-highlights">
+          <span v-html="note.contentHighlights"></span>
+        </div>
+        <div v-else-if="note.content" class="text-gray-500 text-xs mt-1 line-clamp-3">
+          {{ contentPreview }}
+        </div>
+      </div>
+      <p class="text-gray-600 text-xs mt-auto">
+        {{ formatDate(note.lastModified) }}
+      </p>
+    </div>
+
+    <!-- Note Preview Modal -->
+    <NotePreviewModal
+      v-model="showPreviewModal"
+      :note="note"
+      @close="showPreviewModal = false"
+    />
+  </div>
+</template>
+
+<script setup>
+import { computed, ref } from "vue";
+import { useGlobalStore } from "../globalStore.js";
+import NotePreviewModal from "./NotePreviewModal.vue";
+
+const props = defineProps({
+  note: {
+    type: Object,
+    required: true
+  }
+});
+
+const globalStore = useGlobalStore();
+const showPreviewModal = ref(false);
+
+// Handle click to show preview modal
+function handleClick() {
+  showPreviewModal.value = true;
+}
+
+// Content preview (first 200 characters)
+const contentPreview = computed(() => {
+  if (!props.note.content) return "";
+  const cleanContent = props.note.content.replace(/#[a-zA-Z0-9_\-\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g, '').trim();
+  return cleanContent.substring(0, 200) + (cleanContent.length > 200 ? '...' : '');
+});
+
+// Check if note was edited recently (within 1 hour)
+const isRecentlyEdited = computed(() => {
+  if (!props.note.lastModified) return false;
+  
+  const lastModified = new Date(props.note.lastModified * 1000);
+  const now = new Date();
+  const diffInHours = (now - lastModified) / (1000 * 60 * 60);
+  
+  return diffInHours < 1;
+});
+
+// Format date
+function formatDate(timestamp) {
+  if (!timestamp) return '';
+  
+  // Server returns timestamp in seconds, so multiply by 1000 to get milliseconds
+  const date = new Date(timestamp * 1000);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    console.warn('Invalid timestamp:', timestamp);
+    return '';
+  }
+  
+  const now = new Date();
+  const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  
+  if (diffInDays === 0) {
+    return 'Today';
+  } else if (diffInDays === 1) {
+    return 'Yesterday';
+  } else if (diffInDays < 7) {
+    return `${diffInDays} days ago`;
+  } else if (diffInDays < 30) {
+    const weeks = Math.floor(diffInDays / 7);
+    return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+  } else if (diffInDays < 365) {
+    const months = Math.floor(diffInDays / 30);
+    return `${months} month${months > 1 ? 's' : ''} ago`;
+  } else {
+    const years = Math.floor(diffInDays / 365);
+    return `${years} year${years > 1 ? 's' : ''} ago`;
+  }
+}
+</script> 

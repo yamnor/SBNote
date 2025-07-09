@@ -1,0 +1,203 @@
+// Editor Custom Styles - Content Styling
+
+// Font family for content
+.ProseMirror,
+.toastui-editor-contents {
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: 16px;
+  background-color: var(--theme-background-surface);
+}
+
+// Apply custom styles to Editor content
+.ProseMirror,
+.toastui-editor-contents {
+  // Headers
+  h1, .toastui-editor-md-heading1 {
+    color: var(--theme-text);
+    font-weight: 600;
+    font-size: 1.75rem;
+    margin: 1em 0 0.5em;
+    padding: 0;
+    border-bottom: none;
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+  
+  h2, .toastui-editor-md-heading2 {
+    color: var(--theme-text);
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 1em 0 0.5em;
+    padding: 0;
+    border-bottom: none;
+  }
+  
+  h3, .toastui-editor-md-heading3 {
+    color: var(--theme-text);
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin: 1em 0 0.5em;
+    padding: 0;
+    border-bottom: none;
+  }
+  
+  h4, .toastui-editor-md-heading4,
+  h5, .toastui-editor-md-heading5,
+  h6, .toastui-editor-md-heading6 {
+    color: var(--theme-text);
+    font-weight: 500;
+    font-size: 1.125rem;
+    margin: 1em 0 0.5em;
+    padding: 0;
+    border-bottom: none;
+  }
+  
+  // Text elements
+  p {
+    color: var(--theme-text);
+    margin: 0 0 1rem;
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+  }
+  
+  ul, ol, strong, em {
+    color: var(--theme-text);
+  }
+  
+  // List styling
+  ul > li::before {
+    margin-top: 0.7rem;
+  }
+  
+  // Links
+  a {
+    color: var(--theme-brand);
+    text-decoration: underline;
+    
+    &:hover {
+      color: var(--theme-brand-dark);
+    }
+  }
+  
+  // Code blocks
+  code {
+    background-color: var(--theme-background-subtle);
+    color: var(--theme-text);
+    font-family: "Noto Sans Mono", "Consolas", "Lucida Console", Monaco, "Andale Mono", monospace;
+  }
+  
+  pre {
+    background-color: var(--theme-background-subtle);
+    
+    code {
+      background-color: transparent;
+    }
+  }
+  
+  // Blockquotes
+  blockquote {
+    color: var(--theme-text-muted);
+    border-left-color: var(--theme-border);
+  }
+  
+  // Tables
+  table {
+    color: var(--theme-text);
+    
+    th {
+      background-color: var(--theme-background-subtle);
+      border-color: var(--theme-border);
+      color: var(--theme-text);
+    }
+    
+    td {
+      border-color: var(--theme-border);
+    }
+  }
+}
+
+// Additional content styling
+.toastui-editor-contents {
+  ul, menu, ol, dir {
+    color: var(--theme-text);
+  }
+  
+  pre code {
+    color: var(--theme-text);
+  }
+  
+  th p {
+    color: var(--theme-text);
+  }
+}
+
+// Editor text color
+.ProseMirror {
+  color: var(--theme-text);
+}
+
+// Code styling
+.toastui-editor-md-code,
+.toastui-editor-contents code {
+  background-color: var(--theme-background-subtle);
+}
+
+// Code block line backgrounds
+.toastui-editor-md-code-block-line-background {
+  background-color: var(--theme-background-subtle);
+}
+
+// Syntax highlighting tokens
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  background: none;
+}
+
+// Blockquote styling
+.toastui-editor-md-block-quote .toastui-editor-md-marked-text {
+  color: var(--theme-text-muted);
+}
+
+// Table styling
+.toastui-editor-md-table .toastui-editor-md-table-cell {
+  color: var(--theme-text);
+}
+
+// Chart plugin styling
+.toastui-editor-chart {
+  background-color: var(--theme-background-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.toastui-editor-chart canvas {
+  background-color: var(--theme-background-surface);
+}
+
+// Chart popup styling
+.toastui-editor-chart-popup {
+  background-color: var(--theme-background-surface);
+  border: 1px solid var(--theme-border);
+}
+
+.toastui-editor-chart-popup .toastui-editor-chart-popup-body {
+  background-color: var(--theme-background-surface);
+}
+
+.toastui-editor-chart-popup input,
+.toastui-editor-chart-popup textarea {
+  background-color: var(--theme-background-surface);
+  border: 1px solid var(--theme-border);
+  color: var(--theme-text);
+}
+
+.toastui-editor-chart-popup label {
+  color: var(--theme-text);
+}

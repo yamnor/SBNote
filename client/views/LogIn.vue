@@ -1,67 +1,68 @@
 <template>
-  <div class="flex h-full flex-col items-center justify-center">
-    <Logo class="mb-5" />
+  <div class="flex h-screen flex-col items-center justify-center">
     <form @submit.prevent="logIn" class="flex max-w-80 flex-col items-center">
-      <TextInput
+      <input
         v-model="username"
+        type="text"
         id="username"
         placeholder="Username"
-        class="mb-1"
+        class="w-full rounded-md border border-theme-border px-3 py-2 focus:outline-none dark:bg-theme-background-elevated mb-3"
         autocomplete="username"
         required
       />
-      <TextInput
+      <input
         v-model="password"
+        type="password"
         id="password"
         placeholder="Password"
-        type="password"
-        class="mb-1"
+        class="w-full rounded-md border border-theme-border px-3 py-2 focus:outline-none dark:bg-theme-background-elevated mb-3"
         autocomplete="current-password"
         required
       />
-      <TextInput
+      <input
         v-if="globalStore.config.authType == authTypes.totp"
         v-model="totp"
+        type="text"
         id="one-time-code"
         placeholder="2FA Code"
-        class="mb-1"
+        class="w-full rounded-md border border-theme-border px-3 py-2 focus:outline-none dark:bg-theme-background-elevated mb-3"
         autocomplete="one-time-code"
         required
       />
-      <div class="mb-4 flex">
+      <div class="mb-6 flex items-center">
         <input
           type="checkbox"
           id="remember-me"
           v-model="rememberMe"
-          class="mr-1"
+          class="mr-2"
         />
-        <label for="remember-me">Remember Me</label>
+        <label for="remember-me" class="text-theme-text text-sm">Remember Me</label>
       </div>
-      <CustomButton :iconPath="mdilLogin" label="Log In" />
+      <button type="submit" class="flex items-center justify-center px-4 py-2 rounded-lg bg-theme-brand text-white hover:bg-theme-brand-dark transition-colors">
+        <LogIn class="w-4 h-4 mr-2" />
+        Log In
+      </button>
     </form>
   </div>
 </template>
 
 <script setup>
-import { mdilLogin } from "@mdi/light-js";
-import { useToast } from "primevue/usetoast";
+import { LogIn } from "lucide-vue-next";
+
 import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import { apiErrorHandler, getToken } from "../api.js";
-import CustomButton from "../components/CustomButton.vue";
-import Logo from "../components/Logo.vue";
-import TextInput from "../components/TextInput.vue";
 import { authTypes } from "../constants.js";
 import { useGlobalStore } from "../globalStore.js";
-import { getToastOptions } from "../helpers.js";
+
 import { storeToken } from "../tokenStorage.js";
 
 const props = defineProps({ redirect: String });
 
 const globalStore = useGlobalStore();
 const router = useRouter();
-const toast = useToast();
+
 
 const username = ref("");
 const password = ref("");
@@ -72,6 +73,7 @@ function logIn() {
   getToken(username.value, password.value, totp.value)
     .then((access_token) => {
       storeToken(access_token, rememberMe.value);
+      globalStore.isAuthenticated = true;
       if (props.redirect) {
         router.push(props.redirect);
       } else {
@@ -84,15 +86,9 @@ function logIn() {
       totp.value = "";
 
       if (error.response?.status === 401) {
-        toast.add(
-          getToastOptions(
-            "Please check your credentials and try again.",
-            "Login Failed",
-            "error",
-          ),
-        );
+        // Login failed
       } else {
-        apiErrorHandler(error, toast);
+        apiErrorHandler(error);
       }
     });
 }

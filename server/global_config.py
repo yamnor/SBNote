@@ -35,7 +35,7 @@ class GlobalConfig:
         return FileSystemAttachments()
 
     def _load_auth_type(self):
-        key = "FLATNOTES_AUTH_TYPE"
+        key = "SBNOTE_AUTH_TYPE"
         auth_type = get_env(
             key, mandatory=False, default=AuthType.PASSWORD.value
         )
@@ -52,29 +52,29 @@ class GlobalConfig:
         return auth_type
 
     def _quick_access_hide(self):
-        key = "FLATNOTES_QUICK_ACCESS_HIDE"
+        key = "SBNOTE_QUICK_ACCESS_HIDE"
         value = get_env(key, mandatory=False, default=False, cast_bool=True)
         if value is False:
-            depricated_key = "FLATNOTES_HIDE_RECENTLY_MODIFIED"
+            deprecated_key = "SBNOTE_HIDE_RECENTLY_MODIFIED"
             value = get_env(
-                depricated_key, mandatory=False, default=False, cast_bool=True
+                deprecated_key, mandatory=False, default=False, cast_bool=True
             )
             if value is True:
                 logger.warning(
-                    f"{depricated_key} is depricated. Please use {key} instead."
+                    f"{deprecated_key} is deprecated. Please use {key} instead."
                 )
         return value
 
     def _quick_access_title(self):
-        key = "FLATNOTES_QUICK_ACCESS_TITLE"
-        return get_env(key, mandatory=False, default="RECENTLY MODIFIED")
+        key = "SBNOTE_QUICK_ACCESS_TITLE"
+        return get_env(key, mandatory=False, default="")
 
     def _quick_access_term(self):
-        key = "FLATNOTES_QUICK_ACCESS_TERM"
+        key = "SBNOTE_QUICK_ACCESS_TERM"
         return get_env(key, mandatory=False, default="*")
 
     def _quick_access_sort(self):
-        key = "FLATNOTES_QUICK_ACCESS_SORT"
+        key = "SBNOTE_QUICK_ACCESS_SORT"
         value = get_env(key, mandatory=False, default="lastModified")
         valid_values = ["score", "title", "lastModified"]
         if value not in valid_values:
@@ -87,11 +87,11 @@ class GlobalConfig:
         return value
 
     def _quick_access_limit(self):
-        key = "FLATNOTES_QUICK_ACCESS_LIMIT"
-        return get_env(key, mandatory=False, default=4, cast_int=True)
+        key = "SBNOTE_QUICK_ACCESS_LIMIT"
+        return get_env(key, mandatory=False, default=12, cast_int=True)
 
     def _load_path_prefix(self):
-        key = "FLATNOTES_PATH_PREFIX"
+        key = "SBNOTE_PATH_PREFIX"
         value = get_env(key, mandatory=False, default="")
         if value and (not value.startswith("/") or value.endswith("/")):
             logger.error(

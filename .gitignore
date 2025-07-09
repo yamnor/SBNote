@@ -248,3 +248,7 @@ dist
 .vscode/
 data/
 /notes/
+
+.cursor/
+.gitignore
+docker-compose.yml

@@ -3,7 +3,7 @@ import * as constants from "./constants.js";
 import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
-  history: createWebHistory(""),
+  history: createWebHistory(),
   routes: [
     {
       path: "/",
@@ -17,10 +17,20 @@ const router = createRouter({
       props: (route) => ({ redirect: route.query[constants.params.redirect] }),
     },
     {
-      path: "/note/:title",
+      path: "/:filename",
       name: "note",
       component: () => import("./views/Note.vue"),
-      props: true,
+      props: (route) => ({ 
+        filename: route.params.filename.replace(/\.md$/, '') 
+      }),
+    },
+    {
+      path: "/slide/:filename",
+      name: "slide",
+      component: () => import("./views/Slide.vue"),
+      props: (route) => ({ 
+        filename: route.params.filename.replace(/\.md$/, '') 
+      }),
     },
     {
       path: "/new",
@@ -30,9 +40,18 @@ const router = createRouter({
     {
       path: "/search",
       name: "search",
-      component: () => import("./views/SearchResults.vue"),
+      component: () => import("./views/Search.vue"),
       props: (route) => ({
         searchTerm: route.query[constants.params.searchTerm],
+        sortBy: Number(route.query[constants.params.sortBy]) || undefined,
+      }),
+    },
+    {
+      path: "/tag/:tagName",
+      name: "tag",
+      component: () => import("./views/Search.vue"),
+      props: (route) => ({
+        tagName: route.params.tagName,
         sortBy: Number(route.query[constants.params.sortBy]) || undefined,
       }),
     },
@@ -40,13 +59,16 @@ const router = createRouter({
 });
 
 router.afterEach((to) => {
-  let title = "flatnotes";
+  let title = "SBNote";
   if (to.name === "note") {
-    if (to.params.title) {
-      title = `${to.params.title} - ${title}`;
+    if (to.params.filename) {
+      // For existing notes, we'll update the title dynamically in the Note component
+      title = "Note - " + title;
     } else {
       title = "New Note - " + title;
     }
+  } else if (to.name === "slide") {
+    title = "Slide - " + title;
   }
   document.title = title;
 });

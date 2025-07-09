@@ -2,7 +2,8 @@ const tokenStorageKey = "token";
 
 function getBasePath() {
   // This relies on the fact that flanotes always has a correctly formatted relative path set in <base> tag
-  return document.querySelector('base').getAttribute('href')
+  const baseElement = document.querySelector('base');
+  return baseElement ? baseElement.getAttribute('href') : '/';
 }
 
 function getCookieString(token) {
@@ -19,13 +20,19 @@ export function storeToken(token, persist = false) {
 }
 
 export function getStoredToken() {
-  return sessionStorage.getItem(tokenStorageKey);
+  // First check sessionStorage, then localStorage
+  const sessionToken = sessionStorage.getItem(tokenStorageKey);
+  if (sessionToken) {
+    return sessionToken;
+  }
+  return localStorage.getItem(tokenStorageKey);
 }
 
 export function loadStoredToken() {
   const token = localStorage.getItem(tokenStorageKey);
   if (token != null) {
-    storeToken(token, false);
+    // Load from localStorage to sessionStorage for current session
+    sessionStorage.setItem(tokenStorageKey, token);
   }
 }
 

@@ -23,18 +23,18 @@ class LocalAuth(BaseAuth):
     JWT_ALGORITHM = "HS256"
 
     def __init__(self) -> None:
-        self.username = get_env("FLATNOTES_USERNAME", mandatory=True).lower()
-        self.password = get_env("FLATNOTES_PASSWORD", mandatory=True)
-        self.secret_key = get_env("FLATNOTES_SECRET_KEY", mandatory=True)
+        self.username = get_env("SBNOTE_USERNAME", mandatory=True).lower()
+        self.password = get_env("SBNOTE_PASSWORD", mandatory=True)
+        self.secret_key = get_env("SBNOTE_SECRET_KEY", mandatory=True)
         self.session_expiry_days = get_env(
-            "FLATNOTES_SESSION_EXPIRY_DAYS", default=30, cast_int=True
+            "SBNOTE_SESSION_EXPIRY_DAYS", default=30, cast_int=True
         )
 
         # TOTP
         self.is_totp_enabled = False
         if global_config.auth_type == AuthType.TOTP:
             self.is_totp_enabled = True
-            self.totp_key = get_env("FLATNOTES_TOTP_KEY", mandatory=True)
+            self.totp_key = get_env("SBNOTE_TOTP_KEY", mandatory=True)
             self.totp_key = b32encode(self.totp_key.encode("utf-8"))
             self.totp = TOTP(self.totp_key)
             self.last_used_totp = None
@@ -101,7 +101,7 @@ class LocalAuth(BaseAuth):
 
     def _create_access_token(self, data: dict):
         to_encode = data.copy()
-        expiry_datetime = datetime.utcnow() + timedelta(
+        expiry_datetime = datetime.now() + timedelta(
             days=self.session_expiry_days
         )
         to_encode.update({"exp": expiry_datetime})
@@ -114,7 +114,7 @@ class LocalAuth(BaseAuth):
         # Fix for #237. Remove padding as per spec:
         # https://github.com/google/google-authenticator/wiki/Key-Uri-Format#secret
         unpadded_secret = self.totp_key.rstrip(b"=")
-        uri = build_uri(unpadded_secret, self.username, issuer="flatnotes")
+        uri = build_uri(unpadded_secret, self.username, issuer="sbnote")
         qr = QRCode()
         qr.add_data(uri)
         print(

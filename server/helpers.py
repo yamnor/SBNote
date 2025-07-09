@@ -1,10 +1,15 @@
 import os
 import re
 import sys
+from datetime import datetime
+from typing import Dict, Any, Optional, Tuple, Union
+from collections import OrderedDict
 
 from pydantic import BaseModel
 
 from logger import logger
+
+import frontmatter
 
 
 def camel_case(snake_case_str: str) -> str:
@@ -13,50 +18,34 @@ def camel_case(snake_case_str: str) -> str:
     return parts[0] + "".join(part.title() for part in parts[1:])
 
 
-def is_valid_filename(value):
-    """Raise ValueError if the declared string contains any of the following
-    characters: <>:"/\\|?*"""
-    invalid_chars = r'<>:"/\|?*'
-    if any(invalid_char in value for invalid_char in invalid_chars):
-        raise ValueError(
-            "title cannot include any of the following characters: "
-            + invalid_chars
-        )
-    return value
+def is_valid_filename(filename: str) -> str:
+    """Validate that the given filename is valid."""
+    if not filename:
+        raise ValueError("Filename cannot be empty.")
+    if len(filename) > 255:
+        raise ValueError("Filename is too long.")
+    if re.search(r'[<>:"/\\|?*]', filename):
+        raise ValueError("Filename contains invalid characters.")
+    return filename
 
 
-def strip_whitespace(value):
-    """Return the declared string with leading and trailing whitespace
-    removed."""
-    return value.strip()
-
-
-def get_env(
-    key, mandatory=False, default=None, cast_int=False, cast_bool=False
-):
-    """Get an environment variable. If `mandatory` is True and environment
-    variable isn't set, exit the program"""
-    value = os.environ.get(key)
+def get_env(key: str, mandatory: bool = False, default: str = None, cast_bool: bool = False, cast_int: bool = False) -> Union[str, bool, int]:
+    """Get an environment variable."""
+    value = os.getenv(key, default)
     if mandatory and not value:
-        logger.error(f"Environment variable {key} must be set.")
-        sys.exit(1)
-    if not mandatory and not value:
-        return default
-    if cast_int:
+        raise ValueError(f"Environment variable '{key}' is required but not set.")
+    
+    if cast_bool and value is not None:
+        if isinstance(value, str):
+            return value.lower() in ('true', '1', 'yes', 'on')
+        return bool(value)
+    
+    if cast_int and value is not None:
         try:
-            value = int(value)
-        except (TypeError, ValueError):
-            logger.error(f"Invalid value '{value}' for {key}.")
-            sys.exit(1)
-    if cast_bool:
-        value = value.lower()
-        if value == "true":
-            value = True
-        elif value == "false":
-            value = False
-        else:
-            logger.error(f"Invalid value '{value}' for {key}.")
-            sys.exit(1)
+            return int(value)
+        except (ValueError, TypeError):
+            raise ValueError(f"Environment variable '{key}' must be an integer.")
+    
     return value
 
 
@@ -74,6 +63,70 @@ def replace_base_href(html_file, path_prefix):
     updated_html = re.sub(pattern, replacement, html, flags=re.IGNORECASE)
     with open(html_file, "w", encoding="utf-8") as f:
         f.write(updated_html)
+
+
+def parse_markdown_with_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
+    """Parse markdown content with frontmatter and return metadata and body."""
+    try:
+        post = frontmatter.loads(content)
+        metadata = post.metadata
+        body = post.content
+        
+        # Ensure title is always a string
+        if 'title' in metadata and not isinstance(metadata['title'], str):
+            metadata['title'] = str(metadata['title'])
+        
+        # Ensure tags is always a list
+        if 'tags' in metadata:
+            if metadata['tags'] is None:
+                metadata['tags'] = []
+            elif not isinstance(metadata['tags'], list):
+                # Convert to list if it's not already
+                metadata['tags'] = [metadata['tags']] if metadata['tags'] else []
+        else:
+            metadata['tags'] = []
+        
+        return metadata, body
+    except Exception:
+        # If frontmatter parsing fails, treat entire content as body
+        return {}, content
+
+
+def create_markdown_with_frontmatter(
+    title: str, 
+    content: str, 
+    tags: list = None, 
+    created: datetime = None
+) -> str:
+    """Create markdown content with frontmatter."""
+    # Format created time without microseconds
+    created_time = created or datetime.now()
+    if created_time.microsecond != 0:
+        created_time = created_time.replace(microsecond=0)
+    
+    # Format tags as YAML list
+    tags_list = tags or []
+    tags_yaml = ""
+    if tags_list:
+        tags_yaml = "\n".join([f"- {tag}" for tag in tags_list])
+    else:
+        # Use empty YAML list format that's more compatible
+        tags_yaml = ""
+    
+    # Create frontmatter manually to control order
+    # Ensure title is treated as string by wrapping in quotes if it looks like a number
+    title_str = f'"{title}"' if str(title).isdigit() else title
+    
+    frontmatter_content = f"""---
+title: {title_str}
+tags:
+{tags_yaml}
+created: {created_time.strftime('%Y-%m-%d %H:%M:%S')}
+---
+
+{content}"""
+    
+    return frontmatter_content
 
 
 class CustomBaseModel(BaseModel):

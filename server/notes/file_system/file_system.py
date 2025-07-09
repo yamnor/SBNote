@@ -2,13 +2,15 @@ import glob
 import os
 import re
 import shutil
+import string
 import time
 from datetime import datetime
 from typing import List, Literal, Set, Tuple
+import random
 
 import whoosh
 from whoosh import writing
-from whoosh.analysis import CharsetFilter, StemmingAnalyzer
+from whoosh.analysis import CharsetFilter, StemmingAnalyzer, StandardAnalyzer
 from whoosh.fields import DATETIME, ID, KEYWORD, TEXT, SchemaClass
 from whoosh.highlight import ContextFragmenter, WholeFragmenter
 from whoosh.index import Index, LockError
@@ -18,7 +20,7 @@ from whoosh.query import Every
 from whoosh.searching import Hit
 from whoosh.support.charset import accent_map
 
-from helpers import get_env, is_valid_filename
+from helpers import get_env, parse_markdown_with_frontmatter, create_markdown_with_frontmatter
 from logger import logger
 
 from ..base import BaseNotes
@@ -27,7 +29,14 @@ from ..models import Note, NoteCreate, NoteUpdate, SearchResult
 MARKDOWN_EXT = ".md"
 INDEX_SCHEMA_VERSION = "5"
 
-StemmingFoldingAnalyzer = StemmingAnalyzer() | CharsetFilter(accent_map)
+# Use StandardAnalyzer for more flexible matching
+StemmingFoldingAnalyzer = StandardAnalyzer() | CharsetFilter(accent_map)
+
+
+def generate_random_filename(length: int = 8) -> str:
+    """Generate a random filename with specified length."""
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
 
 
 class IndexSchema(SchemaClass):
@@ -37,18 +46,18 @@ class IndexSchema(SchemaClass):
         field_boost=2.0, analyzer=StemmingFoldingAnalyzer, sortable=True
     )
     content = TEXT(analyzer=StemmingFoldingAnalyzer)
-    tags = KEYWORD(lowercase=True, field_boost=2.0)
+    tags = KEYWORD(lowercase=False, field_boost=2.0)
 
 
 class FileSystemNotes(BaseNotes):
-    TAGS_RE = re.compile(r"(?:(?<=^#)|(?<=\s#))[a-zA-Z0-9_-]+(?=\s|$)")
+    TAGS_RE = re.compile(r"(?:^|\s)#([a-zA-Z0-9_\-\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+)(?=\s|$)")
     CODEBLOCK_RE = re.compile(r"`{1,3}.*?`{1,3}", re.DOTALL)
     TAGS_WITH_HASH_RE = re.compile(
-        r"(?:(?<=^)|(?<=\s))#[a-zA-Z0-9_-]+(?=\s|$)"
+        r"(?:(?<=^)|(?<=\s))#[a-zA-Z0-9_\-\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+(?=\s|$)"
     )
 
     def __init__(self):
-        self.storage_path = get_env("FLATNOTES_PATH", mandatory=True)
+        self.storage_path = get_env("SBNOTE_PATH", mandatory=True)
         if not os.path.exists(self.storage_path):
             raise NotADirectoryError(
                 f"'{self.storage_path}' is not a valid directory."
@@ -58,54 +67,156 @@ class FileSystemNotes(BaseNotes):
 
     def create(self, data: NoteCreate) -> Note:
         """Create a new note."""
-        filepath = self._path_from_title(data.title)
-        self._write_file(filepath, data.content)
+        # Generate random filename
+        filename = generate_random_filename()
+        while os.path.exists(os.path.join(self.storage_path, filename + MARKDOWN_EXT)):
+            filename = generate_random_filename()
+        
+        filepath = os.path.join(self.storage_path, filename + MARKDOWN_EXT)
+        created_time = datetime.now()
+        
+        # Create markdown with frontmatter
+        markdown_content = create_markdown_with_frontmatter(
+            title=data.title,
+            content=data.content or "",
+            tags=data.tags or [],
+            created=created_time
+        )
+        
+        self._write_file(filepath, markdown_content)
+        
+        # Update the search index
+        self._sync_index_with_retry()
+        
         return Note(
             title=data.title,
             content=data.content,
             last_modified=os.path.getmtime(filepath),
+            created=created_time.timestamp(),
+            tags=data.tags or [],
+            filename=filename + MARKDOWN_EXT,
         )
 
-    def get(self, title: str) -> Note:
-        """Get a specific note."""
-        is_valid_filename(title)
-        filepath = self._path_from_title(title)
-        content = self._read_file(filepath)
-        return Note(
-            title=title,
-            content=content,
-            last_modified=os.path.getmtime(filepath),
-        )
-
-    def update(self, title: str, data: NoteUpdate) -> Note:
-        """Update a specific note."""
-        is_valid_filename(title)
-        filepath = self._path_from_title(title)
-        if data.new_title is not None:
-            new_filepath = self._path_from_title(data.new_title)
-            if filepath != new_filepath and os.path.isfile(new_filepath):
-                raise FileExistsError(
-                    f"Failed to rename. '{data.new_title}' already exists."
-                )
-            os.rename(filepath, new_filepath)
-            title = data.new_title
-            filepath = new_filepath
-        if data.new_content is not None:
-            self._write_file(filepath, data.new_content, overwrite=True)
-            content = data.new_content
+    def get(self, filename: str) -> Note:
+        # Add extension if not present
+        if not filename.endswith(MARKDOWN_EXT):
+            filename += MARKDOWN_EXT
+        
+        # Special handling for README.md - use the app's README.md
+        if filename.lower() == 'readme.md':
+            # Get the app root directory (parent of storage_path)
+            app_root = os.path.dirname(os.path.dirname(os.path.dirname(self.storage_path)))
+            filepath = os.path.join(app_root, 'README.md')
+            
+            # Check if README.md exists in app root
+            if not os.path.exists(filepath):
+                raise FileNotFoundError(f"README.md not found in app root: {filepath}")
         else:
-            content = self._read_file(filepath)
+            filepath = os.path.join(self.storage_path, filename)
+        
+        content = self._read_file(filepath)
+        
+        # Parse frontmatter
+        metadata, body = parse_markdown_with_frontmatter(content)
+        
+        # Parse created date from frontmatter
+        created_time = None
+        if 'created' in metadata:
+            try:
+                created_time = datetime.strptime(metadata['created'], '%Y-%m-%d %H:%M:%S').timestamp()
+            except (ValueError, TypeError):
+                # Fallback to file creation time if parsing fails
+                created_time = os.path.getctime(filepath)
+        else:
+            # Fallback to file creation time if no created field
+            created_time = os.path.getctime(filepath)
+        
         return Note(
-            title=title,
-            content=content,
+            title=metadata.get('title', self._strip_ext(filename)),
+            content=body,
             last_modified=os.path.getmtime(filepath),
+            created=created_time,
+            tags=metadata.get('tags', []),
+            filename=filename,
         )
 
-    def delete(self, title: str) -> None:
-        """Delete a specific note."""
-        is_valid_filename(title)
-        filepath = self._path_from_title(title)
+    def update(self, filename: str, data: NoteUpdate) -> Note:
+        # Add extension if not present
+        if not filename.endswith(MARKDOWN_EXT):
+            filename += MARKDOWN_EXT
+        filepath = os.path.join(self.storage_path, filename)
+        
+        # Read existing content and parse frontmatter
+        existing_content = self._read_file(filepath)
+        metadata, body = parse_markdown_with_frontmatter(existing_content)
+        
+        # Update metadata (file name stays the same, only frontmatter changes)
+        if data.new_title is not None:
+            metadata['title'] = data.new_title
+        
+        # Update content - handle both None and empty string cases
+        if hasattr(data, 'new_content') and data.new_content is not None:
+            body = data.new_content
+        
+        if data.tags is not None:
+            metadata['tags'] = data.tags
+        
+        # Create new markdown with updated frontmatter
+        # createdはdatetime型で渡す必要がある
+        created_dt = None
+        if 'created' in metadata and metadata['created']:
+            if isinstance(metadata['created'], datetime):
+                created_dt = metadata['created']
+            else:
+                try:
+                    created_dt = datetime.strptime(metadata['created'], '%Y-%m-%d %H:%M:%S')
+                except Exception:
+                    created_dt = datetime.fromtimestamp(os.path.getctime(filepath))
+        else:
+            created_dt = datetime.fromtimestamp(os.path.getctime(filepath))
+
+        markdown_content = create_markdown_with_frontmatter(
+            title=metadata.get('title', self._strip_ext(filename)),
+            content=body,
+            tags=metadata.get('tags', []),
+            created=created_dt
+        )
+        
+        self._write_file(filepath, markdown_content, overwrite=True)
+        
+        # Update the search index
+        self._sync_index_with_retry()
+        
+        # Parse created date from frontmatter
+        created_time = None
+        if 'created' in metadata:
+            try:
+                created_time = datetime.strptime(metadata['created'], '%Y-%m-%d %H:%M:%S').timestamp()
+            except (ValueError, TypeError):
+                # Fallback to file creation time if parsing fails
+                created_time = os.path.getctime(filepath)
+        else:
+            # Fallback to file creation time if no created field
+            created_time = os.path.getctime(filepath)
+        
+        return Note(
+            title=metadata.get('title', self._strip_ext(filename)),
+            content=body,
+            last_modified=os.path.getmtime(filepath),
+            created=created_time,
+            tags=metadata.get('tags', []),
+            filename=filename,
+        )
+
+    def delete(self, filename: str) -> None:
+        # Add extension if not present
+        if not filename.endswith(MARKDOWN_EXT):
+            filename += MARKDOWN_EXT
+        filepath = os.path.join(self.storage_path, filename)
         os.remove(filepath)
+        
+        # Update the search index
+        self._sync_index_with_retry()
 
     def search(
         self,
@@ -113,9 +224,55 @@ class FileSystemNotes(BaseNotes):
         sort: Literal["score", "title", "last_modified"] = "score",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
+        content_limit: int = None,
     ) -> Tuple[SearchResult, ...]:
         """Search the index for the given term."""
         self._sync_index_with_retry()
+        
+        # Check if this is a search for "_untagged" tag
+        original_term = term.strip()
+        if original_term == "#_untagged" or original_term == "tags:_untagged":
+            # Special handling for _untagged tag - return notes without tags
+            with self.index.searcher() as searcher:
+                # Get all notes and filter those without tags
+                query = Every()
+                
+                # Determine sort field
+                sort_field = sort if sort in ["title", "last_modified"] else None
+                
+                # Determine sort direction
+                reverse = order == "desc"
+                if sort_field is None:
+                    reverse = not reverse
+                
+                # Run search to get all notes
+                results = searcher.search(
+                    query,
+                    sortedby=sort_field,
+                    reverse=reverse,
+                    limit=None,  # Get all notes to filter
+                    terms=True,
+                )
+                
+                # Filter results to only include notes without tags
+                filtered_results = []
+                for hit in results:
+                    filename = hit["filename"]
+                    filepath = os.path.join(self.storage_path, filename)
+                    content = self._read_file(filepath)
+                    metadata, body = parse_markdown_with_frontmatter(content)
+                    
+                    # Only include notes without tags
+                    if not metadata.get('tags', []):
+                        filtered_results.append(hit)
+                
+                # Apply limit after filtering
+                if limit:
+                    filtered_results = filtered_results[:limit]
+                
+                return tuple(self._search_result_from_hit(hit, content_limit) for hit in filtered_results)
+        
+        # Regular search processing
         term = self._pre_process_search_term(term)
         with self.index.searcher() as searcher:
             # Parse Query
@@ -126,6 +283,15 @@ class FileSystemNotes(BaseNotes):
                     self._fieldnames_for_term(term), self.index.schema
                 )
                 parser.add_plugin(DateParserPlugin())
+                
+                # Add fuzzy search and wildcard support
+                from whoosh.qparser import FuzzyTermPlugin, WildcardPlugin
+                # Configure fuzzy search with distance 3 (allows more character differences)
+                fuzzy_plugin = FuzzyTermPlugin()
+                fuzzy_plugin.maxdist = 3
+                parser.add_plugin(fuzzy_plugin)
+                parser.add_plugin(WildcardPlugin())
+                
                 query = parser.parse(term)
 
             # Determine Sort By
@@ -149,7 +315,7 @@ class FileSystemNotes(BaseNotes):
                 limit=limit,
                 terms=True,
             )
-            return tuple(self._search_result_from_hit(hit) for hit in results)
+            return tuple(self._search_result_from_hit(hit, content_limit) for hit in results)
 
     def get_tags(self) -> list[str]:
         """Return a list of all indexed tags. Note: Tags no longer in use will
@@ -159,16 +325,162 @@ class FileSystemNotes(BaseNotes):
             tags = reader.field_terms("tags")
             return [tag for tag in tags]
 
+    def list_notes(
+        self,
+        sort: Literal["title", "last_modified"] = "last_modified",
+        order: Literal["asc", "desc"] = "desc",
+        limit: int = None,
+    ) -> list[Note]:
+        """Get a list of all notes."""
+        self._sync_index_with_retry()
+        with self.index.searcher() as searcher:
+            # Use Every() query to get all documents
+            query = Every()
+            
+            # Determine sort field
+            sort_field = sort if sort in ["title", "last_modified"] else "last_modified"
+            
+            # Determine sort direction
+            reverse = order == "desc"
+            
+            # Run search
+            results = searcher.search(
+                query,
+                sortedby=sort_field,
+                reverse=reverse,
+                limit=limit,
+            )
+            
+            # Convert to Note objects
+            notes = []
+            for hit in results:
+                filename = hit["filename"]
+                filepath = os.path.join(self.storage_path, filename)
+                content = self._read_file(filepath)
+                metadata, body = parse_markdown_with_frontmatter(content)
+                
+                notes.append(Note(
+                    title=metadata.get('title', self._strip_ext(filename)),
+                    content=body,
+                    last_modified=hit["last_modified"].timestamp(),
+                    tags=metadata.get('tags', []),
+                    filename=filename,
+                ))
+            
+            return notes
+
+    def get_notes_by_tag(
+        self,
+        tag_name: str,
+        sort: Literal["title", "last_modified"] = "last_modified",
+        order: Literal["asc", "desc"] = "desc",
+        limit: int = None,
+    ) -> list[Note]:
+        """Get notes that have a specific tag."""
+        self._sync_index_with_retry()
+        
+        # Special handling for "_untagged" tag - return notes without tags
+        if tag_name == "_untagged":
+            with self.index.searcher() as searcher:
+                # Get all notes and filter those without tags
+                from whoosh.query import Every
+                query = Every()
+                
+                # Determine sort field
+                sort_field = sort if sort in ["title", "last_modified"] else "last_modified"
+                
+                # Determine sort direction
+                reverse = order == "desc"
+                
+                # Run search to get all notes
+                results = searcher.search(
+                    query,
+                    sortedby=sort_field,
+                    reverse=reverse,
+                    limit=None,  # Get all notes to filter
+                )
+                
+                # Convert to Note objects and filter those without tags
+                notes = []
+                for hit in results:
+                    filename = hit["filename"]
+                    filepath = os.path.join(self.storage_path, filename)
+                    content = self._read_file(filepath)
+                    metadata, body = parse_markdown_with_frontmatter(content)
+                    
+                    # Only include notes without tags
+                    if not metadata.get('tags', []):
+                        notes.append(Note(
+                            title=metadata.get('title', self._strip_ext(filename)),
+                            content=body,
+                            last_modified=hit["last_modified"].timestamp(),
+                            tags=metadata.get('tags', []),
+                            filename=filename,
+                        ))
+                
+                # Apply limit after filtering
+                if limit:
+                    notes = notes[:limit]
+                
+                return notes
+        
+        # Regular tag search
+        with self.index.searcher() as searcher:
+            # Search for notes with the specific tag
+            from whoosh.query import Term
+            query = Term("tags", tag_name)
+            
+            # Determine sort field
+            sort_field = sort if sort in ["title", "last_modified"] else "last_modified"
+            
+            # Determine sort direction
+            reverse = order == "desc"
+            
+            # Run search
+            results = searcher.search(
+                query,
+                sortedby=sort_field,
+                reverse=reverse,
+                limit=limit,
+            )
+            
+            # Convert to Note objects
+            notes = []
+            for hit in results:
+                filename = hit["filename"]
+                filepath = os.path.join(self.storage_path, filename)
+                content = self._read_file(filepath)
+                metadata, body = parse_markdown_with_frontmatter(content)
+                
+                notes.append(Note(
+                    title=metadata.get('title', self._strip_ext(filename)),
+                    content=body,
+                    last_modified=hit["last_modified"].timestamp(),
+                    tags=metadata.get('tags', []),
+                    filename=filename,
+                ))
+            
+            return notes
+
     @property
     def _index_path(self):
-        return os.path.join(self.storage_path, ".flatnotes")
+        return os.path.join(self.storage_path, ".sbnote")
 
-    def _path_from_title(self, title: str) -> str:
-        return os.path.join(self.storage_path, title + MARKDOWN_EXT)
+
 
     def _get_by_filename(self, filename: str) -> Note:
         """Get a note by its filename."""
-        return self.get(self._strip_ext(filename))
+        filepath = os.path.join(self.storage_path, filename)
+        content = self._read_file(filepath)
+        metadata, body = parse_markdown_with_frontmatter(content)
+        
+        return Note(
+            title=metadata.get('title', self._strip_ext(filename)),
+            content=body,
+            last_modified=os.path.getmtime(filepath),
+            tags=metadata.get('tags', []),
+            filename=filename,
+        )
 
     def _load_index(self) -> Index:
         """Load the note index or create new if not exists."""
@@ -198,11 +510,18 @@ class FileSystemNotes(BaseNotes):
         - The content without the tags.
         - A set of tags converted to lowercase."""
         content_ex_codeblock = re.sub(cls.CODEBLOCK_RE, "", content)
-        _, tags = cls._re_extract(cls.TAGS_RE, content_ex_codeblock)
-        content_ex_tags, _ = cls._re_extract(cls.TAGS_RE, content)
+        tags = cls.TAGS_RE.findall(content_ex_codeblock)
+        content_ex_tags = cls.TAGS_RE.sub("", content)
         try:
-            tags = [tag.lower() for tag in tags]
-            return (content_ex_tags, set(tags))
+            # Don't convert Japanese tags to lowercase
+            processed_tags = []
+            for tag in tags:
+                # Only convert to lowercase if the tag contains only ASCII characters
+                if tag.isascii():
+                    processed_tags.append(tag.lower())
+                else:
+                    processed_tags.append(tag)
+            return (content_ex_tags, set(processed_tags))
         except IndexError:
             return (content, set())
 
@@ -212,13 +531,12 @@ class FileSystemNotes(BaseNotes):
         """Add a Note object to the index using the given writer. If the
         filename already exists in the index an update will be performed
         instead."""
-        content_ex_tags, tag_set = self._extract_tags(note.content)
-        tag_string = " ".join(tag_set)
+        tag_string = " ".join(note.tags or [])
         writer.update_document(
-            filename=note.title + MARKDOWN_EXT,
+            filename=note.filename or note.title + MARKDOWN_EXT,
             last_modified=datetime.fromtimestamp(note.last_modified),
             title=note.title,
-            content=content_ex_tags,
+            content=note.content,
             tags=tag_string,
         )
 
@@ -294,6 +612,20 @@ class FileSystemNotes(BaseNotes):
             lambda tag: "tags:" + tag.group(0)[1:],
             term,
         )
+        
+        # Add wildcard support for partial matches
+        # If the term doesn't already contain wildcards and is not a phrase
+        if '*' not in term and '~' not in term and '"' not in term and len(term) > 0:
+            # Add wildcard to the end for partial matching
+            # But only if it's not already a field-specific search
+            if ':' not in term:
+                # For very short terms (2 characters or less), use both wildcard and fuzzy
+                if len(term) <= 2:
+                    term = term + '*' + ' OR ' + term + '~'
+                else:
+                    # Use wildcard for longer terms
+                    term = term + '*'
+        
         return term
 
     @staticmethod
@@ -321,10 +653,14 @@ class FileSystemNotes(BaseNotes):
             elif os.path.isdir(item_path):
                 shutil.rmtree(item_path)
 
-    def _search_result_from_hit(self, hit: Hit):
+    def _search_result_from_hit(self, hit: Hit, content_limit: int = None):
         matched_fields = self._get_matched_fields(hit.matched_terms())
 
-        title = self._strip_ext(hit["filename"])
+        filename = hit["filename"]
+        filepath = os.path.join(self.storage_path, filename)
+        content = self._read_file(filepath)
+        metadata, body = parse_markdown_with_frontmatter(content)
+        title = metadata.get('title', self._strip_ext(filename))
         last_modified = hit["last_modified"].timestamp()
 
         # If the search was ordered using a text field then hit.score is the
@@ -334,18 +670,31 @@ class FileSystemNotes(BaseNotes):
 
         if "title" in matched_fields:
             hit.results.fragmenter = WholeFragmenter()
-            title_highlights = hit.highlights("title", text=title)
+            title_highlights = hit.highlights("title", text=title, top=1)
+            # Replace Whoosh highlight tags with mark tags for better semantic meaning
+            if title_highlights:
+                # Replace all variations of Whoosh highlight tags
+                title_highlights = re.sub(r'<b[^>]*>', '<mark class="highlight">', title_highlights)
+                title_highlights = title_highlights.replace('</b>', '</mark>')
         else:
             title_highlights = None
 
         if "content" in matched_fields:
-            hit.results.fragmenter = ContextFragmenter()
-            content = self._read_file(self._path_from_title(title))
-            content_ex_tags, _ = FileSystemNotes._extract_tags(content)
+            hit.results.fragmenter = ContextFragmenter(charlimit=200, surround=50)
+            content_ex_tags, _ = FileSystemNotes._extract_tags(body)
             content_highlights = hit.highlights(
                 "content",
                 text=content_ex_tags,
+                top=2,  # Show up to 2 fragments to increase chance of finding matches
             )
+            # Replace Whoosh highlight tags with mark tags for better semantic meaning
+            if content_highlights:
+                # Replace all variations of Whoosh highlight tags
+                content_highlights = re.sub(r'<b[^>]*>', '<mark class="highlight">', content_highlights)
+                content_highlights = content_highlights.replace('</b>', '</mark>')
+            else:
+                # If no highlights generated, show a snippet of the content
+                content_highlights = content_ex_tags[:100] + ('...' if len(content_ex_tags) > 100 else '')
         else:
             content_highlights = None
 
@@ -355,9 +704,17 @@ class FileSystemNotes(BaseNotes):
             else None
         )
 
+        # Limit content if content_limit is specified
+        if content_limit and body and len(body) > content_limit:
+            limited_content = body[:content_limit] + "..."
+        else:
+            limited_content = body
+
         return SearchResult(
             title=title,
+            content=limited_content,
             last_modified=last_modified,
+            filename=filename,
             score=score,
             title_highlights=title_highlights,
             content_highlights=content_highlights,

@@ -1,7 +1,7 @@
 <template>
   <!-- Confirm Deletion Modal -->
   <ConfirmModal
-    v-model="isDeleteModalVisible"
+    v-model="uiState.isDeleteModalVisible"
     title="Confirm Deletion"
     :message="`Are you sure you want to delete the note '${note.title}'?`"
     confirmButtonText="Delete"
@@ -9,122 +9,137 @@
     @confirm="deleteConfirmedHandler"
   />
 
-  <!-- Save Changes Modal -->
+  <!-- File Size Limit Modal -->
   <ConfirmModal
-    v-model="isSaveChangesModalVisible"
-    title="Save Changes"
-    message="Do you want to save your changes?"
-    confirmButtonText="Save"
-    confirmButtonStyle="success"
-    rejectButtonText="Discard"
-    rejectButtonStyle="danger"
-    @confirm="saveHandler((close = true))"
-    @reject="closeNote"
-  />
-
-  <!-- Draft Modal -->
-  <ConfirmModal
-    v-model="isDraftModalVisible"
-    title="Draft Detected"
-    message="There is an unsaved draft of this note stored in this browser. Do you want to resume the draft version or delete it?"
-    confirmButtonText="Resume Draft"
+    v-model="uiState.isFileSizeModalVisible"
+    title="File Too Large"
+    :message="fileSizeModalMessage"
+    confirmButtonText="OK"
     confirmButtonStyle="cta"
-    rejectButtonText="Delete Draft"
-    rejectButtonStyle="danger"
-    @confirm="setEditMode()"
-    @reject="
-      clearDraft();
-      setEditMode();
-    "
+    @confirm="closeFileSizeModal"
   />
 
-  <LoadingIndicator ref="loadingIndicator" class="flex h-full flex-col">
-    <!-- Header -->
-    <div class="flex flex-col-reverse md:flex-row md:items-baseline">
-      <!-- Title -->
-      <div class="grow truncate text-3xl leading-[1.6em]">
-        <span v-show="!editMode" :title="note.title">{{ note.title }}</span>
-        <input
-          v-show="editMode"
-          v-model.trim="newTitle"
-          class="w-full bg-theme-background outline-none"
-          placeholder="Title"
-        />
+  <div :class="`w-full mx-auto flex flex-col overflow-visible h-full`">
+    <Loading ref="loadingIndicator" class="flex-1 overflow-visible">
+      <div class="flex flex-col h-full">
+        <!-- Content -->
+        <div class="flex-1 editor-container">
+          <Editor
+            v-if="canModify"
+            ref="toastEditor"
+            :key="note.filename || 'new-note'"
+            :initialValue="getInitialEditorValue()"
+            :initialEditType="loadDefaultEditorMode()"
+            :addImageBlobHook="addImageBlobHook"
+            :previewStyle="globalStore.previewStyle"
+            @change="handleEditorChange"
+          />
+          <EditorViewer
+            v-else
+            :initialValue="note.content"
+          />
+        </div>
+
+        <!-- 日付表示 -->
+        <div class="text-xs text-gray-500 flex flex-row gap-4 p-1 justify-end note-content-width">
+          <span v-if="note.lastModifiedAsString">Modified: {{ note.lastModifiedAsString }}</span>
+        </div>
+
+        <!-- Tags section at bottom -->
+        <div class="mt-2 mb-2 note-content-width">
+          <TagInput 
+            v-model="displayTags"
+            :readonly="!canModify"
+            @tagConfirmed="onTagConfirmed"
+          />
+        </div>
+
+        <!-- Tag Grid section -->
+        <div v-if="noteTags.length > 0" class="mt-2 tag-grid-container" :style="noteContainerStyle">
+          <div>
+            <!-- Sort Controls -->
+            <div class="flex items-center justify-end w-full mb-2 space-x-2">
+              <SortDropdown
+                v-if="selectedNoteTag && displayedTagNotes.length > 0"
+                v-model="noteTagSortBy"
+                :sort-order="noteTagSortOrder"
+                @update:sort-order="updateNoteTagSortOrder"
+                :options="noteSortOptions"
+                label="Sort Notes by"
+              />
+              <SortDropdown
+                v-model="tagSortBy"
+                :sort-order="tagSortOrder"
+                @update:sort-order="updateTagSortOrder"
+                :options="tagSortOptions"
+                label="Sort Tags by"
+              />
+            </div>
+
+            <!-- Grid Content -->
+            <GridLayout
+              :items="tagGridItems"
+              @tag-click="onNoteTagClick"
+              @tag-dblclick="onNoteTagDoubleClick"
+            />
+          </div>
+        </div>
       </div>
-
-      <!-- Buttons -->
-      <div class="flex shrink-0 self-end md:self-baseline print:hidden">
-        <!-- Delete Button -->
-        <CustomButton
-          v-show="canModify && !isNewNote"
-          label="Delete"
-          :iconPath="mdilDelete"
-          @click="deleteHandler"
-        />
-        <!-- Save Button -->
-        <CustomButton
-          v-show="editMode"
-          label="Save"
-          :iconPath="mdilContentSave"
-          @click="saveHandler((close = false))"
-          class="relative ml-1"
-        >
-          <!-- Unsaved Changes Indicator -->
-          <div
-            v-show="unsavedChanges"
-            class="absolute right-1 h-1.5 w-1.5 rounded-full bg-theme-brand"
-          ></div>
-        </CustomButton>
-        <!-- Edit Toggle -->
-        <Toggle
-          v-if="canModify"
-          label="Edit"
-          :isOn="editMode"
-          class="ml-1"
-          @click="toggleEditModeHandler"
-        />
-      </div>
-    </div>
-
-    <hr v-if="!editMode" class="my-4 border-theme-border" />
-
-    <!-- Content -->
-    <div class="flex-1">
-      <ToastViewer
-        v-if="!editMode"
-        :initialValue="note.content"
-        class="toast-viewer pb-4"
-      />
-      <ToastEditor
-        v-if="editMode"
-        ref="toastEditor"
-        :initialValue="getInitialEditorValue()"
-        :initialEditType="loadDefaultEditorMode()"
-        :addImageBlobHook="addImageBlobHook"
-        @change="startContentChangedTimeout"
-        @keydown="keydownHandler"
-      />
-    </div>
-  </LoadingIndicator>
+    </Loading>
+  </div>
 </template>
 
 <style>
-/* Disable checkboxes in view mode. See https://github.com/nhn/tui.editor/issues/1087. */
-.toast-viewer li.task-list-item {
-  pointer-events: none;
+/* Main container styling */
+.w-full.mx-auto.flex.h-full.flex-col {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100%;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
-.toast-viewer li.task-list-item a {
-  pointer-events: auto;
+
+/* Toast Editor container styling */
+.flex-1 {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: visible;
+}
+
+/* Editor container styling */
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: visible;
+}
+
+/* Tag grid container styling for split view */
+.tag-grid-container {
+  max-width: var(--layout-width-note);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Note content width styling */
+.note-content-width {
+  max-width: var(--layout-width-note);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>
 
 <script setup>
-import { mdiNoteOffOutline } from "@mdi/js";
-import { mdilContentSave, mdilDelete } from "@mdi/light-js";
-import Mousetrap from "mousetrap";
-import { useToast } from "primevue/usetoast";
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { FileX } from "lucide-vue-next";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
+import { useRoute } from "vue-router";
+
 
 import {
   apiErrorHandler,
@@ -133,291 +148,546 @@ import {
   deleteNote,
   getNote,
   updateNote,
+  getNotesByTag,
+  getTagsWithCounts,
 } from "../api.js";
 import { Note } from "../classes.js";
 import ConfirmModal from "../components/ConfirmModal.vue";
-import CustomButton from "../components/CustomButton.vue";
-import LoadingIndicator from "../components/LoadingIndicator.vue";
-import Toggle from "../components/Toggle.vue";
-import ToastEditor from "../components/toastui/ToastEditor.vue";
-import ToastViewer from "../components/toastui/ToastViewer.vue";
-import { authTypes } from "../constants.js";
+
+import Loading from "../components/Loading.vue";
+import TagInput from "../components/TagInput.vue";
+import Editor from "../components/Editor.vue";
+import EditorViewer from "../components/EditorViewer.vue";
+import SortDropdown from "../components/SortDropdown.vue";
+import GridLayout from "../components/GridLayout.vue";
+
+import { noteConstants, params } from "../constants.js";
 import { useGlobalStore } from "../globalStore.js";
-import { getToastOptions } from "../helpers.js";
+import { useSorting } from "../composables/useSorting.js";
+import { useGridData } from "../composables/useGridData.js";
+import { useTagInteractions } from "../composables/useTagInteractions.js";
+import { useDataFetching } from "../composables/useDataFetching.js";
 
 const props = defineProps({
-  title: String,
+  filename: String,
 });
 
-const canModify = computed(
-  () => globalStore.config.authType != authTypes.readOnly,
-);
-let contentChangedTimeout = null;
-const editMode = ref(false);
-const globalStore = useGlobalStore();
-const isSaveChangesModalVisible = ref(false);
-const isDeleteModalVisible = ref(false);
-const isDraftModalVisible = ref(false);
-const isNewNote = computed(() => !props.title);
-const loadingIndicator = ref();
-const note = ref({});
-const reservedFilenameCharacters = /[<>:"/\\|?*]/;
-const router = useRouter();
-const newTitle = ref();
-const toast = useToast();
-const toastEditor = ref();
-const unsavedChanges = ref(false);
+const route = useRoute();
 
-function init() {
-  // Return if we already have the note e.g. When we rename a note, the route prop would change but we’d already have the note.
-  if (props.title && props.title == note.value.title) {
+const globalStore = useGlobalStore();
+const canModify = computed(() => {
+  // README.md is always read-only
+  if (props.filename && props.filename.toLowerCase() === 'readme.md') {
+    return false;
+  }
+  return globalStore.isAuthenticated && globalStore.config.authType !== 'read_only' && globalStore.editMode;
+});
+let contentChangedTimeout = null;
+let autoSaveTimeout = null;
+let titleGenerationTimeout = null;
+const loadingIndicator = ref();
+const router = useRouter();
+const toastEditor = ref();
+
+// Composables
+const { noteSortOptions, tagSortOptions, sortItems } = useSorting();
+const { createNestedGridItems } = useGridData();
+const { handleTagClick, handleTagDoubleClick } = useTagInteractions();
+const { fetchNotesByTag } = useDataFetching();
+
+// State management - grouped related states
+const noteState = ref({
+  note: {},
+  newTitle: "",
+  isNewNote: !props.filename
+});
+
+const uiState = ref({
+  isDeleteModalVisible: false,
+  isFileSizeModalVisible: false,
+  unsavedChanges: false
+});
+
+const autoSaveState = ref({
+  isAutoSaving: false,
+  isAutoSavingInProgress: false
+});
+
+// Tag grid state
+const tagGridState = ref({
+  selectedNoteTag: null,
+  displayedTagNotes: [],
+  noteTagSortBy: 'lastModified',
+  noteTagSortOrder: 'desc',
+  tagSortBy: 'name',
+  tagSortOrder: 'asc'
+});
+
+// Tag counts state
+const tagCountsState = ref({
+  allTagsWithCounts: []
+});
+
+// Computed properties for easier access
+const note = computed(() => noteState.value.note);
+const newTitle = computed(() => noteState.value.newTitle);
+const isNewNote = computed(() => noteState.value.isNewNote);
+
+// Tag grid computed properties
+const selectedNoteTag = computed(() => tagGridState.value.selectedNoteTag);
+const displayedTagNotes = computed(() => tagGridState.value.displayedTagNotes);
+const noteTagSortBy = computed(() => tagGridState.value.noteTagSortBy);
+const noteTagSortOrder = computed(() => tagGridState.value.noteTagSortOrder);
+const tagSortBy = computed(() => tagGridState.value.tagSortBy);
+const tagSortOrder = computed(() => tagGridState.value.tagSortOrder);
+
+// Computed property for tag display
+const displayTags = computed({
+  get: () => canModify.value ? newTags.value : (note.value.tags || []),
+  set: (value) => {
+    if (canModify.value) {
+      newTags.value = value;
+    }
+  }
+});
+
+// Computed property for note tags (current note's tags)
+const noteTags = computed(() => {
+  // Use newTags for editing mode, note.value.tags for view mode
+  const tags = canModify.value ? newTags.value : (note.value.tags || []);
+  const allTagsWithCounts = tagCountsState.value.allTagsWithCounts;
+  
+  const tagData = tags.map(tag => {
+    // Find the actual count for this tag
+    const tagData = allTagsWithCounts.find(t => t.tag === tag);
+    return {
+      tag: tag,
+      count: tagData ? tagData.count : 1
+    };
+  });
+  
+  // Sort the tags
+  return sortItems(tagData, tagSortBy.value, tagSortOrder.value, 'tags');
+});
+
+// Computed property for sorted tag notes
+const sortedTagNotes = computed(() => {
+  return sortItems(displayedTagNotes.value, noteTagSortBy.value, noteTagSortOrder.value, 'notes');
+});
+
+// Computed property for tag grid items
+const tagGridItems = computed(() => {
+  const items = createNestedGridItems(noteTags.value, sortedTagNotes.value, selectedNoteTag.value, []);
+  return items;
+});
+
+// newTags is a ref for v-model compatibility
+const newTags = ref([]);
+
+// File size modal message
+const fileSizeModalMessage = ref("");
+
+// State update functions
+function updateNoteState(updates) {
+  Object.assign(noteState.value, updates);
+}
+
+function updateUIState(updates) {
+  Object.assign(uiState.value, updates);
+}
+
+function updateAutoSaveState(updates) {
+  Object.assign(autoSaveState.value, updates);
+}
+
+function updateTagGridState(updates) {
+  Object.assign(tagGridState.value, updates);
+}
+
+function updateTagCountsState(updates) {
+  Object.assign(tagCountsState.value, updates);
+}
+
+// Load tag counts
+async function loadTagCounts() {
+  try {
+    const tagsWithCounts = await getTagsWithCounts();
+    updateTagCountsState({ allTagsWithCounts: tagsWithCounts });
+  } catch (error) {
+    console.error('Failed to load tag counts:', error);
+  }
+}
+
+// Tag grid event handlers
+async function onNoteTagClick(tagName) {
+  try {
+    const previousSelectedTag = selectedNoteTag.value;
+    
+    handleTagClick(tagName, selectedNoteTag.value, (tag) => updateTagGridState({ selectedNoteTag: tag }), () => updateTagGridState({ displayedTagNotes: [] }));
+    
+    // Only fetch notes if a new tag was selected (not the same tag)
+    if (selectedNoteTag.value === tagName && previousSelectedTag !== tagName) {
+      // Get notes for the selected tag
+      const notes = await fetchNotesByTag(getNotesByTag, tagName, noteTagSortBy.value, noteTagSortOrder.value, 10);
+      updateTagGridState({ displayedTagNotes: notes });
+    }
+  } catch (error) {
+    console.error('Failed to get notes for tag:', error);
+  }
+}
+
+function onNoteTagDoubleClick(tagName) {
+  handleTagDoubleClick(tagName, '/tag/');
+}
+
+function updateNoteTagSortOrder(newOrder) {
+  updateTagGridState({ noteTagSortOrder: newOrder });
+}
+
+function updateTagSortOrder(newOrder) {
+  updateTagGridState({ tagSortOrder: newOrder });
+}
+
+// Create empty note to get filename immediately
+function createEmptyNote() {
+  const emptyTitle = newTitle.value || noteConstants.DEFAULT_TITLE;
+  const emptyContent = note.value.content || "";
+  const defaultTags = newTags.value;
+  
+  createNote(emptyTitle, emptyContent, defaultTags)
+    .then((data) => {
+      // Update note with server data
+      updateNoteState({
+        note: {
+          ...note.value,
+          title: data.title,
+          tags: data.tags,
+          content: data.content,
+          filename: data.filename
+        },
+        newTitle: data.title,
+        isNewNote: false  // Mark as existing note after creation
+      });
+      
+      // Update newTags with server data (silently to avoid watch trigger)
+      const serverTags = data.tags || [];
+      if (newTags.value.length !== serverTags.length || 
+          newTags.value.some((tag, index) => tag !== serverTags[index])) {
+        newTags.value = serverTags;
+      }
+      
+      // Update browser tab title
+      document.title = `${data.title} - SBNote`;
+      
+      // Update URL with filename (without extension)
+      const filename = data.filename.replace(noteConstants.MARKDOWN_EXTENSION, '');
+      router.replace({ name: "note", params: { filename } });
+      
+      // Update local state
+      updateUIState({ unsavedChanges: false });
+      setBeforeUnloadConfirmation(false);
+    })
+    .catch((error) => {
+      console.error('Failed to create empty note:', error);
+      apiErrorHandler(error);
+    });
+}
+
+function handleEditorChange() {
+  if (canModify.value) {
+    startContentChangedTimeout();
+
+    const content = toastEditor.value.getMarkdown();
+    if (generateTitleFromContent(content) !== note.value.title) {
+      updateUIState({ unsavedChanges: true });
+    }
+
+    // Auto-generate title from first line
+    clearTimeout(titleGenerationTimeout);
+    titleGenerationTimeout = setTimeout(() => {
+      const content = toastEditor.value.getMarkdown();
+      const generatedTitle = generateTitleFromContent(content);
+      if (generatedTitle && generatedTitle !== newTitle.value) {
+        updateNoteState({ newTitle: generatedTitle });
+      }
+    }, noteConstants.TITLE_GENERATION_DELAY);
+  }
+}
+
+async function init() {
+  if (props.filename && props.filename === note.value.filename) {
     return;
   }
-
   loadingIndicator.value.setLoading();
-  if (props.title) {
-    getNote(props.title)
+  
+  // Load tag counts first
+  await loadTagCounts();
+  
+  if (props.filename) {
+    // Add .md extension for API call
+    const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
+    getNote(filenameWithExtension)
       .then((data) => {
-        note.value = data;
+        const isExistingNote = note.value.filename;
+        updateNoteState({
+          note: data,
+          newTitle: data.title
+        });
+        // Initialize newTags separately
+        newTags.value = data.tags || [];
+        if (data.title && data.title.trim()) {
+          document.title = `${data.title} - SBNote`;
+        }
+        if (!isExistingNote) {
+          note.value.content = data.content;
+        }
         loadingIndicator.value.setLoaded();
+        updateFileMenuState();
+        
+        // Reset tag grid state when note changes
+        updateTagGridState({
+          selectedNoteTag: null,
+          displayedTagNotes: []
+        });
       })
       .catch((error) => {
+        console.error('Failed to load note:', error);
         if (error.response?.status === 404) {
-          loadingIndicator.value.setFailed("Note not found", mdiNoteOffOutline);
+          loadingIndicator.value.setFailed("Note not found", FileX);
         } else {
           loadingIndicator.value.setFailed();
-          apiErrorHandler(error, toast);
+          apiErrorHandler(error);
         }
       });
   } else {
-    newTitle.value = "";
-    note.value = new Note();
-    // Set the editMode to false to close any existing editors.
-    // This ensures the editor is cleanly reinitialised in an empty state.
-    // Simple fix for #266 without requiring a full re-work of the logic.
-    editMode.value = false;
-    nextTick(() => {
-      editHandler();
-      loadingIndicator.value.setLoaded();
+    // Check if tag parameter is provided for new note
+    const tagFromQuery = route.query.tag;
+    const contentFromQuery = route.query[params.content];
+    const initialTags = tagFromQuery ? [tagFromQuery] : [];
+    
+    updateNoteState({
+      newTitle: "",
+      note: new Note({
+        content: contentFromQuery || ""
+      })
     });
+    
+    // Initialize newTags separately
+    newTags.value = initialTags;
+    
+    // Set default title for new note
+    document.title = "New Note - SBNote";
+    loadingIndicator.value.setLoaded();
+    updateFileMenuState();
+    
+    // Reset tag grid state for new note
+    updateTagGridState({
+      selectedNoteTag: null,
+      displayedTagNotes: []
+    });
+    
+    // Immediately create empty note to get filename
+    createEmptyNote();
   }
-}
-
-// Note Editing
-function toggleEditModeHandler() {
-  if (editMode.value) {
-    closeHandler();
-  } else {
-    editHandler();
-  }
-}
-
-function editHandler() {
-  const draftContent = loadDraft();
-  if (draftContent) {
-    isDraftModalVisible.value = true;
-  } else {
-    setEditMode();
-  }
-}
-
-function setEditMode() {
-  newTitle.value = note.value.title;
-  unsavedChanges.value = false;
-  editMode.value = true;
 }
 
 function getInitialEditorValue() {
-  const draftContent = loadDraft();
-  return draftContent ? draftContent : note.value.content;
+  // If this is a new note and we have content from query params, use it
+  if (isNewNote.value && note.value.content) {
+    return note.value.content;
+  }
+  return note.value.content;
 }
 
-// Note Deletion
+function generateTitleFromContent(content) {
+  if (!content) return "";
+  
+  // Split content into lines and get the first non-empty line
+  const lines = content.split('\n');
+  let firstLine = "";
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (trimmedLine) {
+      firstLine = trimmedLine;
+      break;
+    }
+  }
+  
+  if (!firstLine) return "";
+  
+  // Remove markdown formatting
+  let title = firstLine
+    // Remove headers (# ## ### etc.)
+    .replace(noteConstants.MARKDOWN_PATTERNS.HEADERS, '')
+    // Remove bold/italic markers
+    .replace(noteConstants.MARKDOWN_PATTERNS.BOLD, '$1')
+    .replace(noteConstants.MARKDOWN_PATTERNS.ITALIC, '$1')
+    .replace(noteConstants.MARKDOWN_PATTERNS.BOLD_UNDERSCORE, '$1')
+    .replace(noteConstants.MARKDOWN_PATTERNS.ITALIC_UNDERSCORE, '$1')
+    // Remove code markers
+    .replace(noteConstants.MARKDOWN_PATTERNS.CODE, '$1')
+    // Remove links [text](url) -> text
+    .replace(noteConstants.MARKDOWN_PATTERNS.LINKS, '$1')
+    // Remove images ![alt](url) -> alt
+    .replace(noteConstants.MARKDOWN_PATTERNS.IMAGES, '$1')
+    // Remove HTML tags
+    .replace(noteConstants.MARKDOWN_PATTERNS.HTML_TAGS, '')
+    // Trim whitespace
+    .trim();
+  
+  // Limit title length to reasonable size
+  if (title.length > noteConstants.MAX_TITLE_LENGTH) {
+    title = title.substring(0, noteConstants.TITLE_TRUNCATE_LENGTH) + '...';
+  }
+  
+  return title;
+}
+
+
+
+
+
+// Note Deletion (for NavBar event)
 function deleteHandler() {
-  isDeleteModalVisible.value = true;
+  updateUIState({ isDeleteModalVisible: true });
+}
+
+// Copy Link (for NavBar event)
+function copyLinkHandler() {
+  // Get current note URL
+  const currentRoute = router.currentRoute.value;
+  const noteUrl = router.resolve(currentRoute).href;
+  const fullUrl = window.location.origin + noteUrl;
+  
+  // Copy to clipboard
+  navigator.clipboard.writeText(fullUrl).then(() => {
+    // Show success toast notification
+    globalStore.toast?.addToast(
+      'Note URL copied to clipboard',
+      'Copy Link',
+      'success'
+    );
+  }).catch(err => {
+    console.error('Failed to copy URL:', err);
+    // Show error toast notification
+    globalStore.toast?.addToast(
+      'Failed to copy URL to clipboard',
+      'Copy Link Error',
+      'error'
+    );
+  });
+}
+
+// Close Note (for NavBar event)
+function closeHandler() {
+  // Check if there's a previous page in browser history
+  if (window.history.length > 1) {
+    // Check if the previous page is within the same app
+    const currentOrigin = window.location.origin;
+    const referrer = document.referrer;
+    
+    // If referrer is from the same origin, go back
+    if (referrer && referrer.startsWith(currentOrigin)) {
+      router.back();
+    } else {
+      // If referrer is from outside the app or empty, go to home
+      router.push({ name: "home" });
+    }
+  } else {
+    // If no history, go to home
+    router.push({ name: "home" });
+  }
+}
+
+// Toggle Preview Style (for NavBar event)
+function togglePreviewStyleHandler(event) {
+  // The previewStyle is already updated in globalStore by NavBar
+  // No additional logic needed as the computed property will automatically update
 }
 
 function deleteConfirmedHandler() {
-  deleteNote(note.value.title)
+  // Add .md extension for API call
+  const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
+  deleteNote(filenameWithExtension)
     .then(() => {
-      toast.add(getToastOptions("Note deleted ✓", "Success", "success"));
       router.push({ name: "home" });
     })
     .catch((error) => {
-      apiErrorHandler(error, toast);
+      apiErrorHandler(error);
     });
 }
 
-// Note Saving
-function saveHandler(close = false) {
-  // Save Default Editor Mode
-  saveDefaultEditorMode();
 
-  // Empty Title Validation
-  if (!newTitle.value) {
-    toast.add(
-      getToastOptions("Cannot save note without a title.", "Invalid", "error"),
-    );
-    return;
-  }
 
-  // Invalid Character Validation
-  if (reservedFilenameCharacters.test(newTitle.value)) {
-    badFilenameToast("Title");
-    return;
-  }
 
-  // Save Note
-  let newContent = toastEditor.value.getMarkdown();
-  if (isNewNote.value) {
-    saveNew(newTitle.value, newContent, close);
+
+function handleSaveFailure(error) {
+  if (error.response?.status === 413) {
+    showFileSizeModal("note");
   } else {
-    saveExisting(newTitle.value, newContent, close);
+    apiErrorHandler(error);
   }
 }
 
-function saveNew(newTitle, newContent, close = false) {
-  createNote(newTitle, newContent)
-    .then((data) => {
-      clearDraft();
-      note.value = data;
-      router
-        .push({
-          name: "note",
-          params: { title: note.value.title },
-        })
-        .then(() => {
-          // Wait for the route to be updated before setting edit mode to false
-          // as the route is used to determine the action.
-          noteSaveSuccess(close);
-        });
-    })
-    .catch(noteSaveFailure);
-}
 
-function saveExisting(newTitle, newContent, close = false) {
-  // Return if no changes
-  if (newTitle == note.value.title && newContent == note.value.content) {
-    noteSaveSuccess(close);
-    return;
-  }
-
-  updateNote(note.value.title, newTitle, newContent)
-    .then((data) => {
-      clearDraft();
-      note.value = data;
-      router.replace({ name: "note", params: { title: note.value.title } });
-      noteSaveSuccess(close);
-    })
-    .catch(noteSaveFailure);
-}
-
-function noteSaveFailure(error) {
-  if (error.response?.status === 409) {
-    toast.add(
-      getToastOptions(
-        "A note with this title already exists. Please try again with a new title.",
-        "Duplicate",
-        "error",
-      ),
-    );
-  } else if (error.response?.status === 413) {
-    entityTooLargeToast("note");
-  } else {
-    apiErrorHandler(error, toast);
-  }
-}
-
-function noteSaveSuccess(close = false) {
-  unsavedChanges.value = false;
-  if (close) {
-    closeNote();
-  }
-  setBeforeUnloadConfirmation(false);
-  toast.add(getToastOptions("Note saved successfully ✓", "Success", "success"));
-}
-
-// Note Closure
-function closeHandler() {
-  if (isContentChanged()) {
-    isSaveChangesModalVisible.value = true;
-  } else {
-    closeNote();
-  }
-}
 
 function closeNote() {
-  clearDraft();
-  editMode.value = false;
+  clearAutoSaveTimeout();
+  clearTitleGenerationTimeout();
   if (isNewNote.value) {
     router.push({ name: "home" });
-  } else {
-    editMode.value = false;
   }
 }
 
 // Image Upload
 function addImageBlobHook(file, callback) {
-  const altTextInputValue = document.getElementById(
-    "toastuiAltTextInput",
-  )?.value;
-
-  // Upload the image then use the callback to insert the URL into the editor
-  postAttachment(file).then(function (data) {
-    if (data) {
-      // If the user has entered an alt text, use it. Otherwise, use the filename returned by the API.
-      const altText = altTextInputValue ? altTextInputValue : data.filename;
-      callback(data.url, altText);
-    }
-  });
+  postAttachment(file)
+    .then((data) => {
+      if (data) {
+        const altText = data.filename;
+        callback(data.url, altText);
+      }
+    })
+    .catch((error) => {
+      console.warn('Image upload failed, using local URL:', error);
+      // Fallback to local URL if upload fails
+      const url = URL.createObjectURL(file);
+      callback(url, file.name);
+    });
 }
 
 function postAttachment(file) {
-  // Invalid Character Validation
-  if (reservedFilenameCharacters.test(file.name)) {
-    badFilenameToast("Title");
-    return;
+  if (!file.name || file.name.trim() === "") {
+    globalStore.toast?.addToast(
+      "Invalid filename",
+      "Invalid Attachment",
+      "error"
+    );
+    return Promise.reject(new Error("Invalid filename"));
   }
 
-  // Uploading Toast
-  toast.add(getToastOptions("Uploading attachment..."));
-
-  // Upload the attachment
   return createAttachment(file)
     .then((data) => {
-      // Success Toast
-      toast.add(
-        getToastOptions(
-          "Attachment uploaded successfully ✓",
-          "Success",
-          "success",
-        ),
-      );
       return data;
     })
     .catch((error) => {
       if (error.response?.status === 409) {
-        // Note: The current implementation will append a datetime to the filename if it already exists.
-        // Error Toast
-        toast.add(
-          getToastOptions(
-            "An attachment with this filename already exists.",
-            "Duplicate",
-            "error",
-          ),
-        );
-      } else if (error.response?.status == 413) {
-        entityTooLargeToast("attachment");
+        // File already exists, will be handled by server
+        return Promise.reject(error);
+      } else if (error.response?.status === 413) {
+        showFileSizeModal("attachment");
+        return Promise.reject(error);
       } else {
-        apiErrorHandler(error, toast);
+        apiErrorHandler(error);
+        return Promise.reject(error);
       }
     });
 }
 
-// Content Change Watcher
 function startContentChangedTimeout() {
   clearContentChangedTimeout();
-  contentChangedTimeout = setTimeout(contentChangedHandler, 1000);
+  contentChangedTimeout = setTimeout(contentChangedHandler, noteConstants.CONTENT_CHANGE_DELAY);
 }
 
 function clearContentChangedTimeout() {
@@ -427,71 +697,192 @@ function clearContentChangedTimeout() {
 }
 
 function contentChangedHandler() {
+  if (autoSaveState.value.isAutoSavingInProgress) {
+    return;
+  }
+  
   if (isContentChanged()) {
-    unsavedChanges.value = true;
+    updateUIState({ unsavedChanges: true });
     setBeforeUnloadConfirmation(true);
-    saveDraft();
+    const delay = isNewNote.value ? noteConstants.NEW_NOTE_AUTO_SAVE_DELAY : noteConstants.AUTO_SAVE_DELAY;
+    startAutoSaveTimeout(delay);
   } else {
-    unsavedChanges.value = false;
+    updateUIState({ unsavedChanges: false });
     setBeforeUnloadConfirmation(false);
-    clearDraft();
+    clearAutoSaveTimeout();
   }
 }
 
-// Drafts
-function saveDraft() {
-  const content = toastEditor.value.getMarkdown();
-  if (content) {
-    localStorage.setItem(note.value.title, content);
+function startAutoSaveTimeout(delay = noteConstants.AUTO_SAVE_DELAY) {
+  clearAutoSaveTimeout();
+  autoSaveTimeout = setTimeout(autoSaveHandler, delay);
+}
+
+function clearAutoSaveTimeout() {
+  if (autoSaveTimeout != null) {
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = null;
   }
 }
 
-function clearDraft() {
-  localStorage.removeItem(note.value.title);
-}
-
-function loadDraft() {
-  return localStorage.getItem(note.value.title);
-}
-
-// Keyboard Shortcuts
-// 'e' to edit
-Mousetrap.bind("e", () => {
-  if (editMode.value === false && canModify.value) {
-    editHandler();
-  }
-});
-
-function keydownHandler(event) {
-  // Ctrl + Enter to save
-  if ((event.ctrlKey || event.metaKey) && event.key == "Enter") {
-    saveHandler((close = false));
-  }
-  // Escape to exit edit mode
-  if (event.key == "Escape") {
-    closeHandler();
+function clearTitleGenerationTimeout() {
+  if (titleGenerationTimeout) {
+    clearTimeout(titleGenerationTimeout);
+    titleGenerationTimeout = null;
   }
 }
 
-// Helpers
-function entityTooLargeToast(entityName) {
-  toast.add(
-    getToastOptions(
-      `This ${entityName} is too large. Please try again with a smaller ${entityName} or adjust your server configuration.`,
-      "Failure",
-      "error",
-    ),
-  );
+function onTagConfirmed() {
+  // Only proceed if we can modify the note
+  if (!canModify.value) {
+    return
+  }
+  
+  // Clear any pending auto-save timeout
+  if (autoSaveTimeout) {
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = null;
+  }
+  
+  // Force save immediately for tag changes
+  if (!autoSaveState.value.isAutoSaving) {
+    performSave(false, true);
+  }
 }
 
-function badFilenameToast(entityName) {
-  toast.add(
-    getToastOptions(
-      'Due to filename restrictions, the following characters are not allowed: <>:"/\\|?*',
-      `Invalid ${entityName}`,
-      "error",
-    ),
-  );
+// Unified save function
+function performSave(close = false, isAuto = false) {
+  saveDefaultEditorMode();
+  ensureTitle();
+  
+  updateAutoSaveState({ 
+    isAutoSaving: true, 
+    isAutoSavingInProgress: true 
+  });
+  
+  const newContent = toastEditor.value.getMarkdown();
+  if (isNewNote.value) {
+    saveNewNote(newTitle.value, newContent, newTags.value, close, isAuto);
+  } else {
+    saveExistingNote(props.filename, newTitle.value, newContent, newTags.value, close, isAuto);
+  }
+}
+
+function autoSaveHandler() {
+  if (!isContentChanged()) {
+    resetAutoSaveState();
+    return;
+  }
+  performSave(false, true);
+}
+
+function ensureTitle() {
+  if (!newTitle.value || newTitle.value.trim() === "") {
+    const content = toastEditor.value.getMarkdown();
+    newTitle.value = generateTitleFromContent(content);
+    if (!newTitle.value || newTitle.value.trim() === "") {
+      newTitle.value = noteConstants.DEFAULT_TITLE;
+    }
+  }
+}
+
+
+
+
+
+function resetAutoSaveState() {
+  updateAutoSaveState({ 
+    isAutoSaving: false, 
+    isAutoSavingInProgress: false 
+  });
+}
+
+function saveNewNote(title, content, tags, close = false, isAuto = false) {
+  createNote(title, content, tags)
+    .then(async (data) => {
+      // For auto-save, don't update note object to preserve cursor position
+      if (!isAuto) {
+        updateNoteState({
+          note: data,
+          isNewNote: false  // Mark as existing note after creation
+        });
+      } else {
+        // Only update isNewNote flag for auto-save
+        updateNoteState({
+          isNewNote: false
+        });
+      }
+      // Update newTags with server data (silently to avoid watch trigger)
+      const serverTags = data.tags || [];
+      if (newTags.value.length !== serverTags.length || 
+          newTags.value.some((tag, index) => tag !== serverTags[index])) {
+        newTags.value = serverTags;
+      }
+      if (data.title && data.title.trim()) {
+        document.title = `${data.title} - SBNote`;
+      }
+      // Update URL with filename (without extension)
+      const filename = data.filename.replace(noteConstants.MARKDOWN_EXTENSION, '');
+      router.replace({ name: "note", params: { filename } });
+      updateUIState({ unsavedChanges: false });
+      setBeforeUnloadConfirmation(false);
+      
+      // Reload tag counts to reflect changes
+      await loadTagCounts();
+      
+      if (isAuto) resetAutoSaveState();
+      if (close) closeNote();
+    })
+    .catch((error) => {
+      console.error('Failed to save new note:', error);
+      if (isAuto) resetAutoSaveState();
+      handleSaveFailure(error);
+    });
+}
+
+function saveExistingNote(filename, title, content, tags, close = false, isAuto = false) {
+  // Add .md extension for API call
+  const filenameWithExtension = filename + noteConstants.MARKDOWN_EXTENSION;
+  updateNote(filenameWithExtension, title, content, tags)
+    .then(async (data) => {
+      // For auto-save, don't update note object to preserve cursor position
+      if (!isAuto) {
+        updateNoteState({
+          note: data
+        });
+      }
+      // Update newTags with server data (silently to avoid watch trigger)
+      const serverTags = data.tags || [];
+      if (newTags.value.length !== serverTags.length || 
+          newTags.value.some((tag, index) => tag !== serverTags[index])) {
+        newTags.value = serverTags;
+      }
+      if (data.title && data.title.trim()) {
+        document.title = `${data.title} - SBNote`;
+      }
+      updateUIState({ unsavedChanges: false });
+      setBeforeUnloadConfirmation(false);
+      
+      // Reload tag counts to reflect changes
+      await loadTagCounts();
+      
+      if (isAuto) resetAutoSaveState();
+      if (close) closeNote();
+    })
+    .catch((error) => {
+      console.error('Failed to save existing note:', error);
+      if (isAuto) resetAutoSaveState();
+      handleSaveFailure(error);
+    });
+}
+
+function showFileSizeModal(entityName) {
+  fileSizeModalMessage.value = `The ${entityName} you're trying to upload is too large. Please choose a smaller file.`;
+  updateUIState({ isFileSizeModalVisible: true });
+}
+
+function closeFileSizeModal() {
+  updateUIState({ isFileSizeModalVisible: false });
 }
 
 function setBeforeUnloadConfirmation(enable = true) {
@@ -504,12 +895,30 @@ function setBeforeUnloadConfirmation(enable = true) {
   }
 }
 
+// Update file menu state in App.vue
+function updateFileMenuState() {
+  if (window.updateNoteFileMenuState) {
+    window.updateNoteFileMenuState({
+      canModify: canModify.value,
+      isNewNote: isNewNote.value,
+      autoSaveState: autoSaveState.value,
+      unsavedChanges: uiState.value.unsavedChanges
+    });
+  }
+  
+  // Update current note tags globally for NavBar component
+  const currentTags = canModify.value ? newTags.value : (note.value.tags || []);
+  window.currentNoteTags = currentTags;
+}
+
 function saveDefaultEditorMode() {
-  const isWysiwygMode = toastEditor.value.isWysiwygMode();
-  localStorage.setItem(
-    "defaultEditorMode",
-    isWysiwygMode ? "wysiwyg" : "markdown",
-  );
+  if (toastEditor.value) {
+    const isWysiwygMode = toastEditor.value.isWysiwygMode();
+    localStorage.setItem(
+      "defaultEditorMode",
+      isWysiwygMode ? "wysiwyg" : "markdown",
+    );
+  }
 }
 
 function loadDefaultEditorMode() {
@@ -518,12 +927,117 @@ function loadDefaultEditorMode() {
 }
 
 function isContentChanged() {
+  if (autoSaveState.value.isAutoSavingInProgress) {
+    return false;
+  }
+  
+  // Optimize tag comparison by checking length first
+  const currentTags = note.value.tags || [];
+  const tagsChanged = newTags.value.length !== currentTags.length || 
+    newTags.value.some((tag, index) => tag !== currentTags[index]);
+  
   return (
     newTitle.value != note.value.title ||
-    toastEditor.value.getMarkdown() != note.value.content
+    (toastEditor.value && toastEditor.value.getMarkdown() != note.value.content) ||
+    tagsChanged
   );
 }
 
-watch(() => props.title, init);
-onMounted(init);
+// Unified watch for content changes
+function handleContentChange(isTagsOnlyChange = false) {
+  if (autoSaveState.value.isAutoSavingInProgress) {
+    return;
+  }
+  
+  if (isContentChanged()) {
+    updateUIState({ unsavedChanges: true });
+    setBeforeUnloadConfirmation(true);
+    
+    const delay = isTagsOnlyChange ? noteConstants.TAGS_ONLY_CHANGE_DELAY : noteConstants.AUTO_SAVE_DELAY;
+    
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout);
+    }
+    autoSaveTimeout = setTimeout(() => {
+      if (uiState.value.unsavedChanges && !autoSaveState.value.isAutoSaving) {
+        autoSaveHandler();
+      }
+    }, delay);
+  } else {
+    updateUIState({ unsavedChanges: false });
+    setBeforeUnloadConfirmation(false);
+    clearAutoSaveTimeout();
+  }
+}
+
+watch([newTitle], () => {
+  if (newTitle.value && newTitle.value.trim()) {
+    document.title = `${newTitle.value} - SBNote`;
+  }
+  handleContentChange();
+}, { deep: true, immediate: true });
+
+watch([newTags], async () => {
+  // Check if this is a tags-only change
+  const isTagsOnlyChange = (
+    newTitle.value === note.value.title &&
+    (toastEditor.value && toastEditor.value.getMarkdown() === note.value.content) &&
+    newTags.value.length !== (note.value.tags || []).length
+  );
+  handleContentChange(isTagsOnlyChange);
+  
+  // Reset tag grid state when tags change
+  if (selectedNoteTag.value) {
+    updateTagGridState({
+      selectedNoteTag: null,
+      displayedTagNotes: []
+    });
+  }
+  
+  // Update tag counts when tags change (for immediate UI feedback)
+  if (canModify.value) {
+    await loadTagCounts();
+  }
+}, { deep: true });
+
+watch(() => props.filename, async () => {
+  if (toastEditor.value && toastEditor.value.getMarkdown() !== note.value.content) {
+    updateUIState({ unsavedChanges: true });
+  }
+  await init();
+});
+
+// Watch for changes that affect file menu state
+watch([canModify, isNewNote, autoSaveState, () => uiState.value.unsavedChanges], () => {
+  updateFileMenuState();
+}, { deep: true });
+
+// Watch for edit mode changes to set preview style for view mode
+watch(canModify, (newCanModify) => {
+  // In view mode (canModify = false), always use single view (tab)
+  if (!newCanModify) {
+    globalStore.setPreviewStyle('tab');
+  }
+}, { immediate: true });
+
+onMounted(async () => {
+  await init();
+  
+  // Listen for file menu events from NavBar
+  window.addEventListener('note-close', closeHandler);
+  window.addEventListener('note-copy-link', copyLinkHandler);
+  window.addEventListener('note-delete', deleteHandler);
+  window.addEventListener('note-toggle-preview-style', togglePreviewStyleHandler);
+  
+  // Update file menu state in App.vue
+  updateFileMenuState();
+});
+
+onUnmounted(() => {
+  // Clean up event listeners
+  window.removeEventListener('note-close', closeHandler);
+  window.removeEventListener('note-copy-link', copyLinkHandler);
+  window.removeEventListener('note-delete', deleteHandler);
+  window.removeEventListener('note-toggle-preview-style', togglePreviewStyleHandler);
+});
 </script>

@@ -1,0 +1,146 @@
+// Editor Overrides - Editor UI and Layout Settings
+// This file contains settings for the editor interface, toolbar, and layout
+
+// Basic layout and sizing
+
+.toastui-editor-ww-container {
+  display: none !important;
+}
+
+.ProseMirror,
+.toastui-editor-contents {
+  padding: 0.5rem 1rem !important;
+  margin: 0 auto;
+  max-width: var(--layout-width-note) !important;
+}
+
+.toastui-editor-md-mode .toastui-editor-md-vertical-style {
+  flex-direction: row !important;
+  max-width: var(--layout-width-split-view) !important;
+  margin: 0 auto;
+  background-color: var(--theme-background-surface);
+}
+
+.toastui-editor-md-vertical-style .toastui-editor.md-mode,
+.toastui-editor-md-vertical-style .toastui-editor-md-preview {
+  padding: 0 !important;
+  min-height: 0 !important;
+  width: 50% !important;
+}
+
+.toastui-editor.md-mode,
+.toastui-editor-md-preview {
+  padding: 0 !important;
+  min-height: 0 !important;
+}
+
+.toastui-editor-md-tab-style {
+  max-width: var(--layout-width-note) !important;
+  margin: 0 auto;
+}
+
+// Editor container styling
+.toastui-editor-defaultUI {
+  border: none;
+}
+
+// Toolbar styling
+.toastui-editor-defaultUI-toolbar {
+  background-color: var(--theme-background);
+  border-bottom: none;
+  padding: 0;
+}
+
+.toastui-editor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  max-width: var(--layout-width-note) !important;
+  margin: 0 auto;
+}
+
+.toastui-editor-defaultUI .toastui-editor-md-tab-container {
+  background-color: var(--theme-background);
+  border-bottom: none;
+  float: right;
+}
+
+.toastui-editor-mode-switch {
+  background-color: var(--theme-background);
+  border-color: var(--theme-border);
+}
+
+.toastui-editor-defaultUI-toolbar button {
+  border: 1px solid var(--theme-background);
+}
+
+.toastui-editor-defaultUI .tab-item.active {
+  background-color: var(--theme-background-surface);
+  color: var(--theme-text);
+  border-color: var(--theme-border);
+}
+
+.toastui-editor-defaultUI .tab-item {
+  background-color: var(--theme-background);
+  color: var(--theme-text-muted);
+  border: none;
+}
+
+.toastui-editor-md-tab-container .tab-item.active {
+  border: none;
+}
+
+.toastui-editor-toolbar-divider {
+  background-color: var(--theme-text);
+}
+
+.toastui-editor-defaultUI-toolbar button:not(:disabled):hover {
+  background-color: var(--theme-background-elevated);
+  border: 1px solid var(--theme-background);
+}
+
+// Popup styling
+.toastui-editor-popup {
+  background-color: var(--theme-background-surface);
+  border: 1px solid var(--theme-border);
+}
+
+.toastui-editor-popup-body {
+  label {
+    color: var(--theme-text);
+  }
+  input {
+    background-color: var(--theme-background-surface);
+    border: 1px solid var(--theme-border);
+  }
+}
+
+.toastui-editor-popup-add-table .toastui-editor-table-cell,
+.toastui-editor-popup-add-table .toastui-editor-table-cell.header {
+  background-color: var(--theme-background-surface);
+  border-color: var(--theme-border);
+}
+
+.toastui-editor-popup-add-heading ul li:hover {
+  background-color: var(--theme-background-subtle);
+}
+
+.toastui-editor-popup-add-image .toastui-editor-tabs .tab-item {
+  color: var(--theme-text);
+  background-color: var(--theme-background-surface);
+  border-color: var(--theme-border);
+}
+
+.toastui-editor-popup-add-image .toastui-editor-file-name.has-file {
+  color: var(--theme-text);
+}
+
+.toastui-editor-popup-body input[type="text"] {
+  color: var(--theme-text);
+  background-color: var(--theme-background-surface);
+}
+
+.toastui-editor-dropdown-toolbar {
+  background-color: var(--theme-background-surface);
+  border-color: var(--theme-border);
+}

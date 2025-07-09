@@ -4,10 +4,9 @@ import colors from "tailwindcss/colors";
 
 export default {
   content: ["client/**/*.{html,js,vue}"],
-  darkMode: "selector",
   theme: {
     fontFamily: {
-      sans: ["Poppins", "sans-serif"],
+      sans: ["Noto Sans JP", "Poppins", "sans-serif"],
     },
     screens: {
       sm: "640px",
@@ -17,19 +16,26 @@ export default {
     extend: {
       colors: {
         // Dynamic
-        "theme-brand": "rgb(var(--theme-brand) / <alpha-value>)",
-        "theme-background": "rgb(var(--theme-background) / <alpha-value>)",
-        "theme-background-elevated":
-          "rgb(var(--theme-background-elevated) / <alpha-value>)",
-        "theme-text": "rgb(var(--theme-text) / <alpha-value>)",
-        "theme-text-muted": "rgb(var(--theme-text-muted) / <alpha-value>)",
-        "theme-text-very-muted":
-          "rgb(var(--theme-text-very-muted) / <alpha-value>)",
-        "theme-shadow": "rgb(var(--theme-shadow) / <alpha-value>)",
-        "theme-border": "rgb(var(--theme-border) / <alpha-value>)",
+        "theme-brand": "var(--theme-brand)",
+        "theme-brand-dark": "var(--theme-brand-dark)",
+        "theme-brand-accent": "var(--theme-brand-accent)",
+        "theme-background": "var(--theme-background)",
+        "theme-background-surface": "var(--theme-background-surface)",
+        "theme-background-subtle": "var(--theme-background-subtle)",
+        "theme-background-elevated": "var(--theme-background-elevated)",
+        "theme-text": "var(--theme-text)",
+        "theme-text-muted": "var(--theme-text-muted)",
+        "theme-shadow-sm": "var(--theme-shadow-sm)",
+        "theme-shadow-md": "var(--theme-shadow-md)",
+        "theme-shadow-lg": "var(--theme-shadow-lg)",
+        "theme-border": "var(--theme-border)",
         // Static
         "theme-success": colors.emerald[600],
         "theme-danger": colors.rose[600],
+      },
+      maxWidth: {
+        "layout-note": "var(--layout-width-note)",
+        "layout-grid": "var(--layout-width-grid)",
       },
     },
   },

@@ -4,15 +4,26 @@ class Note {
   constructor(note) {
     this.title = note?.title;
     this.lastModified = note?.lastModified;
+    this.created = note?.created;
     this.content = note?.content;
+    this.tags = note?.tags;
+    this.filename = note?.filename;
   }
 
   get lastModifiedAsDate() {
-    return new Date(this.lastModified * 1000);
+    return this.lastModified ? new Date(this.lastModified * 1000) : null;
   }
 
   get lastModifiedAsString() {
-    return this.lastModifiedAsDate.toLocaleString();
+    return this.lastModified ? this.lastModifiedAsDate.toLocaleString() : '';
+  }
+
+  get createdAsDate() {
+    return this.created ? new Date(this.created * 1000) : null;
+  }
+
+  get createdAsString() {
+    return this.created ? this.createdAsDate.toLocaleString() : '';
   }
 }
 
