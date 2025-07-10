@@ -38,6 +38,7 @@
     "3dmol": "^2.5.1",
     "axios": "1.8.4",
     "codemirror": "^6.0.2",
+    "jsmol": "^1.0.0",
     "katex": "^0.16.22",
     "lucide-vue-next": "^0.525.0",
     "markmap-lib": "^0.18.12",

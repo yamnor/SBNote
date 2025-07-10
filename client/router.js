@@ -33,14 +33,6 @@ const router = createRouter({
       }),
     },
     {
-      path: "/raw/:filename",
-      name: "raw",
-      component: () => import("./views/Raw.vue"),
-      props: (route) => ({ 
-        filename: route.params.filename.replace(/\.md$/, '') 
-      }),
-    },
-    {
       path: "/new",
       name: "new",
       component: () => import("./views/Note.vue"),
@@ -81,8 +73,7 @@ router.afterEach((to) => {
   const viewNames = {
     note: "Note",
     slide: "Slide", 
-    mol: "Mol",
-    raw: "Raw"
+    mol: "Mol"
   };
   
   if (to.name === "note") {
@@ -93,7 +84,7 @@ router.afterEach((to) => {
       title = "New Note - " + title;
     }
   } else if (viewNames[to.name]) {
-    // For other views (slide/mol/code), we'll update the title dynamically in their components
+    // For other views (slide/mol), we'll update the title dynamically in their components
     title = viewNames[to.name] + " - " + title;
   }
   
