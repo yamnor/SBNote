@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { FileX, Loader2, RefreshCw } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -47,6 +47,10 @@ const props = defineProps({
   noteTitle: {
     type: String,
     default: 'Molecular Structure'
+  },
+  fileContent: {
+    type: String,
+    required: true
   }
 });
 
@@ -60,8 +64,8 @@ let viewer = null;
 
 // Methods
 async function loadMolecule() {
-  if (!props.attachmentFilename) {
-    error.value = 'No attachment filename provided';
+  if (!props.fileContent) {
+    error.value = 'No file content provided';
     emit('error', error.value);
     return;
   }
@@ -71,19 +75,22 @@ async function loadMolecule() {
   emit('loading', true);
 
   try {
+    // Wait for DOM to be ready
+    await nextTick();
+    
+    // Additional wait for DOM element to be fully ready
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
     // Check if 3Dmol.js is loaded
     if (!window.$3Dmol) {
       throw new Error('3Dmol.js library not loaded. Please refresh the page.');
     }
 
-    // Fetch attachment file content
-    const response = await fetch(`/files/${encodeURIComponent(props.attachmentFilename)}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch attachment file: ${response.statusText}`);
+    // Wait for DOM element to be ready
+    if (!molViewer.value) {
+      throw new Error('Viewer container not ready');
     }
-    
-    const fileContent = await response.text();
-    
+
     // Clear previous viewer
     if (viewer) {
       viewer.clear();
@@ -101,16 +108,16 @@ async function loadMolecule() {
     
     // Load file data based on format
     if (fileExtension === 'xyz') {
-      viewer.addModel(fileContent, 'xyz');
+      viewer.addModel(props.fileContent, 'xyz');
     } else if (fileExtension === 'pdb') {
-      viewer.addModel(fileContent, 'pdb');
+      viewer.addModel(props.fileContent, 'pdb');
     } else if (fileExtension === 'mol') {
-      viewer.addModel(fileContent, 'mol');
+      viewer.addModel(props.fileContent, 'mol');
     } else if (fileExtension === 'sdf') {
-      viewer.addModel(fileContent, 'sdf');
+      viewer.addModel(props.fileContent, 'sdf');
     } else {
       // Default to XYZ format
-      viewer.addModel(fileContent, 'xyz');
+      viewer.addModel(props.fileContent, 'xyz');
     }
     
     // Set view style
@@ -127,9 +134,6 @@ async function loadMolecule() {
     emit('loaded', true);
     emit('loading', false);
     
-    // Update browser title
-    updateBrowserTitle();
-    
   } catch (err) {
     console.error('Failed to load molecule:', err);
     error.value = `Failed to load molecular structure: ${err.message}`;
@@ -143,30 +147,23 @@ function retryLoad() {
   loadMolecule();
 }
 
-function updateBrowserTitle() {
-  if (props.noteTitle) {
-    document.title = `${props.noteTitle} - SBNote`;
-  } else {
-    document.title = "Molecule - SBNote";
-  }
-}
-
-// Watch for attachment filename changes
-watch(() => props.attachmentFilename, (newFilename) => {
-  if (newFilename) {
+// Watch for file content changes
+watch(() => props.fileContent, (newContent) => {
+  if (newContent) {
     loadMolecule();
   }
 }, { immediate: true });
 
-// Watch for note title changes to update browser title
-watch(() => props.noteTitle, () => {
-  updateBrowserTitle();
+// Watch for attachment filename changes
+watch(() => props.attachmentFilename, (newFilename) => {
+  if (newFilename && props.fileContent) {
+    loadMolecule();
+  }
 }, { immediate: true });
 
 // Lifecycle
 onMounted(() => {
   // Initial load will be handled by the watcher
-  updateBrowserTitle();
 });
 
 onUnmounted(() => {

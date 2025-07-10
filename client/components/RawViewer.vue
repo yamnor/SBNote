@@ -12,6 +12,7 @@
 /* Ensure the viewer container takes full height */
 .w-full.h-full {
   min-height: 0;
+  height: 100%;
 }
 
 /* CodeMirror custom styles */
