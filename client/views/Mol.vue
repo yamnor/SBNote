@@ -1,48 +1,52 @@
 <template>
-  <div class="fixed inset-0 z-50 bg-white dark:bg-gray-900">
+  <div class="fixed inset-0 z-50 bg-[var(--theme-background)]">
     <!-- Header -->
-    <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-white/90 backdrop-blur-sm">
-      <FileTextIcon 
+    <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-center">
+      <div class="flex items-center justify-between gap-4 py-4 h-14 bg-[var(--theme-background)] backdrop-blur-sm w-full max-w-[var(--layout-width-note)]">
+      <button
         @click="goToNote" 
-        class="w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors cursor-pointer flex-shrink-0"
+        class="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--theme-button)] hover:bg-[var(--theme-brand)] hover:text-white text-theme-text transition-colors cursor-pointer flex-shrink-0 shadow-sm"
         title="Go to note"
-      />
+      >
+        <FileTextIcon class="w-4 h-4" />
+      </button>
       
-      <h1 class="text-lg text-theme-text-muted truncate min-w-0 flex-1 px-4">
+      <h1 class="text-sm text-theme-text-muted truncate min-w-0 flex-1">
         {{ noteTitle }}
       </h1>
       
-      <div class="flex items-center space-x-6">
+      <div class="flex items-center gap-4">
         <!-- Raw button -->
         <button
           @click="setViewMode('raw')"
-          class="flex items-center justify-center w-8 h-8 transition-colors"
-          :class="viewMode === 'raw' ? 'text-theme-brand text-theme-text' : 'text-theme-muted hover:text-theme-text text-theme-text-muted'"
+          class="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--theme-button)] hover:bg-[var(--theme-brand)] hover:text-white text-theme-text transition-colors shadow-sm"
+          :class="viewMode === 'raw' ? '!bg-[var(--theme-brand)] !text-white' : ''"
           :title="viewMode === 'raw' ? 'Current view' : 'Raw View'"
         >
-          <Grip class="w-8 h-8" />
+          <Grip class="w-4 h-4" />
         </button>
         
         <!-- Mol button -->
         <button
           @click="setViewMode('mol')"
-          class="flex items-center justify-center w-8 h-8 transition-colors"
-          :class="viewMode === 'mol' ? 'text-theme-brand text-theme-text' : 'text-theme-muted hover:text-theme-text text-theme-text-muted'"
+          class="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--theme-button)] hover:bg-[var(--theme-brand)] hover:text-white text-theme-text transition-colors shadow-sm"
+          :class="viewMode === 'mol' ? '!bg-[var(--theme-brand)] !text-white' : ''"
           :title="viewMode === 'mol' ? 'Current view' : 'Mol View'"
         >
-          <Eye class="w-8 h-8" />
+          <Eye class="w-4 h-4" />
         </button>
         
         <!-- Chem button -->
         <button
           @click="setViewMode('chem')"
-          class="flex items-center justify-center w-8 h-8 transition-colors"
-          :class="viewMode === 'chem' ? 'text-theme-brand text-theme-text' : 'text-theme-muted hover:text-theme-text text-theme-text-muted'"
+          class="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--theme-button)] hover:bg-[var(--theme-brand)] hover:text-white text-theme-text transition-colors shadow-sm"
+          :class="viewMode === 'chem' ? '!bg-[var(--theme-brand)] !text-white' : ''"
           :title="viewMode === 'chem' ? 'Current view' : 'Chem View'"
         >
-          <SquareTerminal class="w-8 h-8" />
+          <SquareTerminal class="w-4 h-4" />
         </button>
       </div>
+    </div>
     </div>
 
     <!-- Error message -->
@@ -72,7 +76,7 @@
     <!-- Content -->
     <div v-else class="h-screen">
       <!-- MolViewer component -->
-      <div v-if="viewMode === 'mol'" class="h-full pt-16">
+      <div v-if="viewMode === 'mol'" class="h-full pt-14">
         <MolViewer 
           :attachment-filename="attachmentFilename"
           :note-title="noteTitle"
@@ -81,7 +85,7 @@
       </div>
       
       <!-- MiewViewer component -->
-      <div v-else-if="viewMode === 'chem'" class="h-full pt-16">
+      <div v-else-if="viewMode === 'chem'" class="h-full pt-14">
         <MiewViewer 
           :attachment-filename="attachmentFilename"
           :note-title="noteTitle"
@@ -90,7 +94,7 @@
       </div>
       
       <!-- RawViewer component -->
-      <div v-else-if="viewMode === 'raw'" class="h-full pt-16">
+      <div v-else-if="viewMode === 'raw'" class="h-full pt-14">
         <RawViewer
           :file-content="fileContent"
           :language="language"
