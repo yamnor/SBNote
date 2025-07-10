@@ -104,7 +104,6 @@ async function loadMolecule() {
     try {
       JmolInstance.script(myJmol, loadScript);
       JmolInstance.script(myJmol, 'set defaultColors Rasmol;');
-      JmolInstance.script(myJmol, 'console;');
     } catch (scriptError) {
       console.warn('Script execution warning:', scriptError);
     }    
@@ -143,7 +142,7 @@ onUnmounted(() => {
   if (myJmol) {
     const JmolInstance = window.Jmol || Jmol;
     if (JmolInstance) {
-      JmolInstance.script(myJmol, 'zap');
+      JmolInstance.script(myJmol, 'zap;');
     }
     myJmol = null;
   }

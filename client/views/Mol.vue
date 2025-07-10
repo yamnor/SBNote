@@ -2,16 +2,15 @@
   <div class="fixed inset-0 z-50 bg-white dark:bg-gray-900">
     <!-- Header -->
     <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-white/90 backdrop-blur-sm">
-      <div class="flex items-center space-x-3 min-w-0 flex-1">
-        <FileTextIcon 
-          @click="goToNote" 
-          class="w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors cursor-pointer flex-shrink-0"
-          title="Go to note"
-        />
-        <h1 class="text-lg font-semibold text-theme-text-muted truncate min-w-0 flex-1">
-          {{ noteTitle }}
-        </h1>
-      </div>
+      <FileTextIcon 
+        @click="goToNote" 
+        class="w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors cursor-pointer flex-shrink-0"
+        title="Go to note"
+      />
+      
+      <h1 class="text-lg text-theme-text-muted truncate min-w-0 flex-1 px-4">
+        {{ noteTitle }}
+      </h1>
       
       <div class="flex items-center space-x-6">
         <!-- Raw button -->
@@ -41,7 +40,7 @@
           :class="viewMode === 'chem' ? 'text-theme-brand text-theme-text' : 'text-theme-muted hover:text-theme-text text-theme-text-muted'"
           :title="viewMode === 'chem' ? 'Current view' : 'Chem View'"
         >
-          <SquareChevronRight class="w-8 h-8" />
+          <ScanEye class="w-8 h-8" />
         </button>
       </div>
     </div>
@@ -71,48 +70,32 @@
     </div>
 
     <!-- Content -->
-    <div v-else class="h-screen flex flex-col">
-      <!-- Main content area -->
-      <div class="flex-1 relative">
-        <!-- MolViewer component -->
-        <MolViewer 
-          v-if="viewMode === 'mol'"
-          :attachment-filename="attachmentFilename"
-          :note-title="noteTitle"
-          :file-content="fileContent"
-        />
-        
-        <!-- ChemViewer component -->
-        <ChemViewer 
-          v-else-if="viewMode === 'chem'"
-          :attachment-filename="attachmentFilename"
-          :note-title="noteTitle"
-          :file-content="fileContent"
-        />
-        
-        <!-- RawViewer component -->
-        <div v-else-if="viewMode === 'raw'" class="h-full pt-16">
-          <RawViewer
-            :file-content="fileContent"
-            :language="language"
-            :is-loading="false"
-            @editor-ready="onEditorReady"
-            @editor-error="onEditorError"
-          />
-        </div>
-      </div>
+    <div v-else class="h-screen">
+      <!-- MolViewer component -->
+      <MolViewer 
+        v-if="viewMode === 'mol'"
+        :attachment-filename="attachmentFilename"
+        :note-title="noteTitle"
+        :file-content="fileContent"
+      />
       
-      <!-- Footer -->
-      <div class="flex-shrink-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 p-4">
-        <div class="flex items-center justify-between text-sm text-theme-text-muted">
-          <div class="flex items-center space-x-4">
-            <span>File: {{ attachmentFilename }}</span>
-            <span>Mode: {{ viewMode.toUpperCase() }}</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <span>Molecular Structure Viewer</span>
-          </div>
-        </div>
+      <!-- ChemViewer component -->
+      <ChemViewer 
+        v-else-if="viewMode === 'chem'"
+        :attachment-filename="attachmentFilename"
+        :note-title="noteTitle"
+        :file-content="fileContent"
+      />
+      
+      <!-- RawViewer component -->
+      <div v-else-if="viewMode === 'raw'" class="h-full pt-16">
+        <RawViewer
+          :file-content="fileContent"
+          :language="language"
+          :is-loading="false"
+          @editor-ready="onEditorReady"
+          @editor-error="onEditorError"
+        />
       </div>
     </div>
   </div>
@@ -121,7 +104,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { FileText as FileTextIcon, Eye, Grip, FileX, Loader2, RefreshCw, SquareChevronRight } from 'lucide-vue-next';
+import { FileText as FileTextIcon, Eye, Grip, FileX, Loader2, RefreshCw, ScanEye } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
 import MolViewer from '../components/MolViewer.vue';
 import ChemViewer from '../components/ChemViewer.vue';
