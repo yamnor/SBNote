@@ -72,20 +72,22 @@
     <!-- Content -->
     <div v-else class="h-screen">
       <!-- MolViewer component -->
-      <MolViewer 
-        v-if="viewMode === 'mol'"
-        :attachment-filename="attachmentFilename"
-        :note-title="noteTitle"
-        :file-content="fileContent"
-      />
+      <div v-if="viewMode === 'mol'" class="h-full pt-16">
+        <MolViewer 
+          :attachment-filename="attachmentFilename"
+          :note-title="noteTitle"
+          :file-content="fileContent"
+        />
+      </div>
       
       <!-- MiewViewer component -->
-      <MiewViewer 
-        v-else-if="viewMode === 'chem'"
-        :attachment-filename="attachmentFilename"
-        :note-title="noteTitle"
-        :file-content="fileContent"
-      />
+      <div v-else-if="viewMode === 'chem'" class="h-full pt-16">
+        <MiewViewer 
+          :attachment-filename="attachmentFilename"
+          :note-title="noteTitle"
+          :file-content="fileContent"
+        />
+      </div>
       
       <!-- RawViewer component -->
       <div v-else-if="viewMode === 'raw'" class="h-full pt-16">
