@@ -46,6 +46,7 @@
                     <option value="markdown">Markdown</option>
                     <option value="image">Image (JPEG/PNG)</option>
                     <option value="xyz">XYZ File</option>
+                    <option value="plaintext">Plain Text</option>
                   </select>
                 </div>
                 
@@ -142,6 +143,8 @@ const fileTypeAccept = computed(() => {
     return '.jpg,.jpeg,.png';
   } else if (selectedFileType.value === 'xyz') {
     return '.xyz';
+  } else if (selectedFileType.value === 'plaintext') {
+    return ''; // Accept any file type for plaintext
   }
   return '';
 });
@@ -180,6 +183,8 @@ function onFileSelected(event) {
       clearFile();
       return;
     }
+  } else if (selectedFileType.value === 'plaintext') {
+    // No file extension validation for plaintext - accept any file
   }
   
   // Validate file size (10MB limit)
@@ -223,6 +228,8 @@ async function importFile() {
       emit("imported", { type: 'image', file: selectedFile.value });
     } else if (selectedFileType.value === 'xyz') {
       emit("imported", { type: 'xyz', file: selectedFile.value });
+    } else if (selectedFileType.value === 'plaintext') {
+      emit("imported", { type: 'plaintext', file: selectedFile.value });
     }
     closeModal();
   } catch (error) {

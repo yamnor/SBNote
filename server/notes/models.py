@@ -51,6 +51,11 @@ class NoteXyzImport(CustomBaseModel):
     tags: Optional[List[str]] = Field(default_factory=list)
 
 
+class NotePlaintextImport(CustomBaseModel):
+    original_filename: str
+    tags: Optional[List[str]] = Field(default_factory=list)
+
+
 class SearchResult(CustomBaseModel):
     title: str
     content: Optional[str] = Field(None)

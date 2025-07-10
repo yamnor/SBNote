@@ -24,7 +24,7 @@ from helpers import get_env, parse_markdown_with_frontmatter, create_markdown_wi
 from logger import logger
 
 from ..base import BaseNotes
-from ..models import Note, NoteCreate, NoteUpdate, NoteImport, NoteImageImport, NoteXyzImport, SearchResult
+from ..models import Note, NoteCreate, NoteUpdate, NoteImport, NoteImageImport, NoteXyzImport, NotePlaintextImport, SearchResult
 
 MARKDOWN_EXT = ".md"
 INDEX_SCHEMA_VERSION = "10"
@@ -248,6 +248,58 @@ class FileSystemNotes(BaseNotes):
             tags=data.tags or [],
             created=created_time,
             category="coordinate",
+            visibility="private",
+            attachment_extension=attachment_extension
+        )
+        
+        self._write_file(filepath, markdown_content)
+        
+        # Update the search indexes
+        self._sync_index_with_retry()
+        
+        return Note(
+            title=title,
+            content=content,
+            last_modified=os.path.getmtime(filepath),
+            created_time=created_time.timestamp(),
+            tags=data.tags or [],
+            filename=note_filename + MARKDOWN_EXT,
+            attachment_extension=attachment_extension,
+        )
+
+    def import_plaintext(self, data: NotePlaintextImport, filename: str) -> Note:
+        """Import a plaintext file and create a note with the plaintext file link."""
+        # Generate title from original filename
+        title = data.original_filename
+        
+        # Create markdown content with original filename on first line and plaintext file link on third line
+        content = f"{data.original_filename}\n\n[Plaintext File](/files/{filename})"
+        
+        # Use the same filename as the attachment (without extension)
+        note_filename = os.path.splitext(filename)[0]
+        
+        # Ensure filename is unique for markdown file
+        while os.path.exists(os.path.join(self.storage_path, note_filename + MARKDOWN_EXT)):
+            # Add suffix if duplicate
+            base_name = note_filename
+            counter = 1
+            while os.path.exists(os.path.join(self.storage_path, f"{base_name}_{counter}{MARKDOWN_EXT}")):
+                counter += 1
+            note_filename = f"{base_name}_{counter}"
+        
+        filepath = os.path.join(self.storage_path, note_filename + MARKDOWN_EXT)
+        created_time = datetime.now()
+        
+        # Extract attachment extension (without dot)
+        attachment_extension = os.path.splitext(filename)[1].lstrip('.')
+        
+        # Create markdown with frontmatter
+        markdown_content = create_markdown_with_frontmatter(
+            title=title,
+            content=content,
+            tags=data.tags or [],
+            created=created_time,
+            category="plaintext",
             visibility="private",
             attachment_extension=attachment_extension
         )

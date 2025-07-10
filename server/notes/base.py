@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Literal
 
-from .models import Note, NoteCreate, NoteUpdate, NoteImport, NoteImageImport, NoteXyzImport, SearchResult
+from .models import Note, NoteCreate, NoteUpdate, NoteImport, NoteImageImport, NoteXyzImport, NotePlaintextImport, SearchResult
 
 
 class BaseNotes(ABC):
@@ -23,6 +23,11 @@ class BaseNotes(ABC):
     @abstractmethod
     def import_xyz(self, data: NoteXyzImport, filename: str) -> Note:
         """Import an xyz file and create a note with the xyz file link."""
+        pass
+
+    @abstractmethod
+    def import_plaintext(self, data: NotePlaintextImport, filename: str) -> Note:
+        """Import a plaintext file and create a note with the plaintext file link."""
         pass
 
     @abstractmethod
