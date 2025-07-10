@@ -599,13 +599,13 @@ def get_attachment(filename: str):
             status_code=404, detail=api_messages.attachment_not_found
         )
 
-# Raw file redirect endpoint
+# Attachment redirect endpoint
 @router.get(
-    "/raw/{basename}",
+    "/a/{basename}",
     include_in_schema=False,
 )
-def get_raw_file_by_basename(basename: str):
-    """Get a raw file by note basename. Redirects to the actual file if the note has an attachment."""
+def get_attachment_by_basename(basename: str):
+    """Get an attachment by note basename. Redirects to the actual file if the note has an attachment."""
     try:
         # Get the note by basename
         note = note_storage.get_by_basename(basename)
@@ -630,7 +630,7 @@ def get_raw_file_by_basename(basename: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error in get_raw_file_by_basename: {e}")
+        logger.error(f"Error in get_attachment_by_basename: {e}")
         raise HTTPException(
             status_code=500, detail="Internal server error"
         )

@@ -169,7 +169,7 @@ class FileSystemNotes(BaseNotes):
         title = data.original_filename
         
         # Create markdown content with original filename on first line and image link on third line
-        content = f"{data.original_filename}\n\n![{data.original_filename}](/files/{filename})"
+        content = f"{data.original_filename}\n\n![Image](/a/{os.path.splitext(filename)[0]})"
         
         # Use the same filename as the attachment (without extension)
         note_filename = os.path.splitext(filename)[0]
@@ -221,7 +221,7 @@ class FileSystemNotes(BaseNotes):
         title = data.original_filename
         
         # Create markdown content with original filename on first line and xyz file link on third line
-        content = f"{data.original_filename}\n\n[XYZ File](/files/{filename})"
+        content = f"{data.original_filename}\n\n[Coordinate](/a/{os.path.splitext(filename)[0]})"
         
         # Use the same filename as the attachment (without extension)
         note_filename = os.path.splitext(filename)[0]
@@ -273,7 +273,7 @@ class FileSystemNotes(BaseNotes):
         title = data.original_filename
         
         # Create markdown content with original filename on first line and plaintext file link on third line
-        content = f"{data.original_filename}\n\n[Plaintext File](/files/{filename})"
+        content = f"{data.original_filename}\n\n[Plaintext](/a/{os.path.splitext(filename)[0]})"
         
         # Use the same filename as the attachment (without extension)
         note_filename = os.path.splitext(filename)[0]
