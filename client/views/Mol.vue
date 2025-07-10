@@ -18,7 +18,7 @@
       <div class="flex items-center space-x-8">
         <!-- Raw button -->
         <button
-          @click="toggleViewMode"
+          @click="setViewMode('raw')"
           class="flex items-center justify-center w-8 h-8 transition-colors"
           :class="viewMode === 'raw' ? 'text-theme-brand text-theme-text' : 'text-theme-muted hover:text-theme-text text-theme-text-muted'"
           :title="viewMode === 'raw' ? 'Current view' : 'Raw View'"
@@ -28,12 +28,22 @@
         
         <!-- Mol button -->
         <button
-          @click="toggleViewMode"
+          @click="setViewMode('mol')"
           class="flex items-center justify-center w-8 h-8 transition-colors"
           :class="viewMode === 'mol' ? 'text-theme-brand text-theme-text' : 'text-theme-muted hover:text-theme-text text-theme-text-muted'"
           :title="viewMode === 'mol' ? 'Current view' : 'Mol View'"
         >
           <Eye class="w-8 h-8" />
+        </button>
+        
+        <!-- Chem button -->
+        <button
+          @click="setViewMode('chem')"
+          class="flex items-center justify-center w-8 h-8 transition-colors"
+          :class="viewMode === 'chem' ? 'text-theme-brand text-theme-text' : 'text-theme-muted hover:text-theme-text text-theme-text-muted'"
+          :title="viewMode === 'chem' ? 'Current view' : 'Chem View'"
+        >
+          <SquareChevronRight class="w-8 h-8" />
         </button>
       </div>
     </div>
@@ -72,6 +82,14 @@
         :file-content="fileContent"
       />
       
+      <!-- ChemViewer component -->
+      <ChemViewer 
+        v-else-if="viewMode === 'chem'"
+        :attachment-filename="attachmentFilename"
+        :note-title="noteTitle"
+        :file-content="fileContent"
+      />
+      
       <!-- RawViewer component -->
       <div v-else-if="viewMode === 'raw'" class="h-full pt-16">
         <RawViewer
@@ -89,9 +107,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { FileText as FileTextIcon, Eye, Grip, FileX, Loader2, RefreshCw } from 'lucide-vue-next';
+import { FileText as FileTextIcon, Eye, Grip, FileX, Loader2, RefreshCw, SquareChevronRight } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
 import MolViewer from '../components/MolViewer.vue';
+import ChemViewer from '../components/ChemViewer.vue';
 import RawViewer from '../components/RawViewer.vue';
 
 const props = defineProps({
@@ -134,8 +153,8 @@ function goToNote() {
   router.push({ name: 'note', params: { filename: basename } });
 }
 
-function toggleViewMode() {
-  viewMode.value = viewMode.value === 'mol' ? 'raw' : 'mol';
+function setViewMode(mode) {
+  viewMode.value = mode;
 }
 
 async function loadFileContent() {

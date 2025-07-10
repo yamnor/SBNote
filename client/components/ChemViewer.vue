@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full relative">
+  <div class="h-full relative pt-16">
     <!-- Error message -->
     <div v-if="error" class="h-full flex items-center justify-center p-8">
       <div class="text-center">
@@ -60,7 +60,6 @@ const emit = defineEmits(['error', 'loading', 'loaded']);
 const chemViewer = ref(null);
 const isLoading = ref(false);
 const error = ref(null);
-let jmolApplet = null;
 
 // Methods
 async function loadMolecule() {
@@ -69,7 +68,7 @@ async function loadMolecule() {
     emit('error', error.value);
     return;
   }
-
+  
   isLoading.value = true;
   error.value = null;
   emit('loading', true);
@@ -78,71 +77,38 @@ async function loadMolecule() {
     // Wait for DOM to be ready
     await nextTick();
     
-    // Additional wait for DOM element to be fully ready
-    await new Promise(resolve => requestAnimationFrame(resolve));
-    
-    // Check if JSmol is loaded
-    if (typeof Jmol === 'undefined') {
-      throw new Error('JSmol library not loaded. Please refresh the page.');
+    // Check if Jmol library is loaded
+    if (!window.Jmol) {
+      throw new Error('Jmol library not loaded. Please refresh the page.');
     }
+    
+    let JmolInstance = window.Jmol;
 
-    // Wait for DOM element to be ready
+    // Check if DOM element is ready
     if (!chemViewer.value) {
       throw new Error('Viewer container not ready');
     }
 
-    // Clear previous viewer
-    if (jmolApplet) {
-      Jmol.script(jmolApplet, 'zap');
-    }
-    
-    // Determine file format from extension
-    const fileExtension = props.attachmentFilename.split('.').pop().toLowerCase();
-    
-    // Create JSmol applet
     const appletId = 'chemViewer_' + Date.now();
-    chemViewer.value.innerHTML = '';
-    
-    jmolApplet = Jmol.getApplet(appletId, {
+    chemViewer.value.innerHTML = `<div id="${appletId}" style="width: 100%; height: 100%;"></div>`;
+
+    $(`#${appletId}`).html(JmolInstance.getAppletHtml("myJmol", {
       width: '100%',
       height: '100%',
-      color: 'white',
-      antialias: true,
-      use: 'HTML5',
-      script: 'set antialiasDisplay ON; set showHydrogens ON;'
-    });
+      j2sPath: 'assets/j2s',
+      use: 'HTML5'
+    }));
     
-    // Add applet to container
-    chemViewer.value.appendChild(jmolApplet);
-    
-    // Load file data based on format
-    let loadScript = '';
-    if (fileExtension === 'xyz') {
-      loadScript = `load DATA "${props.fileContent}" XYZ`;
-    } else if (fileExtension === 'pdb') {
-      loadScript = `load DATA "${props.fileContent}" PDB`;
-    } else if (fileExtension === 'mol') {
-      loadScript = `load DATA "${props.fileContent}" MOL`;
-    } else if (fileExtension === 'sdf') {
-      loadScript = `load DATA "${props.fileContent}" SDF`;
-    } else if (fileExtension === 'cif') {
-      loadScript = `load DATA "${props.fileContent}" CIF`;
-    } else if (fileExtension === 'mol2') {
-      loadScript = `load DATA "${props.fileContent}" MOL2`;
-    } else {
-      // Default to XYZ format
-      loadScript = `load DATA "${props.fileContent}" XYZ`;
-    }
-    
-    // Load molecule and set style
-    Jmol.script(jmolApplet, loadScript);
-    Jmol.script(jmolApplet, 'set antialiasDisplay ON');
-    Jmol.script(jmolApplet, 'set showHydrogens ON');
-    Jmol.script(jmolApplet, 'wireframe OFF');
-    Jmol.script(jmolApplet, 'spacefill OFF');
-    Jmol.script(jmolApplet, 'sticks ON');
-    Jmol.script(jmolApplet, 'zoomTo');
-    
+    let loadScript = `load INLINE "${props.fileContent}";`;
+
+    try {
+      JmolInstance.script(myJmol, loadScript);
+      JmolInstance.script(myJmol, 'set defaultColors Rasmol;');
+      JmolInstance.script(myJmol, 'console;');
+    } catch (scriptError) {
+      console.warn('Script execution warning:', scriptError);
+    }    
+
     isLoading.value = false;
     emit('loaded', true);
     emit('loading', false);
@@ -160,16 +126,9 @@ function retryLoad() {
   loadMolecule();
 }
 
-// Watch for file content changes
-watch(() => props.fileContent, (newContent) => {
-  if (newContent) {
-    loadMolecule();
-  }
-}, { immediate: true });
-
-// Watch for attachment filename changes
-watch(() => props.attachmentFilename, (newFilename) => {
-  if (newFilename && props.fileContent) {
+// Watch for file content and filename changes
+watch([() => props.fileContent, () => props.attachmentFilename], ([newContent, newFilename]) => {
+  if (newContent && newFilename) {
     loadMolecule();
   }
 }, { immediate: true });
@@ -181,9 +140,12 @@ onMounted(() => {
 
 onUnmounted(() => {
   // Clean up viewer
-  if (jmolApplet) {
-    Jmol.script(jmolApplet, 'zap');
-    jmolApplet = null;
+  if (myJmol) {
+    const JmolInstance = window.Jmol || Jmol;
+    if (JmolInstance) {
+      JmolInstance.script(myJmol, 'zap');
+    }
+    myJmol = null;
   }
 });
 </script>
