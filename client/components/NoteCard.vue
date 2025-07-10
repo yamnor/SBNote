@@ -57,7 +57,7 @@
 import { computed, ref } from "vue";
 import { useGlobalStore } from "../globalStore.js";
 import NotePreviewModal from "./NotePreviewModal.vue";
-import { FileText, FileImage, FileDigit, Lock, Users, Globe } from "lucide-vue-next";
+import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe } from "lucide-vue-next";
 
 const props = defineProps({
   note: {
@@ -98,13 +98,14 @@ const categoryIcon = computed(() => {
   
   switch (category.toLowerCase()) {
     case 'image':
-    case 'img':
-      return FileImage;
-    case 'xyz':
-      return FileDigit;
+      return Image;
+    case 'coordinate':
+      return Bolt;
+    case 'plaintext':
+      return FileText;
     case 'note':
     default:
-      return FileText;
+      return StickyNote;
   }
 });
 

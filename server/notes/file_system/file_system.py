@@ -247,7 +247,7 @@ class FileSystemNotes(BaseNotes):
             content=content,
             tags=data.tags or [],
             created=created_time,
-            category="xyz",
+            category="coordinate",
             visibility="private",
             attachment_extension=attachment_extension
         )

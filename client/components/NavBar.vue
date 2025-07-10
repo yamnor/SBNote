@@ -450,8 +450,8 @@ const showSlideView = computed(() => {
 });
 
 const showMolView = computed(() => {
-  // Check if we're on a note page and the note has 'xyz' category
-  return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'xyz';
+      // Check if we're on a note page and the note has 'coordinate' category
+    return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'coordinate';
 });
 
 // Load available tags for new note dropdown
