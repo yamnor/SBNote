@@ -72,7 +72,7 @@
       </DropdownMenuItem>
 
       <!-- Divider -->
-      <div v-if="showSlideView || showMolView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <div v-if="showSlideView || showMolView || showRawView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
 
       <!-- Slide View (only for notes with 'slide' tag) -->
       <DropdownMenuItem 
@@ -90,6 +90,15 @@
         @click="onMolView"
       >
         Mol View
+      </DropdownMenuItem>
+      
+      <!-- Raw View (for all notes) -->
+      <DropdownMenuItem 
+        v-if="showRawView"
+        :icon="Grip"
+        @click="onRawView"
+      >
+        Raw View
       </DropdownMenuItem>
       
       <!-- Divider -->
@@ -331,7 +340,8 @@ import {
   Users,
   Globe,
   Upload,
-  Atom
+  Atom,
+  Grip
 } from "lucide-vue-next";
 
 import SearchInput from "../components/SearchInput.vue";
@@ -431,6 +441,11 @@ const showSlideView = computed(() => {
 const showMolView = computed(() => {
       // Check if we're on a note page and the note has 'coordinate' category
     return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'coordinate';
+});
+
+const showRawView = computed(() => {
+  // Check if we're on a note page and the note has 'plaintext' category
+  return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'plaintext';
 });
 
 
@@ -552,6 +567,11 @@ function onSlideView() {
 function onMolView() {
   // Navigate to mol view
   router.push({ name: 'mol', params: { filename: route.params.filename } });
+}
+
+function onRawView() {
+  // Navigate to raw view
+  router.push({ name: 'raw', params: { filename: route.params.filename } });
 }
 
 function showReadme() {

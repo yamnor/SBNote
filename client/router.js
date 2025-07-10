@@ -33,6 +33,14 @@ const router = createRouter({
       }),
     },
     {
+      path: "/raw/:filename",
+      name: "raw",
+      component: () => import("./views/Raw.vue"),
+      props: (route) => ({ 
+        filename: route.params.filename.replace(/\.md$/, '') 
+      }),
+    },
+    {
       path: "/new",
       name: "new",
       component: () => import("./views/Note.vue"),
@@ -73,7 +81,8 @@ router.afterEach((to) => {
   const viewNames = {
     note: "Note",
     slide: "Slide", 
-    mol: "Mol"
+    mol: "Mol",
+    raw: "Raw"
   };
   
   if (to.name === "note") {
