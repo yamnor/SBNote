@@ -43,6 +43,10 @@ const props = defineProps({
   attachmentFilename: {
     type: String,
     required: true
+  },
+  noteTitle: {
+    type: String,
+    default: 'Molecular Structure'
   }
 });
 
@@ -58,6 +62,7 @@ let viewer = null;
 async function loadMolecule() {
   if (!props.attachmentFilename) {
     error.value = 'No attachment filename provided';
+    emit('error', error.value);
     return;
   }
 
@@ -122,6 +127,9 @@ async function loadMolecule() {
     emit('loaded', true);
     emit('loading', false);
     
+    // Update browser title
+    updateBrowserTitle();
+    
   } catch (err) {
     console.error('Failed to load molecule:', err);
     error.value = `Failed to load molecular structure: ${err.message}`;
@@ -135,6 +143,14 @@ function retryLoad() {
   loadMolecule();
 }
 
+function updateBrowserTitle() {
+  if (props.noteTitle) {
+    document.title = `${props.noteTitle} - SBNote`;
+  } else {
+    document.title = "Molecule - SBNote";
+  }
+}
+
 // Watch for attachment filename changes
 watch(() => props.attachmentFilename, (newFilename) => {
   if (newFilename) {
@@ -142,9 +158,15 @@ watch(() => props.attachmentFilename, (newFilename) => {
   }
 }, { immediate: true });
 
+// Watch for note title changes to update browser title
+watch(() => props.noteTitle, () => {
+  updateBrowserTitle();
+}, { immediate: true });
+
 // Lifecycle
 onMounted(() => {
   // Initial load will be handled by the watcher
+  updateBrowserTitle();
 });
 
 onUnmounted(() => {

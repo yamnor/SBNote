@@ -16,12 +16,6 @@
       </div>
       
       <div class="flex items-center space-x-8">
-        <!-- Loading indicator -->
-        <div v-if="isLoading" class="flex items-center space-x-2 text-theme-text-muted">
-          <Loader2 class="w-4 h-4 animate-spin" />
-          <span class="text-sm">Loading molecule...</span>
-        </div>
-        
         <!-- Raw button -->
         <button
           @click="goToRawView"
@@ -38,8 +32,6 @@
         >
           <Eye class="w-8 h-8" />
         </button>
-        
-
       </div>
     </div>
 
@@ -47,18 +39,16 @@
     <div class="h-screen">
       <MolViewer 
         :attachment-filename="attachmentFilename"
-        @error="handleViewerError"
-        @loading="handleViewerLoading"
-        @loaded="handleViewerLoaded"
+        :note-title="noteTitle"
       />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { ArrowLeft, FileX, Loader2, RefreshCw, Info, FileText, Eye, Grip, FileText as FileTextIcon } from 'lucide-vue-next';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { FileText as FileTextIcon, Eye, Grip } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
 import MolViewer from '../components/MolViewer.vue';
 
@@ -67,12 +57,9 @@ const props = defineProps({
 });
 
 const router = useRouter();
-const route = useRoute();
 
 // State
 const attachmentFilename = ref(null);
-const isLoading = ref(false);
-const error = ref(null);
 
 // Use composable for note data and attachment handling
 const { noteData, loadNoteDataAndAttachment } = useNoteAttachment();
@@ -83,14 +70,6 @@ const noteTitle = computed(() => {
 });
 
 // Methods
-function goBack() {
-  if (window.history.length > 1) {
-    router.back();
-  } else {
-    router.push({ name: 'home' });
-  }
-}
-
 function goToNote() {
   // Navigate to the note view using basename without extension
   const basename = props.filename.replace(/\.md$/, '');
@@ -109,37 +88,13 @@ async function loadNoteData() {
     attachmentFilename.value = filename;
   } catch (err) {
     console.error('Failed to load note data:', err);
-    error.value = err.message || 'Failed to load molecule data';
   }
-}
-
-// MolViewer event handlers
-function handleViewerError(errorMessage) {
-  error.value = errorMessage;
-}
-
-function handleViewerLoading(loading) {
-  isLoading.value = loading;
-}
-
-function handleViewerLoaded() {
-  // Molecule loaded successfully
-  console.log('Molecule loaded successfully');
 }
 
 // Lifecycle
 onMounted(async () => {
   await loadNoteData();
 });
-
-// Watch for note data changes to update browser title
-watch(noteData, (newNoteData) => {
-  if (newNoteData?.title) {
-    document.title = `${newNoteData.title} - SBNote`;
-  } else {
-    document.title = "Molecule - SBNote";
-  }
-}, { immediate: true });
 </script>
 
 <style scoped>
