@@ -13,7 +13,7 @@
         </h1>
       </div>
       
-      <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-6">
         <!-- Raw button -->
         <button
           @click="setViewMode('raw')"
@@ -71,32 +71,48 @@
     </div>
 
     <!-- Content -->
-    <div v-else class="h-screen">
-      <!-- MolViewer component -->
-      <MolViewer 
-        v-if="viewMode === 'mol'"
-        :attachment-filename="attachmentFilename"
-        :note-title="noteTitle"
-        :file-content="fileContent"
-      />
-      
-      <!-- ChemViewer component -->
-      <ChemViewer 
-        v-else-if="viewMode === 'chem'"
-        :attachment-filename="attachmentFilename"
-        :note-title="noteTitle"
-        :file-content="fileContent"
-      />
-      
-      <!-- RawViewer component -->
-      <div v-else-if="viewMode === 'raw'" class="h-full pt-16">
-        <RawViewer
+    <div v-else class="h-screen flex flex-col">
+      <!-- Main content area -->
+      <div class="flex-1 relative">
+        <!-- MolViewer component -->
+        <MolViewer 
+          v-if="viewMode === 'mol'"
+          :attachment-filename="attachmentFilename"
+          :note-title="noteTitle"
           :file-content="fileContent"
-          :language="language"
-          :is-loading="false"
-          @editor-ready="onEditorReady"
-          @editor-error="onEditorError"
         />
+        
+        <!-- ChemViewer component -->
+        <ChemViewer 
+          v-else-if="viewMode === 'chem'"
+          :attachment-filename="attachmentFilename"
+          :note-title="noteTitle"
+          :file-content="fileContent"
+        />
+        
+        <!-- RawViewer component -->
+        <div v-else-if="viewMode === 'raw'" class="h-full pt-16">
+          <RawViewer
+            :file-content="fileContent"
+            :language="language"
+            :is-loading="false"
+            @editor-ready="onEditorReady"
+            @editor-error="onEditorError"
+          />
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="flex-shrink-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex items-center justify-between text-sm text-theme-text-muted">
+          <div class="flex items-center space-x-4">
+            <span>File: {{ attachmentFilename }}</span>
+            <span>Mode: {{ viewMode.toUpperCase() }}</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span>Molecular Structure Viewer</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>

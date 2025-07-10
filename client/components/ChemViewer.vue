@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full relative pt-16">
+  <div class="h-full relative pt-12 pb-4">
     <!-- Error message -->
     <div v-if="error" class="h-full flex items-center justify-center p-8">
       <div class="text-center">
