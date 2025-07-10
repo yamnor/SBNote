@@ -79,8 +79,8 @@
         :file-content="fileContent"
       />
       
-      <!-- ChemViewer component -->
-      <ChemViewer 
+      <!-- MiewViewer component -->
+      <MiewViewer 
         v-else-if="viewMode === 'chem'"
         :attachment-filename="attachmentFilename"
         :note-title="noteTitle"
@@ -107,7 +107,7 @@ import { useRouter } from 'vue-router';
 import { FileText as FileTextIcon, Eye, Grip, FileX, Loader2, RefreshCw, ScanEye } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
 import MolViewer from '../components/MolViewer.vue';
-import ChemViewer from '../components/ChemViewer.vue';
+import MiewViewer from '../components/MiewViewer.vue';
 import RawViewer from '../components/RawViewer.vue';
 
 const props = defineProps({
