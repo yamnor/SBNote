@@ -38,6 +38,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { FileX, Loader2, RefreshCw } from 'lucide-vue-next';
+import * as $3Dmol from '3dmol/build/3Dmol.es6.js';
 
 const props = defineProps({
   attachmentFilename: {
@@ -82,7 +83,7 @@ async function loadMolecule() {
     await new Promise(resolve => requestAnimationFrame(resolve));
     
     // Check if 3Dmol.js is loaded
-    if (!window.$3Dmol) {
+    if (!$3Dmol) {
       throw new Error('3Dmol.js library not loaded. Please refresh the page.');
     }
 
@@ -97,10 +98,10 @@ async function loadMolecule() {
     }
     
     // Create new viewer
-    viewer = window.$3Dmol.createViewer(molViewer.value, {
+    viewer = $3Dmol.createViewer(molViewer.value, {
       backgroundColor: 'white',
       antialias: true,
-      defaultcolors: window.$3Dmol.rasmolElementColors
+      defaultcolors: $3Dmol.rasmolElementColors
     });
     
     // Determine file format from extension
