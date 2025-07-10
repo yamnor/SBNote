@@ -4,6 +4,7 @@
     class="w-full grid gap-2"
     :class="gridColsClass"
   >
+
     <template v-for="(item, index) in items" :key="item.key">
       <!-- Tag Card -->
       <TagCard

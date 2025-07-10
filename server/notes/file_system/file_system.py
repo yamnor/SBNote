@@ -1048,6 +1048,7 @@ class FileSystemNotes(BaseNotes):
             content=limited_content,
             last_modified=last_modified,
             filename=filename,
+            tags=metadata.get('tags', []),
             score=score,
             title_highlights=title_highlights,
             content_highlights=content_highlights,

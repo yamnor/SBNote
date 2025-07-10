@@ -56,6 +56,7 @@ class SearchResult(CustomBaseModel):
     content: Optional[str] = Field(None)
     last_modified: float
     filename: Optional[str] = Field(None)
+    tags: Optional[List[str]] = Field(default_factory=list)
 
     score: Optional[float] = Field(None)
     title_highlights: Optional[str] = Field(None)
