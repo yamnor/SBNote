@@ -113,7 +113,8 @@ function setupKeyboardShortcuts() {
         activeElement.tagName === 'TEXTAREA' ||
         activeElement.contentEditable === 'true' ||
         activeElement.closest('.toastui-editor-contents') ||
-        activeElement.closest('.toastui-editor-md-container')
+        activeElement.closest('.toastui-editor-md-container') ||
+        activeElement.closest('.xterm')
       );
       
       if (isEditing) {
@@ -132,9 +133,9 @@ function setupKeyboardShortcuts() {
       return; // Don't trigger search focus when search input is already focused
     }
     
-    // Check if the pressed key is a printable character
+    // Check if the pressed key is a printable character (excluding space and shift combinations)
     const key = event.key;
-    const isPrintableChar = key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey;
+    const isPrintableChar = key.length === 1 && key !== ' ' && !event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey;
     
     if (isPrintableChar) {
       // Prevent default behavior to avoid double input

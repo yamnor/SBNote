@@ -32,22 +32,25 @@
         </div>
       </div>
 
-      <!-- Terminal toggle button -->
-      <button
-        @click="toggleTerminal"
-        class="absolute top-4 right-4 z-10 p-2 bg-theme-brand text-white rounded-lg hover:bg-theme-brand-dark transition-colors"
-        :title="showTerminal ? 'Hide Terminal' : 'Show Terminal'"
-      >
-        <Terminal v-if="!showTerminal" class="w-4 h-4" />
-        <X v-else class="w-4 h-4" />
-      </button>
-
       <!-- Terminal panel -->
       <div
         v-if="showTerminal"
-        class="absolute bottom-0 left-0 right-0 h-64 bg-gray-900 border-t border-gray-700 z-20"
+        :class="[
+          'absolute bottom-0 left-0 right-0 z-20 border-t border-gray-700',
+          isTerminalMinimized ? 'h-12 min-h-[40px] bg-gray-900/50 backdrop-blur-sm' : 'h-64 bg-gray-900/50 backdrop-blur-sm'
+        ]"
       >
-        <div ref="terminalContainer" class="w-full h-full"></div>
+        <!-- Minimize/Restore Button -->
+        <button
+          @click.stop="toggleTerminal"
+          class="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full bg-gray-800/80 hover:bg-gray-700 border border-gray-600 shadow transition-colors focus:outline-none"
+          :title="isTerminalMinimized ? 'Restore Terminal' : 'Minimize Terminal'"
+          style="z-index:21;"
+        >
+          <ChevronUp v-if="isTerminalMinimized" class="w-5 h-5 text-gray-200" />
+          <ChevronDown v-else class="w-5 h-5 text-gray-200" />
+        </button>
+        <div v-show="!isTerminalMinimized" ref="terminalContainer" class="w-full h-full"></div>
       </div>
     </div>
   </div>
@@ -55,7 +58,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import { FileX, Loader2, RefreshCw, Terminal, X } from 'lucide-vue-next';
+import { FileX, Loader2, RefreshCw, Terminal, X, ChevronDown, ChevronUp } from 'lucide-vue-next';
 import Miew from 'miew';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -84,10 +87,11 @@ const miewViewer = ref(null);
 const terminalContainer = ref(null);
 const isLoading = ref(false);
 const error = ref(null);
-const showTerminal = ref(false);
+const showTerminal = ref(true); // 最初から表示
 let viewer = null;
 let terminal = null;
 let fitAddon = null;
+const isTerminalMinimized = ref(false);
 
 // Terminal command history
 const commandHistory = ref([]);
@@ -219,18 +223,9 @@ function retryLoad() {
   loadMolecule();
 }
 
+// toggleTerminal関数は最小化/復元のみの用途に簡略化
 function toggleTerminal() {
-  showTerminal.value = !showTerminal.value;
-  
-  if (showTerminal.value && viewer && !terminal) {
-    // Initialize terminal when showing
-    nextTick(() => {
-      initializeTerminal();
-    });
-  } else if (!showTerminal.value && terminal) {
-    // Destroy terminal when hiding
-    destroyTerminal();
-  }
+  isTerminalMinimized.value = !isTerminalMinimized.value;
 }
 
 function initializeTerminal() {
@@ -443,31 +438,12 @@ onUnmounted(() => {
 /* xterm.js custom styles */
 .xterm {
   padding: 8px;
+  background: transparent !important;
 }
 
-.xterm-viewport {
-  background-color: #1f2937 !important;
+.xterm .xterm-viewport {
+  overflow-y: hidden;
+  background-color: transparent !important;
 }
 
-.xterm-screen {
-  background-color: #1f2937 !important;
-}
-
-/* Custom scrollbar for terminal */
-.xterm-viewport::-webkit-scrollbar {
-  width: 8px;
-}
-
-.xterm-viewport::-webkit-scrollbar-track {
-  background: #374151;
-}
-
-.xterm-viewport::-webkit-scrollbar-thumb {
-  background: #6b7280;
-  border-radius: 4px;
-}
-
-.xterm-viewport::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
 </style> 

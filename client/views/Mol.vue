@@ -40,7 +40,7 @@
           :class="viewMode === 'chem' ? 'text-theme-brand text-theme-text' : 'text-theme-muted hover:text-theme-text text-theme-text-muted'"
           :title="viewMode === 'chem' ? 'Current view' : 'Chem View'"
         >
-          <ScanEye class="w-8 h-8" />
+          <SquareTerminal class="w-8 h-8" />
         </button>
       </div>
     </div>
@@ -106,7 +106,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { FileText as FileTextIcon, Eye, Grip, FileX, Loader2, RefreshCw, ScanEye } from 'lucide-vue-next';
+import { FileText as FileTextIcon, Eye, Grip, FileX, Loader2, RefreshCw, ScanEye, SquareTerminal } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
 import MolViewer from '../components/MolViewer.vue';
 import MiewViewer from '../components/MiewViewer.vue';
