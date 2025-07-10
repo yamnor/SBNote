@@ -73,6 +73,26 @@ export default defineConfig({
           }
         },
       },
+      onwarn(warning, warn) {
+        // Suppress eval warnings from external libraries
+        if (warning.code === 'EVAL' && 
+            (warning.id?.includes('3dmol') || warning.id?.includes('jquery.terminal'))) {
+          return;
+        }
+        // Suppress CSS property warnings
+        if (warning.code === 'css-syntax-error' && 
+            warning.message.includes('let') && 
+            warning.id?.includes('jquery.terminal')) {
+          return;
+        }
+        // Suppress unsupported CSS property warnings
+        if (warning.code === 'unsupported-css-property' && 
+            warning.message.includes('let') && 
+            warning.id?.includes('jquery.terminal')) {
+          return;
+        }
+        warn(warning);
+      },
     },
     chunkSizeWarningLimit: 1000, // Set limit to 1MB for realistic warnings
   },

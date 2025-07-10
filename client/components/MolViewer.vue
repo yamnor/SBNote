@@ -100,8 +100,7 @@ async function loadMolecule() {
     // Create new viewer
     viewer = $3Dmol.createViewer(molViewer.value, {
       backgroundColor: 'white',
-      antialias: true,
-      defaultcolors: $3Dmol.rasmolElementColors
+      antialias: true
     });
     
     // Determine file format from extension

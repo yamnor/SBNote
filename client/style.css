@@ -142,3 +142,8 @@
         overflow: hidden;
     }
 }
+
+/* Fix jquery.terminal CSS warning */
+.cmd .cmd-clipboard {
+    left: -16px !important;
+}
