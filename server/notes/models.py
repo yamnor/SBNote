@@ -21,7 +21,7 @@ class Note(CustomBaseModel):
     title: str
     content: Optional[str] = Field(None)
     last_modified: float
-    created: Optional[float] = Field(None)
+    created_time: Optional[float] = Field(None)
     tags: Optional[List[str]] = Field(default_factory=list)
     filename: Optional[str] = Field(None)
     category: Optional[str] = Field("note")

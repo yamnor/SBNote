@@ -78,7 +78,7 @@ export async function getNotes(term, sort, order, limit, content_limit) {
     const response = await api.get("api/search", {
       params: {
         term: term,
-        sort: sort,
+        sort: sort === 'createdTime' ? 'createdTime' : sort,
         order: order,
         limit: limit,
         content_limit: content_limit,
@@ -94,7 +94,7 @@ export async function getNotesList(sort, order, limit) {
   try {
     const response = await api.get("api/notes", {
       params: {
-        sort: sort,
+        sort: sort === 'createdTime' ? 'createdTime' : sort,
         order: order,
         limit: limit,
       },
@@ -241,7 +241,7 @@ export async function getNotesByTag(tagName, sort = "lastModified", order = "des
   try {
     const response = await api.get(`api/tags/${encodeURIComponent(tagName)}/notes`, {
       params: {
-        sort: sort,
+        sort: sort === 'createdTime' ? 'createdTime' : sort,
         order: order,
         limit: limit,
       },

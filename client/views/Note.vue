@@ -49,7 +49,7 @@
             </div>
             <div class="flex flex-col items-end">
               <span v-if="note.lastModifiedAsString">Modified: {{ note.lastModifiedAsString }}</span>
-              <span v-if="note.createdAsString">Created: {{ note.createdAsString }}</span>
+              <span v-if="note.createdTimeAsString">Created: {{ note.createdTimeAsString }}</span>
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ class Note {
   constructor(note) {
     this.title = note?.title;
     this.lastModified = note?.lastModified;
-    this.created = note?.created;
+    this.created_time = note?.createdTime;
     this.content = note?.content;
     this.tags = note?.tags;
     this.filename = note?.filename;
@@ -30,13 +30,13 @@ class Note {
     });
   }
 
-  get createdAsDate() {
-    return this.created ? new Date(this.created * 1000) : null;
+  get createdTimeAsDate() {
+    return this.created_time ? new Date(this.created_time * 1000) : null;
   }
 
-  get createdAsString() {
-    if (!this.created) return '';
-    const date = this.createdAsDate;
+  get createdTimeAsString() {
+    if (!this.created_time) return '';
+    const date = this.createdTimeAsDate;
     return date.toLocaleDateString('en-US', {
       year: '2-digit',
       month: '2-digit',

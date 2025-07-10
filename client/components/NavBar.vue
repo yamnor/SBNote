@@ -154,17 +154,6 @@
         New Note
       </DropdownMenuItem>
       
-      <!-- Import File -->
-      <DropdownMenuItem 
-        :icon="Upload"
-        @click="showImportModal"
-      >
-        Import File
-      </DropdownMenuItem>
-      
-      <!-- Divider -->
-      <div v-if="((route.name === 'tag' && route.params.tagName && route.params.tagName !== '_untagged') || (route.name === 'home' && selectedTag && selectedTag !== '_untagged'))" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
-      
       <!-- New Note with current tag (if on tag page or home page with selected tag, but not _untagged) -->
       <DropdownMenuItem 
         v-if="((route.name === 'tag' && route.params.tagName && route.params.tagName !== '_untagged') || (route.name === 'home' && selectedTag && selectedTag !== '_untagged'))"
@@ -174,21 +163,15 @@
         with "{{ route.name === 'tag' ? route.params.tagName : selectedTag }}"
       </DropdownMenuItem>
       
-      <!-- Popular tags section -->
-      <div v-if="availableTags.length > 0" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <!-- Divider -->
+      <div v-if="((route.name === 'tag' && route.params.tagName && route.params.tagName !== '_untagged') || (route.name === 'home' && selectedTag && selectedTag !== '_untagged'))" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
-      <!-- Popular tags -->
-      <div v-if="availableTags.length > 0" class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
-        Popular tags:
-      </div>
-      
+      <!-- Import File -->
       <DropdownMenuItem 
-        v-for="tag in availableTags.slice(0, 5)"
-        :key="tag"
-        :icon="Tag"
-        @click="() => createNewNoteWithTag(tag)"
+        :icon="Upload"
+        @click="showImportModal"
       >
-        with "{{ tag }}"
+        Import File
       </DropdownMenuItem>
     </DropdownMenu>
     
@@ -357,7 +340,6 @@ import DropdownMenuItem from "../components/DropdownMenuItem.vue";
 import { authTypes } from "../constants.js";
 import { useGlobalStore } from "../globalStore.js";
 import { clearStoredToken } from "../tokenStorage.js";
-import { getTags } from "../api.js";
 
 const props = defineProps({
   incrementalSearchResults: {
@@ -408,9 +390,6 @@ const router = useRouter();
 const route = useRoute();
 const searchInput = ref();
 
-// Available tags for new note dropdown
-const availableTags = ref([]);
-
 const emit = defineEmits([
   "incrementalSearch", 
   "selectSearchResult", 
@@ -454,20 +433,7 @@ const showMolView = computed(() => {
     return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'coordinate';
 });
 
-// Load available tags for new note dropdown
-async function loadAvailableTags() {
-  try {
-    const tags = await getTags();
-    // Filter out "_untagged" tag since it's automatically applied
-    availableTags.value = tags.filter(tag => tag !== "_untagged");
-  } catch (error) {
-    console.error('Failed to load tags:', error);
-    availableTags.value = [];
-  }
-}
 
-// Load tags when component mounts
-loadAvailableTags();
 
 function toggleEditMode() {
   globalStore.setEditMode(true);

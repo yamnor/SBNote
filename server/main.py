@@ -128,16 +128,15 @@ def get_note(filename: str, request: Request):
 )
 def get_notes_list(
     request: Request,
-    sort: Literal["title", "lastModified", "createdDate", "category", "visibility"] = "lastModified",
+    sort: Literal["title", "lastModified", "createdTime", "category", "visibility"] = "lastModified",
     order: Literal["asc", "desc"] = "desc",
     limit: int = None,
 ):
     """Get a list of all notes."""
     if sort == "lastModified":
         sort = "last_modified"
-    elif sort == "createdDate":
-        sort = "created_date"
-    
+    elif sort == "createdTime":
+        sort = "created_time"
     # Use public index if not authenticated, main index if authenticated
     use_public_index = not is_authenticated(request)
     return note_storage.list_notes(sort=sort, order=order, limit=limit, use_public_index=use_public_index)
@@ -305,7 +304,7 @@ if global_config.auth_type != AuthType.READ_ONLY:
 def search(
     request: Request,
     term: str,
-    sort: Literal["score", "title", "lastModified", "createdDate", "category", "visibility"] = "score",
+    sort: Literal["score", "title", "lastModified", "createdTime", "category", "visibility"] = "score",
     order: Literal["asc", "desc"] = "desc",
     limit: int = None,
     content_limit: int = None,
@@ -313,10 +312,8 @@ def search(
     """Perform a full text search on all notes."""
     if sort == "lastModified":
         sort = "last_modified"
-    elif sort == "createdDate":
-        sort = "created_date"
-    
-    # Use public index if not authenticated, main index if authenticated
+    elif sort == "createdTime":
+        sort = "created_time"
     use_public_index = not is_authenticated(request)
     return note_storage.search(term, sort=sort, order=order, limit=limit, content_limit=content_limit, use_public_index=use_public_index)
 
@@ -424,35 +421,16 @@ def get_tags_with_counts(request: Request):
 def get_notes_by_tag(
     request: Request,
     tag_name: str,
-    sort: Literal["title", "lastModified", "createdDate", "category", "visibility"] = "lastModified",
+    sort: Literal["title", "lastModified", "createdTime", "category", "visibility"] = "lastModified",
     order: Literal["asc", "desc"] = "desc",
     limit: int = 10,
 ):
-    """Get notes that have a specific tag."""
-    try:
-        if sort == "lastModified":
-            sort = "last_modified"
-        elif sort == "createdDate":
-            sort = "created_date"
-        
-        # Use public index if not authenticated, main index if authenticated
-        use_public_index = not is_authenticated(request)
-        
-        # Special handling for "_untagged" tag - return notes without tags
-        if tag_name == "_untagged":
-            all_notes = note_storage.list_notes(sort=sort, order=order, limit=None, use_public_index=use_public_index)
-            notes_without_tags = [note for note in all_notes if not note.tags]
-            
-            # Apply limit
-            if limit:
-                notes_without_tags = notes_without_tags[:limit]
-            
-            return notes_without_tags
-        
-        return note_storage.get_notes_by_tag(tag_name, sort=sort, order=order, limit=limit, use_public_index=use_public_index)
-    except Exception as e:
-        logger.error(f"Error getting notes by tag {tag_name}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get notes for tag {tag_name}")
+    if sort == "lastModified":
+        sort = "last_modified"
+    elif sort == "createdTime":
+        sort = "created_time"
+    use_public_index = not is_authenticated(request)
+    return note_storage.get_notes_by_tag(tag_name, sort=sort, order=order, limit=limit, use_public_index=use_public_index)
 
 
 if global_config.auth_type != AuthType.READ_ONLY:

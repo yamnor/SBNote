@@ -49,7 +49,7 @@ class BaseNotes(ABC):
     def search(
         self,
         term: str,
-        sort: Literal["score", "title", "last_modified", "created_date", "category", "visibility"] = "score",
+        sort: Literal["score", "title", "last_modified", "created_time", "category", "visibility"] = "score",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
         content_limit: int = None,
@@ -65,9 +65,10 @@ class BaseNotes(ABC):
     @abstractmethod
     def list_notes(
         self,
-        sort: Literal["title", "last_modified", "created_date", "category", "visibility"] = "last_modified",
+        sort: Literal["title", "last_modified", "created_time", "category", "visibility"] = "last_modified",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
+        use_public_index: bool = False,
     ) -> list[Note]:
         """Get a list of all notes."""
         pass
@@ -76,9 +77,21 @@ class BaseNotes(ABC):
     def get_notes_by_tag(
         self,
         tag_name: str,
-        sort: Literal["title", "last_modified", "created_date", "category", "visibility"] = "last_modified",
+        sort: Literal["title", "last_modified", "created_time", "category", "visibility"] = "last_modified",
         order: Literal["asc", "desc"] = "desc",
         limit: int = None,
+        use_public_index: bool = False,
     ) -> list[Note]:
         """Get notes that have a specific tag."""
+        pass
+
+    @abstractmethod
+    def get_notes_without_tags(
+        self,
+        sort: Literal["title", "last_modified", "created_time", "category", "visibility"] = "last_modified",
+        order: Literal["asc", "desc"] = "desc",
+        limit: int = None,
+        use_public_index: bool = False,
+    ) -> list[Note]:
+        """Get notes that have no tags."""
         pass
