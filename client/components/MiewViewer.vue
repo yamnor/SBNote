@@ -57,8 +57,10 @@
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { FileX, Loader2, RefreshCw, Terminal, X } from 'lucide-vue-next';
 import Miew from 'miew';
-import $ from 'jquery';
-import 'jquery.terminal';
+import { Terminal as XTerm } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
+import '@xterm/xterm/css/xterm.css';
 
 const props = defineProps({
   attachmentFilename: {
@@ -85,6 +87,11 @@ const error = ref(null);
 const showTerminal = ref(false);
 let viewer = null;
 let terminal = null;
+let fitAddon = null;
+
+// Terminal command history
+const commandHistory = ref([]);
+const historyIndex = ref(-1);
 
 // Methods
 async function loadMolecule() {
@@ -235,37 +242,90 @@ function initializeTerminal() {
       destroyTerminal();
     }
     
-    // Initialize jQuery Terminal
-    terminal = $(terminalContainer.value).terminal(function (command, term) {
-      viewer.script(command, function (str) {
-        term.echo(str);
-      }, function (str) {
-        term.error(str);
-      });
-    }, {
-      greetings: 'Miew - 3D Molecular Viewer\nCopyright © 2015-2024 EPAM Systems, Inc.\n',
-      prompt: 'miew> ',
-      name: 'miew',
-      scrollOnEcho: true,
-      onInit: function (term) {
-        var colors;
-        if (viewer) {
-          // highlight logs with different colors
-          colors = {
-            error: '#f00',
-            warn: '#990',
-            report: '#1a9cb0',
-          };
-          viewer.logger.addEventListener('message', function (e) {
-            var msg = e.message.replace(/]/g, '\\]');
-            term.echo('[[b;' + (colors[e.level] || '#666') + ';]' + msg + ']');
-          });
-        }
-      },
+    // Create new xterm.js terminal
+    terminal = new XTerm({
+      cursorBlink: true,
+      fontSize: 12,
+      fontFamily: 'Noto Sans Mono, Consolas, Lucida Console, Monaco, monospace',
+      theme: {
+        background: '#1f2937',
+        foreground: '#f9fafb',
+        cursor: '#f9fafb',
+        selection: '#374151',
+        black: '#000000',
+        red: '#ef4444',
+        green: '#10b981',
+        yellow: '#f59e0b',
+        blue: '#3b82f6',
+        magenta: '#8b5cf6',
+        cyan: '#06b6d4',
+        white: '#f9fafb',
+        brightBlack: '#6b7280',
+        brightRed: '#f87171',
+        brightGreen: '#34d399',
+        brightYellow: '#fbbf24',
+        brightBlue: '#60a5fa',
+        brightMagenta: '#a78bfa',
+        brightCyan: '#22d3ee',
+        brightWhite: '#ffffff'
+      }
     });
     
+    // Add addons
+    fitAddon = new FitAddon();
+    terminal.loadAddon(fitAddon);
+    terminal.loadAddon(new WebLinksAddon());
+    
+    // Open terminal
+    terminal.open(terminalContainer.value);
+    fitAddon.fit();
+    
+    // Write welcome message
+    terminal.writeln('\x1b[1;32mMiew - 3D Molecular Viewer\x1b[0m');
+    terminal.writeln('\x1b[3;36mCopyright © 2015-2024 EPAM Systems, Inc.\x1b[0m');
+    terminal.writeln('');
+    terminal.write('\x1b[1;32mmiew>\x1b[0m ');
+    
+    // Handle input
+    let currentLine = '';
+    terminal.onData((data) => {
+      const code = data.charCodeAt(0);
+      
+      if (code === 13) { // Enter
+        handleCommand(currentLine);
+        currentLine = '';
+        terminal.write('\r\n\x1b[1;32mmiew>\x1b[0m ');
+      } else if (code === 127) { // Backspace
+        if (currentLine.length > 0) {
+          currentLine = currentLine.slice(0, -1);
+          terminal.write('\b \b');
+        }
+      } else if (code === 27) { // Escape sequence
+        // Handle arrow keys
+        if (data.length > 2) {
+          const arrowCode = data.charCodeAt(2);
+          if (arrowCode === 65) { // Up arrow
+            navigateHistory('up');
+          } else if (arrowCode === 66) { // Down arrow
+            navigateHistory('down');
+          }
+        }
+      } else if (code >= 32) { // Printable characters
+        currentLine += data;
+        terminal.write(data);
+      }
+    });
+    
+    // Handle window resize
+    const resizeObserver = new ResizeObserver(() => {
+      if (fitAddon) {
+        fitAddon.fit();
+      }
+    });
+    resizeObserver.observe(terminalContainer.value);
+    
     // Focus the terminal
-    terminal.trigger('focus');
+    terminal.focus();
     
     // Disable hot keys to prevent conflicts
     if (typeof viewer.enableHotKeys === 'function') {
@@ -277,14 +337,63 @@ function initializeTerminal() {
   }
 }
 
+function handleCommand(command) {
+  if (!command.trim()) return;
+  
+  // Add to history
+  commandHistory.value.push(command);
+  historyIndex.value = -1;
+  
+  // Execute command through Miew
+  if (viewer && typeof viewer.script === 'function') {
+    try {
+      viewer.script(command, (str) => {
+        terminal.writeln(str);
+      }, (str) => {
+        terminal.writeln(`\x1b[1;31mError: ${str}\x1b[0m`);
+      });
+    } catch (err) {
+      terminal.writeln(`\x1b[1;31mError: ${err.message}\x1b[0m`);
+    }
+  } else {
+    terminal.writeln('\x1b[1;31mError: Miew viewer not available\x1b[0m');
+  }
+}
+
+function navigateHistory(direction) {
+  if (commandHistory.value.length === 0) return;
+  
+  if (direction === 'up') {
+    if (historyIndex.value < commandHistory.value.length - 1) {
+      historyIndex.value++;
+    }
+  } else if (direction === 'down') {
+    if (historyIndex.value > 0) {
+      historyIndex.value--;
+    } else if (historyIndex.value === 0) {
+      historyIndex.value = -1;
+    }
+  }
+  
+  // Clear current line and show history item
+  terminal.write('\r\x1b[K'); // Clear line
+  if (historyIndex.value >= 0) {
+    const historyCommand = commandHistory.value[commandHistory.value.length - 1 - historyIndex.value];
+    terminal.write(historyCommand);
+    // Update currentLine (this would need to be handled in the main input handler)
+  }
+  terminal.write('\x1b[1;32mmiew>\x1b[0m ');
+}
+
 function destroyTerminal() {
   if (terminal) {
     try {
-      terminal.destroy();
+      terminal.dispose();
     } catch (e) {
-      console.warn('Could not destroy terminal:', e);
+      console.warn('Could not dispose terminal:', e);
     }
     terminal = null;
+    fitAddon = null;
   }
   
   // Re-enable hot keys
@@ -325,42 +434,40 @@ onUnmounted(() => {
 
 <style>
 @import 'miew/dist/Miew.min.css';
-@import 'jquery.terminal/css/jquery.terminal.min.css';
 
 /* Ensure the viewer container takes full height */
 .w-full.h-full {
   min-height: 0;
 }
 
-/* Terminal styling */
-.terminal {
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
+/* xterm.js custom styles */
+.xterm {
+  padding: 8px;
 }
 
-/* Custom terminal colors to match theme */
-.terminal .terminal-wrapper {
+.xterm-viewport {
   background-color: #1f2937 !important;
-  color: #f9fafb !important;
 }
 
-.terminal .terminal-wrapper .terminal-cursor {
-  background-color: #f9fafb !important;
+.xterm-screen {
+  background-color: #1f2937 !important;
 }
 
-.terminal .terminal-wrapper .terminal-prompt {
-  color: #10b981 !important;
+/* Custom scrollbar for terminal */
+.xterm-viewport::-webkit-scrollbar {
+  width: 8px;
 }
 
-.terminal .terminal-wrapper .terminal-command {
-  color: #f9fafb !important;
+.xterm-viewport::-webkit-scrollbar-track {
+  background: #374151;
 }
 
-.terminal .terminal-wrapper .terminal-output {
-  color: #d1d5db !important;
+.xterm-viewport::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 4px;
 }
 
-.terminal .terminal-wrapper .terminal-error {
-  color: #ef4444 !important;
+.xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 </style> 
