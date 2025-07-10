@@ -267,6 +267,17 @@ class FileSystemNotes(BaseNotes):
             attachment_extension=attachment_extension,
         )
 
+    def get_by_basename(self, basename: str) -> Note:
+        """Get a note by its basename (filename without extension)."""
+        # Try to find the note with the given basename
+        filename_with_ext = basename + MARKDOWN_EXT
+        filepath = os.path.join(self.storage_path, filename_with_ext)
+        
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Note with basename '{basename}' not found.")
+        
+        return self.get(filename_with_ext)
+
     def get(self, filename: str) -> Note:
         # Add extension if not present
         if not filename.endswith(MARKDOWN_EXT):

@@ -96,6 +96,10 @@ export default defineConfig({
         target: devApiUrl,
         changeOrigin: true,
       },
+      "/raw/": {
+        target: devApiUrl,
+        changeOrigin: true,
+      },
       "/docs": {
         target: devApiUrl,
         changeOrigin: true,

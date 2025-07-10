@@ -586,6 +586,42 @@ def get_attachment(filename: str):
             status_code=404, detail=api_messages.attachment_not_found
         )
 
+# Raw file redirect endpoint
+@router.get(
+    "/raw/{basename}",
+    include_in_schema=False,
+)
+def get_raw_file_by_basename(basename: str):
+    """Get a raw file by note basename. Redirects to the actual file if the note has an attachment."""
+    try:
+        # Get the note by basename
+        note = note_storage.get_by_basename(basename)
+        
+        # Check if attachment_extension exists
+        if not note.attachment_extension:
+            raise HTTPException(
+                status_code=404, detail="No attachment extension found"
+            )
+        
+        # Construct the full filename with extension
+        filename = f"{basename}.{note.attachment_extension}"
+        
+        # Redirect to the actual file
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=f"/files/{filename}")
+        
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404, detail="Note not found"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in get_raw_file_by_basename: {e}")
+        raise HTTPException(
+            status_code=500, detail="Internal server error"
+        )
+
 
 if global_config.auth_type != AuthType.READ_ONLY:
 

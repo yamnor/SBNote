@@ -31,6 +31,11 @@ class BaseNotes(ABC):
         pass
 
     @abstractmethod
+    def get_by_basename(self, basename: str) -> Note:
+        """Get a note by its basename (filename without extension)."""
+        pass
+
+    @abstractmethod
     def update(self, filename: str, new_data: NoteUpdate) -> Note:
         """Update a specific note."""
         pass
