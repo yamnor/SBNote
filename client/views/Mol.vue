@@ -2,20 +2,18 @@
   <div class="fixed inset-0 z-50 bg-white dark:bg-gray-900">
     <!-- Header -->
     <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-white/90 backdrop-blur-sm">
-      <div class="flex items-center space-x-3">
-        <div class="flex items-center space-x-2">
-          <FileTextIcon 
-            @click="goToNote" 
-            class="w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors cursor-pointer"
-            title="Go to note"
-          />
-          <h1 class="text-lg font-semibold text-theme-text-muted">
-            {{ noteTitle }}
-          </h1>
-        </div>
+      <div class="flex items-center space-x-3 min-w-0 flex-1">
+        <FileTextIcon 
+          @click="goToNote" 
+          class="w-8 h-8 text-theme-muted hover:text-theme-text text-theme-text-muted transition-colors cursor-pointer flex-shrink-0"
+          title="Go to note"
+        />
+        <h1 class="text-lg font-semibold text-theme-text-muted truncate min-w-0 flex-1">
+          {{ noteTitle }}
+        </h1>
       </div>
       
-      <div class="flex items-center space-x-8">
+      <div class="flex items-center space-x-4">
         <!-- Raw button -->
         <button
           @click="setViewMode('raw')"
