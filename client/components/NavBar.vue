@@ -72,7 +72,7 @@
       </DropdownMenuItem>
 
       <!-- Divider -->
-      <div v-if="showSlideView || showMolView || showRawView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <div v-if="showSlideView || showMolView || showRawView || showEmbedView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
 
       <!-- Slide View (only for notes with 'slide' tag) -->
       <DropdownMenuItem 
@@ -99,6 +99,15 @@
         @click="onRawView"
       >
         Raw View
+      </DropdownMenuItem>
+      
+      <!-- Embed View (only for notes with 'embed' category) -->
+      <DropdownMenuItem 
+        v-if="showEmbedView"
+        :icon="ExternalLink"
+        @click="onEmbedView"
+      >
+        Embed View
       </DropdownMenuItem>
       
       <!-- Divider -->
@@ -341,7 +350,8 @@ import {
   Globe,
   Upload,
   Atom,
-  Grip
+  Grip,
+  ExternalLink
 } from "lucide-vue-next";
 
 import SearchInput from "../components/SearchInput.vue";
@@ -446,6 +456,11 @@ const showMolView = computed(() => {
 const showRawView = computed(() => {
   // Check if we're on a note page and the note has 'plaintext' category
   return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'plaintext';
+});
+
+const showEmbedView = computed(() => {
+  // Check if we're on a note page and the note has 'embed' category
+  return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'embed';
 });
 
 
@@ -572,6 +587,11 @@ function onMolView() {
 function onRawView() {
   // Navigate to raw view
   router.push({ name: 'raw', params: { filename: route.params.filename } });
+}
+
+function onEmbedView() {
+  // Navigate to embed view
+  router.push({ name: 'embed', params: { filename: route.params.filename } });
 }
 
 function showReadme() {

@@ -57,7 +57,7 @@
 import { computed, ref } from "vue";
 import { useGlobalStore } from "../globalStore.js";
 import NotePreviewModal from "./NotePreviewModal.vue";
-import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe } from "lucide-vue-next";
+import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, ExternalLink } from "lucide-vue-next";
 
 const props = defineProps({
   note: {
@@ -103,6 +103,8 @@ const categoryIcon = computed(() => {
       return Bolt;
     case 'plaintext':
       return FileText;
+    case 'embed':
+      return ExternalLink;
     case 'note':
     default:
       return StickyNote;
