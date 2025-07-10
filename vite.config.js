@@ -24,9 +24,7 @@ export default defineConfig({
             if (id.includes('@toast-ui/editor')) {
               return 'editor-vendor';
             }
-            if (id.includes('@codemirror')) {
-              return 'codemirror-vendor';
-            }
+            // Remove CodeMirror from separate chunk to avoid initialization issues
             if (id.includes('primevue')) {
               return 'primevue-vendor';
             }

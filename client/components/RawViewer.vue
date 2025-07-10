@@ -251,6 +251,9 @@ async function initializeEditor() {
     return;
   }
   
+  // Add a small delay to ensure all CodeMirror modules are properly initialized
+  await new Promise(resolve => setTimeout(resolve, 50));
+  
   try {
     // Get language support
     const languageSupport = getLanguageSupport(props.language);
