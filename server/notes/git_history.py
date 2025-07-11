@@ -12,24 +12,24 @@ class GitHistoryManager:
         self.max_history_count = 100
     
     def _initialize_git_repository(self):
-        """Gitリポジトリの初期化"""
+        """Initialize Git repository"""
         git_path = os.path.join(self.base_path, '.git')
         
         if not os.path.exists(git_path):
             try:
-                # Gitリポジトリを初期化
+                # Initialize Git repository
                 subprocess.run(['git', 'init'], cwd=self.base_path, check=True)
                 
-                # Git設定
+                # Git configuration
                 subprocess.run(['git', 'config', 'user.name', 'SBNote System'], 
                              cwd=self.base_path, check=True)
                 subprocess.run(['git', 'config', 'user.email', 'system@sbnote.local'], 
                              cwd=self.base_path, check=True)
                 
-                # .gitignoreを作成
+                # Create .gitignore
                 self._create_gitignore()
                 
-                # 初期コミット
+                # Initial commit
                 subprocess.run(['git', 'add', '.'], cwd=self.base_path, check=True)
                 subprocess.run(['git', 'commit', '-m', 'Initial commit: SBNote setup'], 
                              cwd=self.base_path, check=True)
@@ -39,7 +39,7 @@ class GitHistoryManager:
                 logger.error(f"Failed to initialize Git repository: {e}")
     
     def _create_gitignore(self):
-        """Gitignoreファイルの作成"""
+        """Create .gitignore file"""
         gitignore_content = """# Attachments (not tracked)
 files/
 # Search index (not tracked)
@@ -57,12 +57,12 @@ Thumbs.db
             f.write(gitignore_content)
     
     async def commit_note_change(self, filename: str, data):
-        """ノート変更のGitコミット"""
+        """Git commit for note changes"""
         try:
-            # コミットメッセージを生成
+            # Generate commit message
             message = self._generate_commit_message(filename, data)
             
-            # Git操作を実行
+            # Execute Git operations
             subprocess.run(['git', 'add', f'notes/{filename}'], 
                          cwd=self.base_path, check=True)
             subprocess.run(['git', 'commit', '-m', message], 
@@ -70,18 +70,18 @@ Thumbs.db
             
             logger.debug(f"Git commit successful: {message}")
             
-            # 古い履歴のクリーンアップ
+            # Cleanup old history
             await self._cleanup_old_history()
             
         except subprocess.CalledProcessError as e:
             logger.error(f"Git commit failed: {e}")
-            # エラーでもノート保存は継続
+            # Continue note saving even if error occurs
         except Exception as e:
             logger.error(f"Unexpected error in Git commit: {e}")
     
     def _generate_commit_message(self, filename: str, data) -> str:
-        """コミットメッセージの生成"""
-        # データからタイトルを取得（簡易版）
+        """Generate commit message"""
+        # Get title from data (simplified)
         title = "Unknown"
         if hasattr(data, 'new_title') and data.new_title:
             title = data.new_title
@@ -89,18 +89,18 @@ Thumbs.db
             title = data.title
         
         if hasattr(data, 'new_content') and data.new_content is not None:
-            return f"Auto-save: {title} - 内容を更新"
+            return f"Auto-save: {title} - Update content"
         elif hasattr(data, 'new_title') and data.new_title is not None:
-            return f"Auto-save: {title} - タイトルを変更"
+            return f"Auto-save: {title} - Change title"
         elif hasattr(data, 'tags') and data.tags is not None:
-            return f"Auto-save: {title} - タグを更新"
+            return f"Auto-save: {title} - Update tags"
         else:
-            return f"Auto-save: {title} - 変更"
+            return f"Auto-save: {title} - Changes"
     
     async def get_note_history(self, filename: str) -> List[dict]:
-        """ノートの履歴を取得"""
+        """Get note history"""
         try:
-            # 拡張子がなければ.mdを付与
+            # Add .md extension if not present
             if not filename.endswith('.md'):
                 filename = filename + '.md'
             result = subprocess.run(
@@ -127,9 +127,9 @@ Thumbs.db
             return []
     
     async def get_note_version(self, filename: str, commit_hash: str) -> Optional[str]:
-        """特定バージョンのノート内容を取得"""
+        """Get content of specific version"""
         try:
-            # 拡張子がなければ.mdを付与
+            # Add .md extension if not present
             if not filename.endswith('.md'):
                 filename = filename + '.md'
             result = subprocess.run(
@@ -142,25 +142,25 @@ Thumbs.db
             return None
     
     async def restore_note_version(self, filename: str, commit_hash: str) -> bool:
-        """特定バージョンに復元"""
+        """Restore to specific version"""
         try:
-            # 拡張子がなければ.mdを付与
+            # Add .md extension if not present
             if not filename.endswith('.md'):
                 filename = filename + '.md'
-            # 現在のバージョンをバックアップ
+            # Backup current version
             backup_path = self._backup_current_version(filename)
             
-            # 指定バージョンの内容を取得
+            # Get content of specified version
             content = await self.get_note_version(filename, commit_hash)
             if not content:
                 return False
             
-            # ファイルを復元
+            # Restore file
             filepath = os.path.join(self.base_path, 'notes', filename)
             with open(filepath, 'w') as f:
                 f.write(content)
             
-            # 復元をGitに記録
+            # Record restoration in Git
             message = f"Restore: {filename} to version {commit_hash[:8]}"
             subprocess.run(['git', 'add', f'notes/{filename}'], 
                          cwd=self.base_path, check=True)
@@ -172,13 +172,13 @@ Thumbs.db
             
         except Exception as e:
             logger.error(f"Failed to restore note version: {e}")
-            # バックアップから復元を試行
+            # Try to restore from backup
             if backup_path:
                 self._restore_from_backup(filename, backup_path)
             return False
     
     def _backup_current_version(self, filename: str) -> Optional[str]:
-        """現在のバージョンをバックアップ"""
+        """Backup current version"""
         try:
             backup_dir = os.path.join(self.base_path, '.backups')
             os.makedirs(backup_dir, exist_ok=True)
@@ -197,7 +197,7 @@ Thumbs.db
         return None
     
     def _restore_from_backup(self, filename: str, backup_path: str):
-        """バックアップから復元"""
+        """Restore from backup"""
         try:
             target_path = os.path.join(self.base_path, 'notes', filename)
             import shutil
@@ -207,12 +207,12 @@ Thumbs.db
             logger.error(f"Failed to restore from backup: {e}")
     
     async def _cleanup_old_history(self):
-        """古い履歴のクリーンアップ"""
+        """Cleanup old history"""
         try:
             cutoff_date = datetime.now() - timedelta(days=self.retention_days)
             cutoff_str = cutoff_date.strftime('%Y-%m-%d')
             
-            # 古いコミットを削除
+            # Delete old commits
             subprocess.run([
                 'git', 'reflog', 'expire', '--expire=' + cutoff_str
             ], cwd=self.base_path, check=True)
