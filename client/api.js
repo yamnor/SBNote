@@ -349,3 +349,33 @@ export async function deleteTag(tagName) {
     return Promise.reject(error);
   }
 }
+
+// Git history API functions
+export async function getNoteHistory(filename) {
+  try {
+    const response = await api.get(`api/notes/${encodeURIComponent(filename)}/history`);
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+export async function getNoteVersion(filename, commitHash) {
+  try {
+    const response = await api.get(`api/notes/${encodeURIComponent(filename)}/version/${commitHash}`);
+    return response.data.content;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+export async function restoreNoteVersion(filename, commitHash) {
+  try {
+    const response = await api.post(`api/notes/${encodeURIComponent(filename)}/restore`, {
+      commit_hash: commitHash
+    });
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}

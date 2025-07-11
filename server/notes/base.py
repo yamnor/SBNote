@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Literal
+from typing import Literal, List, Optional
 
 from .models import Note, NoteCreate, NoteUpdate, NoteImport, NoteImageImport, NoteXyzImport, NotePlaintextImport, NotePasteImport, SearchResult
 
@@ -53,6 +53,19 @@ class BaseNotes(ABC):
     @abstractmethod
     def delete(self, filename: str) -> None:
         """Delete a specific note.""" ""
+        pass
+
+    # Git history methods
+    async def get_history(self, filename: str) -> List[dict]:
+        """Get note history."""
+        pass
+
+    async def get_version_content(self, filename: str, commit_hash: str) -> Optional[str]:
+        """Get content of specific version."""
+        pass
+
+    async def restore_version(self, filename: str, commit_hash: str) -> bool:
+        """Restore note to specific version."""
         pass
 
     @abstractmethod

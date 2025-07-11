@@ -4,8 +4,9 @@ import re
 import shutil
 import string
 import time
+import asyncio
 from datetime import datetime
-from typing import List, Literal, Set, Tuple
+from typing import List, Literal, Set, Tuple, Optional
 import random
 
 import whoosh
@@ -25,6 +26,7 @@ from logger import logger
 
 from ..base import BaseNotes
 from ..models import Note, NoteCreate, NoteUpdate, NoteImport, NoteImageImport, NoteXyzImport, NotePlaintextImport, NotePasteImport, SearchResult
+from ..git_history import GitHistoryManager
 
 MARKDOWN_EXT = ".md"
 INDEX_SCHEMA_VERSION = "10"
@@ -70,6 +72,10 @@ class FileSystemNotes(BaseNotes):
         self.storage_path = os.path.join(self.base_path, "notes")
         os.makedirs(self.storage_path, exist_ok=True)
         
+        # Initialize Git history manager
+        self.git_manager = GitHistoryManager(self.base_path)
+        self.git_manager._initialize_git_repository()
+        
         # Initialize both indexes
         self.main_index = self._load_index("main")
         self.public_index = self._load_index("public")
@@ -101,6 +107,22 @@ class FileSystemNotes(BaseNotes):
         
         # Update the search indexes
         self._sync_index_with_retry()
+        
+        # Git commit (non-blocking)
+        try:
+            # 同期的なコンテキストで非同期処理を実行
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # イベントループが実行中の場合は、バックグラウンドタスクとして実行
+                loop.create_task(self.git_manager.commit_note_change(filename + MARKDOWN_EXT, data))
+            else:
+                # イベントループが実行されていない場合は、新しいループで実行
+                asyncio.run(self.git_manager.commit_note_change(filename + MARKDOWN_EXT, data))
+        except RuntimeError:
+            # イベントループが取得できない場合は、スレッドプールで実行
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                executor.submit(asyncio.run, self.git_manager.commit_note_change(filename + MARKDOWN_EXT, data))
         
         return Note(
             title=data.title,
@@ -153,6 +175,22 @@ class FileSystemNotes(BaseNotes):
         
         # Update the search indexes
         self._sync_index_with_retry()
+        
+        # Git commit (non-blocking)
+        try:
+            # 同期的なコンテキストで非同期処理を実行
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # イベントループが実行中の場合は、バックグラウンドタスクとして実行
+                loop.create_task(self.git_manager.commit_note_change(filename + MARKDOWN_EXT, data))
+            else:
+                # イベントループが実行されていない場合は、新しいループで実行
+                asyncio.run(self.git_manager.commit_note_change(filename + MARKDOWN_EXT, data))
+        except RuntimeError:
+            # イベントループが取得できない場合は、スレッドプールで実行
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                executor.submit(asyncio.run, self.git_manager.commit_note_change(filename + MARKDOWN_EXT, data))
         
         return Note(
             title=title,
@@ -490,6 +528,22 @@ class FileSystemNotes(BaseNotes):
         
         # Update the search indexes with visibility change handling
         self._sync_index_with_retry(visibility_changed=(old_visibility != metadata.get('visibility', 'private')))
+        
+        # Git commit (non-blocking)
+        try:
+            # 同期的なコンテキストで非同期処理を実行
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # イベントループが実行中の場合は、バックグラウンドタスクとして実行
+                loop.create_task(self.git_manager.commit_note_change(filename, data))
+            else:
+                # イベントループが実行されていない場合は、新しいループで実行
+                asyncio.run(self.git_manager.commit_note_change(filename, data))
+        except RuntimeError:
+            # イベントループが取得できない場合は、スレッドプールで実行
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                executor.submit(asyncio.run, self.git_manager.commit_note_change(filename, data))
         
         # Parse created date from frontmatter
         created_time = None
@@ -836,6 +890,19 @@ class FileSystemNotes(BaseNotes):
         if limit:
             notes_without_tags = notes_without_tags[:limit]
         return notes_without_tags
+
+    # Git history methods
+    async def get_history(self, filename: str) -> List[dict]:
+        """Get note history."""
+        return await self.git_manager.get_note_history(filename)
+    
+    async def get_version_content(self, filename: str, commit_hash: str) -> Optional[str]:
+        """Get content of specific version."""
+        return await self.git_manager.get_note_version(filename, commit_hash)
+    
+    async def restore_version(self, filename: str, commit_hash: str) -> bool:
+        """Restore note to specific version."""
+        return await self.git_manager.restore_note_version(filename, commit_hash)
 
     @property
     def _index_path(self):

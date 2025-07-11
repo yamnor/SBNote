@@ -446,6 +446,8 @@ async function init() {
         newTags.value = data.tags || [];
         if (data.title && data.title.trim()) {
           document.title = `${data.title} - SBNote`;
+          // Set current note title globally for NavBar component
+          globalStore.currentNoteTitle = data.title;
         }
         if (!isExistingNote) {
           note.value.content = data.content;
@@ -495,6 +497,9 @@ async function init() {
     
     // Set default title for new note
     document.title = "New Note - SBNote";
+    globalStore.currentNoteTitle = "New Note";
+    globalStore.currentNoteCategory = "note";
+    globalStore.currentNoteTags = initialTags;
     loadingIndicator.value.setLoaded();
     updateFileMenuState();
     
@@ -880,6 +885,7 @@ function saveNewNote(title, content, tags, close = false, isAuto = false) {
       }
       if (data.title && data.title.trim()) {
         document.title = `${data.title} - SBNote`;
+        globalStore.currentNoteTitle = data.title;
       }
       // Update URL with filename (without extension)
       const filename = data.filename.replace(noteConstants.MARKDOWN_EXTENSION, '');
@@ -919,6 +925,7 @@ function saveExistingNote(filename, title, content, tags, close = false, isAuto 
       }
       if (data.title && data.title.trim()) {
         document.title = `${data.title} - SBNote`;
+        globalStore.currentNoteTitle = data.title;
       }
       updateUIState({ unsavedChanges: false });
       setBeforeUnloadConfirmation(false);
@@ -969,10 +976,10 @@ function updateFileMenuState() {
   
   // Update current note tags globally for NavBar component
   const currentTags = canModify.value ? newTags.value : (note.value.tags || []);
-  window.currentNoteTags = currentTags;
+  globalStore.currentNoteTags = currentTags;
   
   // Update current note category globally for NavBar component
-  window.currentNoteCategory = note.value.category || 'note';
+  globalStore.currentNoteCategory = note.value.category || 'note';
 }
 
 function saveDefaultEditorMode() {
@@ -1037,6 +1044,7 @@ function handleContentChange(isTagsOnlyChange = false) {
 watch([newTitle], () => {
   if (newTitle.value && newTitle.value.trim()) {
     document.title = `${newTitle.value} - SBNote`;
+    globalStore.currentNoteTitle = newTitle.value;
   }
   handleContentChange();
 }, { deep: true, immediate: true });

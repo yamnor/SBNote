@@ -575,6 +575,56 @@ def rebuild_index():
         logger.error(f"Failed to rebuild indexes: {e}")
         raise HTTPException(500, "Failed to rebuild indexes")
 
+# Git history endpoints
+@router.get("/api/notes/{filename}/history")
+async def get_note_history(filename: str, request: Request):
+    """Get note history."""
+    if not is_authenticated(request):
+        raise HTTPException(401, "Authentication required")
+    
+    try:
+        history = await note_storage.get_history(filename)
+        return history
+    except Exception as e:
+        logger.error(f"Failed to get note history: {e}")
+        raise HTTPException(500, "Failed to get history")
+
+@router.get("/api/notes/{filename}/version/{commit_hash}")
+async def get_note_version(filename: str, commit_hash: str, request: Request):
+    """Get content of specific version."""
+    if not is_authenticated(request):
+        raise HTTPException(401, "Authentication required")
+    
+    try:
+        content = await note_storage.get_version_content(filename, commit_hash)
+        if content:
+            return {"content": content}
+        else:
+            raise HTTPException(404, "Version not found")
+    except Exception as e:
+        logger.error(f"Failed to get note version: {e}")
+        raise HTTPException(500, "Failed to get version")
+
+@router.post("/api/notes/{filename}/restore")
+async def restore_note_version(filename: str, request: Request, data: dict):
+    """Restore note to specific version."""
+    if not is_authenticated(request):
+        raise HTTPException(401, "Authentication required")
+    
+    commit_hash = data.get("commit_hash")
+    if not commit_hash:
+        raise HTTPException(422, "commit_hash is required")
+    
+    try:
+        success = await note_storage.restore_version(filename, commit_hash)
+        if success:
+            return {"message": "Restored successfully"}
+        else:
+            raise HTTPException(400, "Restore failed")
+    except Exception as e:
+        logger.error(f"Failed to restore note version: {e}")
+        raise HTTPException(500, "Restore failed")
+
 
 # endregion
 

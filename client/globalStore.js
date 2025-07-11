@@ -6,6 +6,11 @@ export const useGlobalStore = defineStore("global", () => {
   const toast = ref(null);
   const isAuthenticated = ref(false);
   
+  // Current note information
+  const currentNoteTitle = ref('');
+  const currentNoteCategory = ref('');
+  const currentNoteTags = ref([]);
+  
   // Load editMode from localStorage or default to true
   const storedEditMode = localStorage.getItem('editMode');
   const editMode = ref(storedEditMode !== null ? storedEditMode === 'true' : true);
@@ -33,6 +38,9 @@ export const useGlobalStore = defineStore("global", () => {
     editMode, 
     setEditMode, 
     previewStyle, 
-    setPreviewStyle
+    setPreviewStyle,
+    currentNoteTitle,
+    currentNoteCategory,
+    currentNoteTags
   };
 });

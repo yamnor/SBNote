@@ -294,6 +294,14 @@
         Copy link
       </DropdownMenuItem>
       
+      <!-- History -->
+      <DropdownMenuItem 
+        :icon="History" 
+        @click="showHistory"
+      >
+        履歴
+      </DropdownMenuItem>
+      
 
       
 
@@ -358,6 +366,13 @@
       :selected-tag="selectedTag"
       @close="closePasteModal"
     />
+    
+    <!-- History Modal -->
+    <HistoryModal 
+      v-model="isHistoryModalVisible"
+      :filename="route.params.filename"
+      :note-title="globalStore.currentNoteTitle || 'Unknown'"
+    />
   </nav>
 </template>
 
@@ -387,7 +402,8 @@ import {
   Atom,
   Grip,
   ExternalLink,
-  FileText
+  FileText,
+  History
 } from "lucide-vue-next";
 
 import SearchInput from "../components/SearchInput.vue";
@@ -395,6 +411,7 @@ import DropdownMenu from "../components/DropdownMenu.vue";
 import DropdownMenuItem from "../components/DropdownMenuItem.vue";
 import EmbedModal from "../components/EmbedModal.vue";
 import PasteModal from "../components/PasteModal.vue";
+import HistoryModal from "../components/HistoryModal.vue";
 import { authTypes } from "../constants.js";
 import { useGlobalStore } from "../globalStore.js";
 import { clearStoredToken } from "../tokenStorage.js";
@@ -449,6 +466,7 @@ const route = useRoute();
 const searchInput = ref();
 const isEmbedModalVisible = ref(false);
 const isPasteModalVisible = ref(false);
+const isHistoryModalVisible = ref(false);
 
 const emit = defineEmits([
   "incrementalSearch", 
@@ -490,17 +508,17 @@ const showSlideView = computed(() => {
 
 const showMolView = computed(() => {
       // Check if we're on a note page and the note has 'coordinate' category
-    return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'coordinate';
+    return route.name === 'note' && route.params.filename && globalStore.currentNoteCategory === 'coordinate';
 });
 
 const showRawView = computed(() => {
   // Check if we're on a note page and the note has 'plaintext' category
-  return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'plaintext';
+  return route.name === 'note' && route.params.filename && globalStore.currentNoteCategory === 'plaintext';
 });
 
 const showEmbedView = computed(() => {
   // Check if we're on a note page and the note has 'embed' category
-  return route.name === 'note' && route.params.filename && window.currentNoteCategory === 'embed';
+  return route.name === 'note' && route.params.filename && globalStore.currentNoteCategory === 'embed';
 });
 
 
@@ -666,6 +684,14 @@ function showPasteModal() {
 
 function closePasteModal() {
   isPasteModalVisible.value = false;
+}
+
+function showHistory() {
+  isHistoryModalVisible.value = true;
+}
+
+function closeHistoryModal() {
+  isHistoryModalVisible.value = false;
 }
 
 // Method to focus the search input
