@@ -9,6 +9,11 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     
+    env:
+      SBNOTE_AUTH_TYPE: password
+      SBNOTE_PORT: 50010
+      SBNOTE_APP_PATH: ~/apps/sbnote
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -38,19 +43,19 @@ jobs:
     - name: Deploy to server
       run: |
         # Copy docker-compose.yml to server
-        scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/apps/sbnote/
+        scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SBNOTE_APP_PATH }}/
         
         ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
-        # Create .env file from secrets
-        cat > ~/apps/sbnote/.env << 'ENVEOF'
-        SBNOTE_AUTH_TYPE=password
+        # Create .env file from secrets and env
+        cat > ${{ env.SBNOTE_APP_PATH }}/.env << 'ENVEOF'
+        SBNOTE_AUTH_TYPE=${{ env.SBNOTE_AUTH_TYPE }}
         SBNOTE_USERNAME=${{ secrets.SBNOTE_USERNAME }}
         SBNOTE_PASSWORD=${{ secrets.SBNOTE_PASSWORD }}
         SBNOTE_SECRET_KEY=${{ secrets.SBNOTE_SECRET_KEY }}
         ENVEOF
         
         # Pull latest image and restart
-        cd ~/apps/sbnote
+        cd ${{ env.SBNOTE_APP_PATH }}
         docker-compose pull
         docker-compose down
         docker-compose up -d
@@ -58,7 +63,7 @@ jobs:
         # Health check
         echo "Waiting for application to start..."
         sleep 15
-        if curl -f http://localhost:50010/health; then
+        if curl -f http://localhost:${{ env.SBNOTE_PORT }}/health; then
           echo "Deployment successful!"
         else
           echo "Deployment failed - health check failed"
