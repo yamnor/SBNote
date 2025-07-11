@@ -57,21 +57,56 @@ services:
   sbnote:
     container_name: sbnote
     image: yamnor/sbnote:latest
+    platform: linux/amd64
     environment:
       PUID: 1000
       PGID: 1000
-      SBNOTE_AUTH_TYPE: "password"
-      SBNOTE_USERNAME: "user"
-      SBNOTE_PASSWORD: "changeMe!"
-      SBNOTE_SECRET_KEY: "aLongRandomSeriesOfCharacters"
+      SBNOTE_AUTH_TYPE: ${SBNOTE_AUTH_TYPE}
+      SBNOTE_USERNAME: ${SBNOTE_USERNAME}
+      SBNOTE_PASSWORD: ${SBNOTE_PASSWORD}
+      SBNOTE_SECRET_KEY: ${SBNOTE_SECRET_KEY}
     volumes:
       - "./data:/data"
-      # Optional. Allows you to save the search index in a different location: 
-      # - "./index:/data/index"
     ports:
-      - "8080:8080"
+      - "50010:8080"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 ```
+
+### Environment Variables
+
+Create a `.env` file in your project directory:
+
+```bash
+SBNOTE_AUTH_TYPE=password
+SBNOTE_USERNAME=admin
+SBNOTE_PASSWORD=your-secure-password
+SBNOTE_SECRET_KEY=your-secret-key
+```
+
+## Deployment with GitHub Actions
+
+This project includes automated deployment using GitHub Actions. When you push to the `main` branch, it will:
+
+1. Build a Docker image for linux/amd64 platform
+2. Push the image to Docker Hub
+3. Deploy to your remote server
+4. Perform health checks
+
+### Required GitHub Secrets
+
+Set up the following secrets in your GitHub repository:
+
+- `SSH_PRIVATE_KEY`: SSH private key for server access
+- `DOCKERHUB_USERNAME`: Your Docker Hub username
+- `DOCKERHUB_TOKEN`: Your Docker Hub access token
+- `SBNOTE_USERNAME`: Application username
+- `SBNOTE_PASSWORD`: Application password
+- `SBNOTE_SECRET_KEY`: JWT secret key
 
 ## Acknowledgments
 

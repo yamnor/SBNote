@@ -1,0 +1,22 @@
+services:
+  sbnote:
+    container_name: sbnote
+    image: yamnor/sbnote:latest
+    platform: linux/amd64
+    environment:
+      PUID: 1000
+      PGID: 1000
+      SBNOTE_AUTH_TYPE: ${SBNOTE_AUTH_TYPE}
+      SBNOTE_USERNAME: ${SBNOTE_USERNAME}
+      SBNOTE_PASSWORD: ${SBNOTE_PASSWORD}
+      SBNOTE_SECRET_KEY: ${SBNOTE_SECRET_KEY}
+    volumes:
+      - "./data:/data"
+    ports:
+      - "50010:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
