@@ -636,8 +636,6 @@ def get_config():
     return GlobalConfigResponseModel(
         auth_type=global_config.auth_type,
         quick_access_hide=global_config.quick_access_hide,
-        quick_access_title=global_config.quick_access_title,
-        quick_access_term=global_config.quick_access_term,
         quick_access_sort=global_config.quick_access_sort,
         quick_access_limit=global_config.quick_access_limit,
     )

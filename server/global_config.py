@@ -10,8 +10,6 @@ class GlobalConfig:
         logger.debug("Loading global config...")
         self.auth_type: AuthType = self._load_auth_type()
         self.quick_access_hide: bool = self._quick_access_hide()
-        self.quick_access_title: str = self._quick_access_title()
-        self.quick_access_term: str = self._quick_access_term()
         self.quick_access_sort: str = self._quick_access_sort()
         self.quick_access_limit: int = self._quick_access_limit()
         self.path_prefix: str = self._load_path_prefix()
@@ -65,14 +63,6 @@ class GlobalConfig:
                 )
         return value
 
-    def _quick_access_title(self):
-        key = "SBNOTE_QUICK_ACCESS_TITLE"
-        return get_env(key, mandatory=False, default="")
-
-    def _quick_access_term(self):
-        key = "SBNOTE_QUICK_ACCESS_TERM"
-        return get_env(key, mandatory=False, default="*")
-
     def _quick_access_sort(self):
         key = "SBNOTE_QUICK_ACCESS_SORT"
         value = get_env(key, mandatory=False, default="lastModified")
@@ -112,7 +102,5 @@ class AuthType(str, Enum):
 class GlobalConfigResponseModel(CustomBaseModel):
     auth_type: AuthType
     quick_access_hide: bool
-    quick_access_title: str
-    quick_access_term: str
     quick_access_sort: str
     quick_access_limit: int

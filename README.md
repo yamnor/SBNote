@@ -109,7 +109,7 @@ SBNOTE_QUICK_ACCESS_LIMIT=12
 
 ### Development Environment Setup
 
-For development, the project includes a `docker-compose.override.yml` file that automatically applies development-specific settings:
+For development, the project uses a `.env` file with development-specific settings:
 
 - **Port**: 3000 (instead of 50010)
 - **Session expiry**: 7 days (instead of 30)
@@ -144,7 +144,6 @@ For development, the project includes a `docker-compose.override.yml` file that 
 Docker Compose loads environment variables in this order:
 1. System environment variables
 2. `.env` file (in project root)
-3. `docker-compose.override.yml` (development overrides)
 
 ## Deployment
 

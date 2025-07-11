@@ -139,8 +139,9 @@ async function onTagClick(tagName) {
     
     // Only fetch notes if a new tag was selected (not the same tag)
     if (selectedTag.value === tagName && previousSelectedTag !== tagName) {
-      // Get notes for the selected tag
-      const notes = await fetchNotesByTag(getNotesByTag, tagName, "lastModified", "desc", 10);
+      // Get notes for the selected tag using config limit
+      const limit = globalStore.config.quickAccessLimit || 12;
+      const notes = await fetchNotesByTag(getNotesByTag, tagName, "lastModified", "desc", limit);
       displayedNotes.value = notes;
     }
   } catch (error) {
@@ -266,7 +267,8 @@ async function refreshHomeData() {
     // If there's a selected tag, refresh its notes
     if (selectedTag.value) {
       try {
-        const notes = await fetchNotesByTag(getNotesByTag, selectedTag.value, "lastModified", "desc", 10);
+        const limit = globalStore.config.quickAccessLimit || 12;
+        const notes = await fetchNotesByTag(getNotesByTag, selectedTag.value, "lastModified", "desc", limit);
         displayedNotes.value = notes;
       } catch (error) {
         console.error('Failed to refresh selected tag notes:', error);
@@ -300,7 +302,8 @@ async function init() {
       
       // Load notes for the selected tag
       try {
-        const notes = await fetchNotesByTag(getNotesByTag, tagToSelect, "lastModified", "desc", 10);
+        const limit = globalStore.config.quickAccessLimit || 12;
+        const notes = await fetchNotesByTag(getNotesByTag, tagToSelect, "lastModified", "desc", limit);
         displayedNotes.value = notes;
       } catch (error) {
         console.error('Failed to load tag notes:', error);
@@ -312,7 +315,8 @@ async function init() {
     // If there's a saved selected tag, load its notes
     if (selectedTag.value) {
       try {
-        const notes = await fetchNotesByTag(getNotesByTag, selectedTag.value, "lastModified", "desc", 10);
+        const limit = globalStore.config.quickAccessLimit || 12;
+        const notes = await fetchNotesByTag(getNotesByTag, selectedTag.value, "lastModified", "desc", limit);
         displayedNotes.value = notes;
       } catch (error) {
         console.error('Failed to load saved tag notes:', error);
