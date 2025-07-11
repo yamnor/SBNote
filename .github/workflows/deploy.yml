@@ -41,12 +41,12 @@ jobs:
     
     - name: Deploy to server
       run: |
-        # Ensure SSH agent is available for scp
-        eval $(ssh-agent -s)
-        ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
+        # Debug SSH connection
+        echo "Testing SSH connection..."
+        ssh -o ConnectTimeout=10 -o BatchMode=yes ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'"
         
         # Copy docker-compose.yml to server
-        scp docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/apps/sbnote/
+        scp -o ConnectTimeout=10 docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/apps/sbnote/
         
         ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
           # Create .env file from secrets
