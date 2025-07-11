@@ -93,8 +93,8 @@ class FileSystemNotes(BaseNotes):
             content=data.content or "",
             tags=data.tags or [],
             created=created_time,
-            category="note",
-            visibility="private"
+            category=getattr(data, 'category', 'note'),
+            visibility=getattr(data, 'visibility', 'private')
         )
         
         self._write_file(filepath, markdown_content)

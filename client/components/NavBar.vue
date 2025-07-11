@@ -191,6 +191,17 @@
       >
         Import File
       </DropdownMenuItem>
+      
+      <!-- Divider -->
+      <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      
+      <!-- Embed Page -->
+      <DropdownMenuItem 
+        :icon="ExternalLink"
+        @click="showEmbedModal"
+      >
+        Embed Page
+      </DropdownMenuItem>
     </DropdownMenu>
     
     <!-- Tag Edit Button with Dropdown -->
@@ -323,6 +334,12 @@
         Delete
       </DropdownMenuItem>
     </DropdownMenu>
+    
+    <!-- Embed Modal -->
+    <EmbedModal 
+      :is-visible="isEmbedModalVisible"
+      @close="closeEmbedModal"
+    />
   </nav>
 </template>
 
@@ -357,6 +374,7 @@ import {
 import SearchInput from "../components/SearchInput.vue";
 import DropdownMenu from "../components/DropdownMenu.vue";
 import DropdownMenuItem from "../components/DropdownMenuItem.vue";
+import EmbedModal from "../components/EmbedModal.vue";
 import { authTypes } from "../constants.js";
 import { useGlobalStore } from "../globalStore.js";
 import { clearStoredToken } from "../tokenStorage.js";
@@ -409,6 +427,7 @@ const globalStore = useGlobalStore();
 const router = useRouter();
 const route = useRoute();
 const searchInput = ref();
+const isEmbedModalVisible = ref(false);
 
 const emit = defineEmits([
   "incrementalSearch", 
@@ -602,6 +621,14 @@ function showReadme() {
 
 function showImportModal() {
   emit("showImportModal");
+}
+
+function showEmbedModal() {
+  isEmbedModalVisible.value = true;
+}
+
+function closeEmbedModal() {
+  isEmbedModalVisible.value = false;
 }
 
 // Method to focus the search input

@@ -105,12 +105,14 @@ export async function getNotesList(sort, order, limit) {
   }
 }
 
-export async function createNote(title, content, tags = []) {
+export async function createNote(title, content, tags = [], category = "note", visibility = "private") {
   try {
     const response = await api.post("api/notes", {
       title: title,
       content: content,
       tags: tags,
+      category: category,
+      visibility: visibility,
     });
     return new Note(response.data);
   } catch (error) {

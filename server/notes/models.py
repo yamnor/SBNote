@@ -15,6 +15,8 @@ class NoteCreate(CustomBaseModel):
     title: str
     content: Optional[str] = Field(None)
     tags: Optional[List[str]] = Field(default_factory=list)
+    category: Optional[str] = Field("note")
+    visibility: Optional[str] = Field("private")
 
 
 class Note(CustomBaseModel):
