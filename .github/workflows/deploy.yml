@@ -40,7 +40,7 @@ jobs:
         # Copy docker-compose.yml to server
         scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/apps/sbnote/
         
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
           # Create .env file from secrets
           cat > ~/apps/sbnote/.env << 'ENVEOF'
           SBNOTE_AUTH_TYPE=password
