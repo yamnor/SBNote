@@ -9,6 +9,7 @@ A self-hosted, database-less note-taking web app that utilises a flat folder of 
 - [Design Principle](#design-principle)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
+- [Development](#development)
 - [Deployment](#deployment)
 - [Acknowledgments](#acknowledgments)
 
@@ -75,7 +76,13 @@ Equally, the only thing SBNote caches is the search index and that's incremental
 
 ### Environment Variables
 
-Create a `.env` file in your project directory:
+Create a `.env` file in your project directory by copying the example:
+
+```bash
+cp .env.example .env
+```
+
+Then edit the `.env` file with your settings:
 
 ```bash
 # Authentication
@@ -84,7 +91,8 @@ SBNOTE_USERNAME=admin
 SBNOTE_PASSWORD=your-secure-password
 SBNOTE_SECRET_KEY=your-secret-key
 
-# Optional settings
+# Application Settings
+SBNOTE_PORT=3000
 SBNOTE_SESSION_EXPIRY_DAYS=30
 SBNOTE_QUICK_ACCESS_HIDE=false
 SBNOTE_QUICK_ACCESS_LIMIT=12
@@ -96,6 +104,47 @@ SBNOTE_QUICK_ACCESS_LIMIT=12
 - `read_only`: Read-only mode, no authentication
 - `password`: Username/password authentication
 - `totp`: Two-factor authentication (requires additional setup)
+
+## Development
+
+### Development Environment Setup
+
+For development, the project includes a `docker-compose.override.yml` file that automatically applies development-specific settings:
+
+- **Port**: 3000 (instead of 50010)
+- **Session expiry**: 7 days (instead of 30)
+- **Quick access**: Enabled with 12 items
+
+### Development Workflow
+
+1. **Setup development environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env with development settings
+   ```
+
+2. **Start development server**
+   ```bash
+   docker-compose up -d
+   # Application will be available at http://localhost:3000
+   ```
+
+3. **View logs**
+   ```bash
+   docker-compose logs -f
+   ```
+
+4. **Stop development server**
+   ```bash
+   docker-compose down
+   ```
+
+### Environment File Priority
+
+Docker Compose loads environment variables in this order:
+1. System environment variables
+2. `.env` file (in project root)
+3. `docker-compose.override.yml` (development overrides)
 
 ## Deployment
 
@@ -117,7 +166,7 @@ services:
     volumes:
       - "./data:/data"
     ports:
-      - "50010:8080"
+      - "${SBNOTE_PORT:-50010}:8080"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

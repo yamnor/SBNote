@@ -52,6 +52,7 @@ jobs:
         SBNOTE_USERNAME=${{ secrets.SBNOTE_USERNAME }}
         SBNOTE_PASSWORD=${{ secrets.SBNOTE_PASSWORD }}
         SBNOTE_SECRET_KEY=${{ secrets.SBNOTE_SECRET_KEY }}
+        SBNOTE_PORT=${{ env.SBNOTE_PORT }}
         ENVEOF
         
         # Pull latest image and restart

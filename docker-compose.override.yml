@@ -1,0 +1,17 @@
+# Development Environment Override
+# This file is automatically loaded by docker-compose for development
+# It overrides settings from docker-compose.yml
+
+services:
+  sbnote:
+    environment:
+      # Development-specific environment variables
+      SBNOTE_PORT: 3000
+      SBNOTE_SESSION_EXPIRY_DAYS: 7
+      SBNOTE_QUICK_ACCESS_HIDE: false
+      SBNOTE_QUICK_ACCESS_LIMIT: 12
+    ports:
+      - "3000:8080"  # Override port for development
+    # Development-specific volumes (if needed)
+    # volumes:
+    #   - "./server:/app/server:ro"  # Mount server code for development 
