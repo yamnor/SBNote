@@ -2,6 +2,26 @@
 
 A self-hosted, database-less note-taking web app that utilises a flat folder of markdown files for storage. SBNote is a fork of [flatnote](https://github.com/Dullage/flatnote) with enhanced features for organizing content through tags and scraps.
 
+## Table of Contents
+
+- [Features](#features)
+- [File Structure](#file-structure)
+- [Design Principle](#design-principle)
+- [Getting Started](#getting-started)
+- [Configuration](#configuration)
+- [Deployment](#deployment)
+- [Acknowledgments](#acknowledgments)
+
+## Features
+
+### Enhanced Features
+
+Building upon flatnote's foundation, SBNote introduces a unique organizational system inspired by Japanese illustrator Noritake's "SBN - Super Binding Notebook" concept:
+
+* **Tag-based Scrap Organization**: Tags serve as a way to group scraps (fragments) of content, which can then be bound together to form notebooks.
+* **Scrap-to-Notebook Workflow**: Create individual scraps with tags, then organize them into cohesive notebooks based on your tagging system.
+* **Flexible Content Addition**: Like the physical SBN where you can add any paper by folding it in half, SBNote allows you to freely add and organize content without rigid rules.
+
 ## File Structure
 
 SBNote organizes files in the following structure within the `SBNOTE_PATH` directory:
@@ -22,36 +42,65 @@ Another key design principle is not to take your notes hostage. Your notes are j
 
 Equally, the only thing SBNote caches is the search index and that's incrementally synced on every search (and when SBNote first starts). This means that you're free to add, edit & delete the markdown files outside of SBNote even whilst SBNote is running.
 
-## Enhanced Features
-
-Building upon flatnote's foundation, SBNote introduces a unique organizational system inspired by Japanese illustrator Noritake's "SBN - Super Binding Notebook" concept - a simple idea of binding papers together to create notebooks:
-
-* **Tag-based Scrap Organization**: Tags serve as a way to group scraps (fragments) of content, which can then be bound together to form notebooks.
-* **Scrap-to-Notebook Workflow**: Create individual scraps with tags, then organize them into cohesive notebooks based on your tagging system.
-* **Flexible Content Addition**: Like the physical SBN where you can add any paper by folding it in half, SBNote allows you to freely add and organize content without rigid rules.
-
 ## Getting Started
 
-### Self Hosted
+### Prerequisites
 
-If you'd prefer to host SBNote yourself then the recommendation is to use Docker.
+- Docker and Docker Compose installed
+- Git (for deployment)
 
-### Example Docker Run Command
+### Quick Start
 
-```shell
-docker run -d \
-  -e "PUID=1000" \
-  -e "PGID=1000" \
-  -e "SBNOTE_AUTH_TYPE=password" \
-  -e "SBNOTE_USERNAME=user" \
-  -e 'SBNOTE_PASSWORD=changeMe!' \
-  -e "SBNOTE_SECRET_KEY=aLongRandomSeriesOfCharacters" \
-  -v "$(pwd)/data:/data" \
-  -p "8080:8080" \
-  yamnor/sbnote:latest
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/sbnote.git
+   cd sbnote
+   ```
+
+2. **Create environment file**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
+
+3. **Start the application**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the application**
+   Open http://localhost:50010 in your browser
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file in your project directory:
+
+```bash
+# Authentication
+SBNOTE_AUTH_TYPE=password
+SBNOTE_USERNAME=admin
+SBNOTE_PASSWORD=your-secure-password
+SBNOTE_SECRET_KEY=your-secret-key
+
+# Optional settings
+SBNOTE_SESSION_EXPIRY_DAYS=30
+SBNOTE_QUICK_ACCESS_HIDE=false
+SBNOTE_QUICK_ACCESS_LIMIT=12
 ```
 
-### Example Docker Compose
+### Authentication Types
+
+- `none`: No authentication required
+- `read_only`: Read-only mode, no authentication
+- `password`: Username/password authentication
+- `totp`: Two-factor authentication (requires additional setup)
+
+## Deployment
+
+### Docker Compose (Recommended)
+
 ```yaml
 services:
   sbnote:
@@ -77,18 +126,19 @@ services:
       retries: 3
 ```
 
-### Environment Variables
+### Docker Run Command
 
-Create a `.env` file in your project directory:
-
-```bash
-SBNOTE_AUTH_TYPE=password
-SBNOTE_USERNAME=admin
-SBNOTE_PASSWORD=your-secure-password
-SBNOTE_SECRET_KEY=your-secret-key
+```shell
+docker run -d \
+  --env-file .env \
+  -e "PUID=1000" \
+  -e "PGID=1000" \
+  -v "$(pwd)/data:/data" \
+  -p "50010:8080" \
+  yamnor/sbnote:latest
 ```
 
-## Deployment with GitHub Actions
+### Automated Deployment with GitHub Actions
 
 This project includes automated deployment using GitHub Actions. When you push to the `main` branch, it will:
 
@@ -97,7 +147,7 @@ This project includes automated deployment using GitHub Actions. When you push t
 3. Deploy to your remote server
 4. Perform health checks
 
-### Required GitHub Secrets
+#### Required GitHub Secrets
 
 Set up the following secrets in your GitHub repository:
 
