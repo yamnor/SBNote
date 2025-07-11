@@ -10,13 +10,13 @@
           <div class="sm:flex sm:items-start">
             <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
               <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                履歴 - {{ noteTitle }}
+                History - {{ noteTitle }}
               </h3>
               
               <!-- Loading state -->
               <div v-if="loading" class="flex justify-center items-center py-8">
                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span class="ml-2 text-gray-600">履歴を読み込み中...</span>
+                <span class="ml-2 text-gray-600">Loading history...</span>
               </div>
               
               <!-- History list -->
@@ -38,13 +38,13 @@
                       @click="previewVersion(entry.commit_hash)"
                       class="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
                     >
-                      プレビュー
+                      Preview
                     </button>
                     <button 
                       @click="restoreVersion(entry.commit_hash)"
                       class="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
                     >
-                      復元
+                      Restore
                     </button>
                   </div>
                 </div>
@@ -52,7 +52,7 @@
               
               <!-- Empty state -->
               <div v-else class="text-center py-8 text-gray-500">
-                履歴がありません
+                No history available
               </div>
             </div>
           </div>
@@ -64,7 +64,7 @@
             @click="closeModal"
             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gray-600 text-base font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:ml-3 sm:w-auto sm:text-sm"
           >
-            閉じる
+            Close
           </button>
         </div>
       </div>
@@ -82,9 +82,9 @@
   <!-- Restore Confirmation Modal -->
   <ConfirmModal
     v-model="showRestoreConfirm"
-    title="復元の確認"
-    :message="`このバージョンに復元しますか？\n現在の変更は失われます。`"
-    confirm-button-text="復元する"
+    title="Confirm Restore"
+    :message="`Are you sure you want to restore this version?\nCurrent changes will be lost.`"
+    confirm-button-text="Restore"
     confirm-button-style="danger"
     @confirm="confirmRestore"
   />
@@ -142,7 +142,7 @@ async function previewVersion(commitHash) {
   try {
     const content = await getNoteVersion(props.filename, commitHash);
     previewContent.value = content;
-    previewTitle.value = `プレビュー - ${props.noteTitle}`;
+    previewTitle.value = `Preview - ${props.noteTitle}`;
     pendingRestoreHash.value = commitHash;
     showPreviewModal.value = true;
   } catch (error) {
@@ -160,7 +160,7 @@ async function confirmRestore() {
     await restoreNoteVersion(props.filename, pendingRestoreHash.value);
     showRestoreConfirm.value = false;
     isVisible.value = false;
-    // ノートを再読み込み
+    // Reload the note
     window.location.reload();
   } catch (error) {
     console.error('Failed to restore version:', error);
@@ -176,6 +176,6 @@ function closeModal() {
 }
 
 function formatTime(dateString) {
-  return new Date(dateString).toLocaleString('ja-JP');
+  return new Date(dateString).toLocaleString('en-US');
 }
 </script> 

@@ -299,7 +299,7 @@
         :icon="History" 
         @click="showHistory"
       >
-        履歴
+        History
       </DropdownMenuItem>
       
 
