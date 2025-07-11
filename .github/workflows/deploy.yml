@@ -35,20 +35,16 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     
-    - name: Add server to known hosts
-      run: |
-        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-    
     - name: Deploy to server
       run: |
         # Debug SSH connection
         echo "Testing SSH connection..."
-        ssh -o ConnectTimeout=10 -o BatchMode=yes ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'"
+        ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o BatchMode=yes ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'"
         
         # Copy docker-compose.yml to server
-        scp -o ConnectTimeout=10 docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/apps/sbnote/
+        scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/apps/sbnote/
         
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
           # Create .env file from secrets
           cat > ~/apps/sbnote/.env << 'ENVEOF'
           SBNOTE_AUTH_TYPE=password
