@@ -41,6 +41,7 @@ RUN mkdir -p ${SBNOTE_PATH}
 RUN apt update && apt install -y \
     curl \
     gosu \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir pipenv
