@@ -37,14 +37,18 @@ jobs:
     
     - name: Add server to known hosts
       run: |
-        ssh-keyscan -H 133.125.71.42 >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
     
     - name: Deploy to server
       run: |
-        # Copy docker-compose.yml to server
-        scp docker-compose.yml yamnor@133.125.71.42:~/apps/sbnote/
+        # Ensure SSH agent is available for scp
+        eval $(ssh-agent -s)
+        ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
         
-        ssh yamnor@133.125.71.42 << 'EOF'
+        # Copy docker-compose.yml to server
+        scp docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/apps/sbnote/
+        
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
           # Create .env file from secrets
           cat > ~/apps/sbnote/.env << 'ENVEOF'
           SBNOTE_AUTH_TYPE=password
