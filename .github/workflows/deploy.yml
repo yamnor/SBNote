@@ -41,27 +41,27 @@ jobs:
         scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/apps/sbnote/
         
         ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
-          # Create .env file from secrets
-          cat > ~/apps/sbnote/.env << 'ENVEOF'
-          SBNOTE_AUTH_TYPE=password
-          SBNOTE_USERNAME=${{ secrets.SBNOTE_USERNAME }}
-          SBNOTE_PASSWORD=${{ secrets.SBNOTE_PASSWORD }}
-          SBNOTE_SECRET_KEY=${{ secrets.SBNOTE_SECRET_KEY }}
-          ENVEOF
-          
-          # Pull latest image and restart
-          cd ~/apps/sbnote
-          docker-compose pull
-          docker-compose down
-          docker-compose up -d
-          
-          # Health check
-          echo "Waiting for application to start..."
-          sleep 15
-          if curl -f http://localhost:50010/health; then
-            echo "Deployment successful!"
-          else
-            echo "Deployment failed - health check failed"
-            exit 1
-          fi
+        # Create .env file from secrets
+        cat > ~/apps/sbnote/.env << 'ENVEOF'
+        SBNOTE_AUTH_TYPE=password
+        SBNOTE_USERNAME=${{ secrets.SBNOTE_USERNAME }}
+        SBNOTE_PASSWORD=${{ secrets.SBNOTE_PASSWORD }}
+        SBNOTE_SECRET_KEY=${{ secrets.SBNOTE_SECRET_KEY }}
+        ENVEOF
+        
+        # Pull latest image and restart
+        cd ~/apps/sbnote
+        docker-compose pull
+        docker-compose down
+        docker-compose up -d
+        
+        # Health check
+        echo "Waiting for application to start..."
+        sleep 15
+        if curl -f http://localhost:50010/health; then
+          echo "Deployment successful!"
+        else
+          echo "Deployment failed - health check failed"
+          exit 1
+        fi
         EOF
