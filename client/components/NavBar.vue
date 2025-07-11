@@ -202,6 +202,17 @@
       >
         Embed Page
       </DropdownMenuItem>
+      
+      <!-- Divider -->
+      <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      
+      <!-- Paste Text -->
+      <DropdownMenuItem 
+        :icon="FileText"
+        @click="showPasteModal"
+      >
+        Paste Text
+      </DropdownMenuItem>
     </DropdownMenu>
     
     <!-- Tag Edit Button with Dropdown -->
@@ -340,6 +351,13 @@
       :is-visible="isEmbedModalVisible"
       @close="closeEmbedModal"
     />
+    
+    <!-- Paste Modal -->
+    <PasteModal 
+      :is-visible="isPasteModalVisible"
+      :selected-tag="selectedTag"
+      @close="closePasteModal"
+    />
   </nav>
 </template>
 
@@ -368,13 +386,15 @@ import {
   Upload,
   Atom,
   Grip,
-  ExternalLink
+  ExternalLink,
+  FileText
 } from "lucide-vue-next";
 
 import SearchInput from "../components/SearchInput.vue";
 import DropdownMenu from "../components/DropdownMenu.vue";
 import DropdownMenuItem from "../components/DropdownMenuItem.vue";
 import EmbedModal from "../components/EmbedModal.vue";
+import PasteModal from "../components/PasteModal.vue";
 import { authTypes } from "../constants.js";
 import { useGlobalStore } from "../globalStore.js";
 import { clearStoredToken } from "../tokenStorage.js";
@@ -428,6 +448,7 @@ const router = useRouter();
 const route = useRoute();
 const searchInput = ref();
 const isEmbedModalVisible = ref(false);
+const isPasteModalVisible = ref(false);
 
 const emit = defineEmits([
   "incrementalSearch", 
@@ -629,6 +650,22 @@ function showEmbedModal() {
 
 function closeEmbedModal() {
   isEmbedModalVisible.value = false;
+}
+
+function showPasteModal() {
+  // Remove focus from search input to prevent input capture
+  if (searchInput.value) {
+    searchInput.value.blur();
+  }
+  
+  // Small delay to ensure focus is properly removed before showing modal
+  setTimeout(() => {
+    isPasteModalVisible.value = true;
+  }, 10);
+}
+
+function closePasteModal() {
+  isPasteModalVisible.value = false;
 }
 
 // Method to focus the search input

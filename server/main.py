@@ -13,7 +13,7 @@ from global_config import AuthType, GlobalConfig, GlobalConfigResponseModel
 from helpers import replace_base_href
 from logger import logger
 from notes.base import BaseNotes
-from notes.models import Note, NoteCreate, NoteUpdate, SearchResult, NoteImport, NoteImageImport, NoteXyzImport, NotePlaintextImport
+from notes.models import Note, NoteCreate, NoteUpdate, SearchResult, NoteImport, NoteImageImport, NoteXyzImport, NotePlaintextImport, NotePasteImport
 
 
 def is_authenticated(request: Request) -> bool:
@@ -284,6 +284,42 @@ if global_config.auth_type != AuthType.READ_ONLY:
             )
         except Exception as e:
             logger.error(f"Unexpected error in import_plaintext: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Import failed: {str(e)}",
+            )
+
+    # Import Paste
+    @router.post(
+        "/api/notes/import-paste",
+        dependencies=auth_deps,
+        response_model=Note,
+    )
+    def import_paste(paste_data: NotePasteImport, attachment_filename: str = Query(...)):
+        """Import a pasted text file as a new note."""
+        try:
+            # Create a new data object with filename included
+            import_data = NotePasteImport(
+                original_filename=paste_data.original_filename,
+                category=paste_data.category,
+                tags=paste_data.tags or []
+            )
+            
+            # Pass filename as a separate parameter to the storage layer
+            return note_storage.import_paste(import_data, attachment_filename)
+        except ValueError as e:
+            logger.error(f"ValueError in import_paste: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=api_messages.invalid_note_title,
+            )
+        except FileExistsError as e:
+            logger.error(f"FileExistsError in import_paste: {e}")
+            raise HTTPException(
+                status_code=409, detail=api_messages.note_exists
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in import_paste: {e}")
             raise HTTPException(
                 status_code=400,
                 detail=f"Import failed: {str(e)}",

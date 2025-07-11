@@ -415,6 +415,13 @@ function focus(character = null) {
   }
 }
 
-// Expose the focus method
-defineExpose({ focus });
+// Method to blur the input
+function blur() {
+  if (input.value) {
+    input.value.blur();
+  }
+}
+
+// Expose the focus and blur methods
+defineExpose({ focus, blur });
 </script>

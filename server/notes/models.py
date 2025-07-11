@@ -58,6 +58,12 @@ class NotePlaintextImport(CustomBaseModel):
     tags: Optional[List[str]] = Field(default_factory=list)
 
 
+class NotePasteImport(CustomBaseModel):
+    original_filename: str
+    category: str
+    tags: Optional[List[str]] = Field(default_factory=list)
+
+
 class SearchResult(CustomBaseModel):
     title: str
     content: Optional[str] = Field(None)

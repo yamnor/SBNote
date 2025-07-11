@@ -210,6 +210,33 @@ export async function importPlaintext(file, tags = []) {
   }
 }
 
+export async function importPaste(file, tags = [], category = 'plaintext') {
+  try {
+    // First upload the pasted text file
+    const formData = new FormData();
+    formData.append("file", file);
+    const uploadResponse = await api.post("api/files", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    
+    // Then create a note with the text file link and category information
+    const response = await api.post("api/notes/import-paste", {
+      original_filename: uploadResponse.data.originalFilename,
+      category: category,
+      tags: tags,
+    }, {
+      params: {
+        attachment_filename: uploadResponse.data.filename
+      }
+    });
+    return new Note(response.data);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
 export async function getNote(filename) {
   try {
     const response = await api.get(`api/notes/${encodeURIComponent(filename)}`);
