@@ -96,7 +96,12 @@ SBNOTE_PORT=3000
 SBNOTE_SESSION_EXPIRY_DAYS=30
 SBNOTE_QUICK_ACCESS_HIDE=false
 SBNOTE_QUICK_ACCESS_LIMIT=12
+
+# Data Storage
+SBNOTE_PATH=./data  # Directory where notes and files are stored
 ```
+
+- `SBNOTE_PATH` : Directory path for storing notes, attachments, and index files. (Default: `./data`)
 
 ### Authentication Types
 
