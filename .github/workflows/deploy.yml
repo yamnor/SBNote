@@ -48,7 +48,7 @@ jobs:
         newgrp docker
         
         # Deploy all users from configuration
-        ./manage-users.sh deploy
+        ${{ env.SBNOTE_APP_PATH }}/manage-users.sh deploy
         
         echo "Deployment completed successfully!"
         EOF
