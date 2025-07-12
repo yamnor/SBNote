@@ -2,7 +2,7 @@
   <div class="relative w-full search-input overflow-visible">
     <!-- Input -->
     <div
-      class="flex items-center w-full rounded-lg bg-theme-button shadow-sm"
+      class="flex items-center w-full rounded-lg bg-theme-button"
       :class="{ 'px-3 py-2': !large, 'px-5 py-4': large }"
     >
       <Search class="w-5 h-5 mr-2 text-theme-text-muted flex-shrink-0" />
@@ -24,7 +24,7 @@
     <!-- Tag Menu -->
     <div
       v-if="tagMenuVisible"
-      class="absolute z-50 left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-theme-border bg-theme-background-surface p-1 shadow-lg"
+      class="absolute z-50 left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-theme-border bg-theme-background-surface p-1"
     >
       <p
         v-for="(tag, index) in tagMatches"
@@ -42,7 +42,7 @@
     <!-- Search Results Menu -->
     <div
       v-if="searchResultsMenuVisible && searchResults.length > 0"
-      class="absolute z-50 left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-theme-border bg-theme-background-surface p-1 shadow-lg"
+      class="absolute z-50 left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-theme-border bg-theme-background-surface p-1"
     >
       <div
         v-for="(result, index) in searchResults"
@@ -67,7 +67,7 @@
     <!-- New Note Menu (when no search results or empty search term) -->
     <div
       v-if="searchResultsMenuVisible && searchResults.length === 0"
-      class="absolute z-50 left-0 mt-2 w-full rounded-md border border-theme-border bg-theme-background-surface p-1 shadow-lg"
+      class="absolute z-50 left-0 mt-2 w-full rounded-md border border-theme-border bg-theme-background-surface p-1"
     >
       <div
         ref="newNoteMenuItem"

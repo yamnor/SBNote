@@ -11,7 +11,7 @@
       @touchcancel="handleTouchCancel"
       class="bg-theme-background-surface p-2 cursor-pointer transition-all duration-200 group h-36 w-full flex flex-col border border-t-4 border-t-theme-brand relative rounded-b-lg hover:border-theme-brand"
       :class="{ 'click-active': isClicking }"
-      style="touch-action: manipulation;"
+      style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;"
       :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"
     >
       <!-- Recent edit indicator in top-left corner -->
