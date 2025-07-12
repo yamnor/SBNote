@@ -69,16 +69,16 @@
 
     body {
         height: 100%;
-        --theme-brand: #3e95ba;
+        --theme-brand: #3a9ef1; /*#3e95ba;*/
         --theme-brand-dark: #317795;
         --theme-brand-accent: #e35183;
-        --theme-background: #f9fbfd;
+        --theme-background: #edf2f7; /*#f9fbfd;*/
         --theme-background-surface: #ffffff;
         --theme-background-subtle: #f8f9fa;
-        --theme-button: #e9eef6;
+        --theme-button: #fff; /*#e9eef6;*/
         --theme-button-hover: #e1e3e6;
         --theme-background-elevated: #ffffff;
-        --theme-text: #2c3139;
+        --theme-text: #343434; /*#2c3139;*/
         --theme-text-muted: #8891a1;
         --theme-border: #c7c7c7;
         --theme-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
