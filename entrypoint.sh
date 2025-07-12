@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 : "${EXEC_TOOL:=gosu}"
 : "${APP_HOST:=0.0.0.0}"
