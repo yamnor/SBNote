@@ -43,7 +43,10 @@ jobs:
         # Deploy using manage-users.sh
         ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
         set -euo pipefail
-                
+        
+        # Apply Docker group membership for this session
+        newgrp docker
+        
         # Deploy all users from configuration
         ./manage-users.sh deploy
         
