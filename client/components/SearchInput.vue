@@ -2,7 +2,7 @@
   <div class="relative w-full search-input overflow-visible">
     <!-- Input -->
     <div
-      class="flex items-center w-full rounded-md bg-theme-background-surface"
+      class="flex items-center w-full rounded-lg bg-theme-button shadow-sm"
       :class="{ 'px-3 py-2': !large, 'px-5 py-4': large }"
     >
       <Search class="w-5 h-5 mr-2 text-theme-text-muted flex-shrink-0" />

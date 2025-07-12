@@ -3,7 +3,14 @@
     <div 
       ref="cardElement"
       @click="handleClick"
-      class="bg-theme-background-surface p-2 cursor-pointer transition-all duration-200 group h-36 w-full flex flex-col border-t-4 border-theme-brand relative"
+      @mousedown="handleMouseDown"
+      @mouseup="handleMouseUp"
+      @mouseleave="handleMouseLeave"
+      @touchstart="handleTouchStart"
+      @touchend="handleTouchEnd"
+      @touchcancel="handleTouchCancel"
+      class="bg-theme-background-surface p-2 cursor-pointer transition-all duration-200 group h-36 w-full flex flex-col border border-t-4 border-t-theme-brand relative rounded-b-lg hover:border-theme-brand"
+      :class="{ 'click-active': isClicking }"
       style="touch-action: manipulation;"
       :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"
     >
@@ -69,9 +76,38 @@ const props = defineProps({
 const globalStore = useGlobalStore();
 const showPreviewModal = ref(false);
 
+// Click state tracking
+const isClicking = ref(false);
+
 // Handle click to show preview modal
 function handleClick() {
   showPreviewModal.value = true;
+}
+
+// Mouse event handlers for desktop
+function handleMouseDown() {
+  isClicking.value = true;
+}
+
+function handleMouseUp() {
+  isClicking.value = false;
+}
+
+function handleMouseLeave() {
+  isClicking.value = false;
+}
+
+// Touch event handlers for mobile
+function handleTouchStart() {
+  isClicking.value = true;
+}
+
+function handleTouchEnd() {
+  isClicking.value = false;
+}
+
+function handleTouchCancel() {
+  isClicking.value = false;
 }
 
 // Content preview (first 200 characters)
@@ -159,4 +195,12 @@ function formatDate(timestamp) {
     return `${years} year${years > 1 ? 's' : ''} ago`;
   }
 }
-</script> 
+</script>
+
+<style scoped>
+/* Click animation - card gets smaller when clicked */
+.click-active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease-out;
+}
+</style> 

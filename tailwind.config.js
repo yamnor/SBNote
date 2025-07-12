@@ -23,6 +23,8 @@ export default {
         "theme-background-surface": "var(--theme-background-surface)",
         "theme-background-subtle": "var(--theme-background-subtle)",
         "theme-background-elevated": "var(--theme-background-elevated)",
+        "theme-button": "var(--theme-button)",
+        "theme-button-hover": "var(--theme-button-hover)",
         "theme-text": "var(--theme-text)",
         "theme-text-muted": "var(--theme-text-muted)",
         "theme-shadow-sm": "var(--theme-shadow-sm)",

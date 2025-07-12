@@ -3,8 +3,8 @@
     ref="cardElement"
     @click="handleClick"
     @dblclick="handleDoubleClick"
-    class="p-2 cursor-pointer transition-all duration-300 group h-36 w-full flex flex-col border relative"
-    :class="[getBackgroundClass(), { 'pin-animation': isPinned }]"
+    class="p-2 cursor-pointer transition-all duration-300 group h-36 w-full flex flex-col border relative rounded-lg"
+    :class="[getBackgroundClass(), { 'pin-animation': showPinAnimation, 'long-press-active': isLongPressing }]"
     style="touch-action: manipulation;"
   >
     <!-- Corner triangle for pinned tags in top-right -->
@@ -21,8 +21,7 @@
     
     <!-- Note count badge in bottom-right corner -->
     <div class="absolute bottom-1 right-1">
-      <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded"
-            :class="isSelected ? 'bg-white text-theme-brand' : 'bg-theme-brand text-white'">
+      <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-gray-200 text-gray-600">
         {{ tagData.count }}
       </span>
     </div>
@@ -38,7 +37,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, onUnmounted, computed } from "vue";
+import { onMounted, ref, onUnmounted, computed, watch } from "vue";
 import { createDoubleClickHandler, addTouchEventListeners, addLongPressDetection } from "../helpers.js";
 
 const props = defineProps({
@@ -62,6 +61,11 @@ const props = defineProps({
 
 const emit = defineEmits(['click', 'dblclick', 'longpress']);
 
+// Long press state tracking
+const isLongPressing = ref(false);
+const showPinAnimation = ref(false);
+const previousPinnedState = ref(props.isPinned);
+
 // Computed property to display tag name (show "_untagged" as "Untagged")
 const displayTagName = computed(() => {
   return props.tagData.tag === "_untagged" ? "Untagged" : props.tagData.tag;
@@ -82,9 +86,9 @@ function getBackgroundClass() {
   if (props.isSelected) {
     return 'bg-theme-brand border-theme-brand text-white';
   } else if (props.hasAnySelection) {
-    return 'bg-gray-100 border-gray-300';
+    return 'bg-gray-100 border-gray-100 hover:border-theme-brand';
   } else {
-    return 'bg-white border-gray-300';
+    return 'bg-white border-gray-300 hover:border-theme-brand';
   }
 }
 
@@ -133,6 +137,16 @@ function handleDoubleClick() {
   emit('dblclick', props.tagData.tag);
 }
 
+function handleLongPressStart() {
+  // Start long press animation
+  isLongPressing.value = true;
+}
+
+function handleLongPressEnd() {
+  // End long press animation
+  isLongPressing.value = false;
+}
+
 function handleLongPress() {
   // Handle long press for pinning/unpinning
   if (clickTimeout) {
@@ -142,12 +156,32 @@ function handleLongPress() {
   emit('longpress', props.tagData.tag);
 }
 
+// Watch for pin state changes to trigger animation
+watch(() => props.isPinned, (newPinnedState, oldPinnedState) => {
+  // Only trigger animation if the pin state actually changed
+  if (newPinnedState !== oldPinnedState) {
+    // Trigger pin animation after a short delay to ensure smooth transition
+    setTimeout(() => {
+      showPinAnimation.value = true;
+      // Remove animation class after animation completes
+      setTimeout(() => {
+        showPinAnimation.value = false;
+      }, 600); // Match animation duration
+    }, 50);
+  }
+});
+
 // Setup touch event listeners on mount
 onMounted(() => {
   if (cardElement.value) {
-    // Don't add touch event listeners here since we're handling clicks manually
-    // to avoid conflicts with the double-click detection logic
-    cleanupLongPress = addLongPressDetection(cardElement.value, handleLongPress, 500);
+    // Add custom long press detection with start/end callbacks
+    cleanupLongPress = addLongPressDetectionWithCallbacks(
+      cardElement.value, 
+      handleLongPress, 
+      handleLongPressStart,
+      handleLongPressEnd,
+      500
+    );
   }
 });
 
@@ -159,23 +193,176 @@ onUnmounted(() => {
     clearTimeout(clickTimeout);
   }
 });
+
+// Custom long press detection with start/end callbacks
+function addLongPressDetectionWithCallbacks(element, longPressHandler, startHandler, endHandler, duration = 500) {
+  if (!element) return () => {};
+  
+  let pressTimer = null;
+  let isLongPress = false;
+  let hasTriggeredLongPress = false;
+  let hasMoved = false;
+  let startX = 0;
+  let startY = 0;
+  
+  const startPress = (event) => {
+    isLongPress = false;
+    hasTriggeredLongPress = false;
+    hasMoved = false;
+    
+    // Store initial touch position
+    if (event.touches && event.touches[0]) {
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+    } else if (event.clientX !== undefined) {
+      startX = event.clientX;
+      startY = event.clientY;
+    }
+    
+    // Start long press animation immediately
+    if (startHandler) {
+      startHandler(event);
+    }
+    
+    pressTimer = setTimeout(() => {
+      // Only trigger long press if no significant movement occurred
+      if (!hasMoved) {
+        isLongPress = true;
+        hasTriggeredLongPress = true;
+        longPressHandler(event);
+      }
+    }, duration);
+  };
+  
+  const handleMove = (event) => {
+    if (!startX && !startY) return;
+    
+    let currentX, currentY;
+    if (event.touches && event.touches[0]) {
+      currentX = event.touches[0].clientX;
+      currentY = event.touches[0].clientY;
+    } else if (event.clientX !== undefined) {
+      currentX = event.clientX;
+      currentY = event.clientY;
+    } else {
+      return;
+    }
+    
+    const deltaX = Math.abs(currentX - startX);
+    const deltaY = Math.abs(currentY - startY);
+    
+    // If moved more than 10px, consider it a scroll gesture
+    if (deltaX > 10 || deltaY > 10) {
+      hasMoved = true;
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+      // End long press animation if moved
+      if (endHandler) {
+        endHandler(event);
+      }
+    }
+  };
+  
+  const endPress = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+    // End long press animation
+    if (endHandler) {
+      endHandler();
+    }
+    // Reset long press flag after a short delay to allow click events to be cancelled
+    setTimeout(() => {
+      isLongPress = false;
+    }, 100);
+  };
+  
+  const cancelPress = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+    isLongPress = false;
+    hasTriggeredLongPress = false;
+    hasMoved = false;
+    // End long press animation
+    if (endHandler) {
+      endHandler();
+    }
+  };
+  
+  // Mouse events for desktop
+  element.addEventListener('mousedown', startPress);
+  element.addEventListener('mousemove', handleMove);
+  element.addEventListener('mouseup', endPress);
+  element.addEventListener('mouseleave', cancelPress);
+  
+  // Touch events for mobile
+  element.addEventListener('touchstart', startPress);
+  element.addEventListener('touchmove', handleMove);
+  element.addEventListener('touchend', endPress);
+  element.addEventListener('touchcancel', cancelPress);
+  
+  // Prevent context menu on long press
+  element.addEventListener('contextmenu', (event) => {
+    if (isLongPress) {
+      event.preventDefault();
+    }
+  });
+  
+  // Add click event listener to prevent click when long press was triggered
+  const clickHandler = (event) => {
+    if (hasTriggeredLongPress) {
+      event.preventDefault();
+      event.stopPropagation();
+      hasTriggeredLongPress = false;
+    }
+  };
+  
+  element.addEventListener('click', clickHandler, true);
+  
+  // Return cleanup function
+  return () => {
+    element.removeEventListener('mousedown', startPress);
+    element.removeEventListener('mousemove', handleMove);
+    element.removeEventListener('mouseup', endPress);
+    element.removeEventListener('mouseleave', cancelPress);
+    element.removeEventListener('touchstart', startPress);
+    element.removeEventListener('touchmove', handleMove);
+    element.removeEventListener('touchend', endPress);
+    element.removeEventListener('touchcancel', cancelPress);
+    element.removeEventListener('click', clickHandler, true);
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+    }
+  };
+}
 </script>
 
 <style scoped>
-/* Card pin animation */
+/* Card pin animation - from small size back to normal */
 .pin-animation {
   animation: pinPulse 0.6s ease-out;
 }
 
 @keyframes pinPulse {
   0% {
-    transform: scale(1);
+    transform: scale(0.95);
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.02);
   }
   100% {
     transform: scale(1);
   }
+}
+
+/* Long press animation - card gets smaller */
+.long-press-active {
+  transform: scale(0.95);
+  transition: transform 0.2s ease-out;
 }
 </style> 
