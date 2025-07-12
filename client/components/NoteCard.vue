@@ -3,7 +3,7 @@
     <div 
       ref="cardElement"
       @click="handleClick"
-      class="bg-theme-background-surface p-2 cursor-pointer transition-all duration-200 group hover:shadow-lg h-36 w-full flex flex-col border-t-4 border-theme-brand shadow-sm relative"
+      class="bg-theme-background-surface p-2 cursor-pointer transition-all duration-200 group h-36 w-full flex flex-col border-t-4 border-theme-brand relative"
       style="touch-action: manipulation;"
       :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"
     >

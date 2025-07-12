@@ -3,7 +3,7 @@
     ref="cardElement"
     @click="handleClick"
     @dblclick="handleDoubleClick"
-    class="p-2 cursor-pointer transition-all duration-300 group hover:shadow-lg h-36 w-full flex flex-col border shadow-sm relative"
+    class="p-2 cursor-pointer transition-all duration-300 group h-36 w-full flex flex-col border relative"
     :class="[getBackgroundClass(), { 'pin-animation': isPinned }]"
     style="touch-action: manipulation;"
   >
@@ -80,7 +80,7 @@ const hasRecentlyModifiedNote = computed(() => {
 
 function getBackgroundClass() {
   if (props.isSelected) {
-    return 'bg-theme-brand border-theme-brand shadow-md text-white';
+    return 'bg-theme-brand border-theme-brand text-white';
   } else if (props.hasAnySelection) {
     return 'bg-gray-100 border-gray-300';
   } else {
