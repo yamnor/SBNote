@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build and Deploy Multi-User
 
 on:
   push:
@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      SBNOTE_AUTH_TYPE: password
-      SBNOTE_PORT: 50010
       SBNOTE_APP_PATH: ~/apps/sbnote
     
     steps:
@@ -42,32 +40,12 @@ jobs:
     
     - name: Deploy to server
       run: |
-        # Copy docker-compose.yml to server
-        scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SBNOTE_APP_PATH }}/
-        
+        # Deploy using manage-users.sh
         ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
-        # Create .env file from secrets and env
-        cat > ${{ env.SBNOTE_APP_PATH }}/.env << 'ENVEOF'
-        SBNOTE_AUTH_TYPE=${{ env.SBNOTE_AUTH_TYPE }}
-        SBNOTE_USERNAME=${{ secrets.SBNOTE_USERNAME }}
-        SBNOTE_PASSWORD=${{ secrets.SBNOTE_PASSWORD }}
-        SBNOTE_SECRET_KEY=${{ secrets.SBNOTE_SECRET_KEY }}
-        SBNOTE_PORT=${{ env.SBNOTE_PORT }}
-        ENVEOF
+        set -euo pipefail
+                
+        # Deploy all users from configuration
+        ./manage-users.sh deploy
         
-        # Pull latest image and restart
-        cd ${{ env.SBNOTE_APP_PATH }}
-        docker-compose pull
-        docker-compose down
-        docker-compose up -d
-        
-        # Health check
-        echo "Waiting for application to start..."
-        sleep 15
-        if curl -f http://localhost:${{ env.SBNOTE_PORT }}/health; then
-          echo "Deployment successful!"
-        else
-          echo "Deployment failed - health check failed"
-          exit 1
-        fi
+        echo "Deployment completed successfully!"
         EOF

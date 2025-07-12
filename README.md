@@ -191,6 +191,22 @@ docker run -d \
   yamnor/sbnote:latest
 ```
 
+### Multi-User Deployment
+
+For multi-user deployments (5-10 users with individual domains), see the deployment scripts in the `deployment/` directory:
+
+```bash
+# Copy deployment scripts to your server
+scp -r deployment/ user@your-server:~/sbnote-deployment/
+
+# Follow the setup instructions
+cd ~/sbnote-deployment
+chmod +x scripts/manage-users.sh
+./scripts/manage-users.sh create user1 user1.sbnote.com 50010
+```
+
+**Note**: Deployment scripts are separated from the main application code for better maintainability and security. See `deployment/README.md` for detailed instructions.
+
 ### Automated Deployment with GitHub Actions
 
 This project includes automated deployment using GitHub Actions. When you push to the `main` branch, it will:
