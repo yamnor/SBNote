@@ -3,7 +3,7 @@
     ref="cardElement"
     @click="handleClick"
     @dblclick="handleDoubleClick"
-    class="p-2 cursor-pointer transition-all duration-300 group h-36 w-full flex flex-col border relative rounded-lg"
+    class="p-2 cursor-pointer transition-all duration-300 group h-36 w-full flex flex-col relative rounded-lg border"
     :class="[getBackgroundClass(), { 'pin-animation': showPinAnimation, 'long-press-active': isLongPressing }]"
     style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;"
   >
@@ -21,7 +21,7 @@
     
     <!-- Note count badge in bottom-right corner -->
     <div class="absolute bottom-1 right-1">
-      <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-gray-200 text-gray-600">
+      <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-color-bg-primary text-color-text-primary">
         {{ tagData.count }}
       </span>
     </div>
@@ -84,11 +84,9 @@ const hasRecentlyModifiedNote = computed(() => {
 
 function getBackgroundClass() {
   if (props.isSelected) {
-    return 'bg-color-button-primary-bg border-color-button-primary-bg text-color-button-primary-fg';
-  } else if (props.hasAnySelection) {
-    return 'bg-color-bg-neutral border-color-bg-neutral hover:border-color-primary';
+    return 'bg-color-primary border-color-primary text-color-inverse';
   } else {
-    return 'bg-color-bg-neutral border-color-bg-neutral hover:border-color-primary';
+    return 'bg-color-bg-base border-color-bg-neutral hover:border-color-primary';
   }
 }
 

@@ -9,7 +9,7 @@
       @touchstart="handleTouchStart"
       @touchend="handleTouchEnd"
       @touchcancel="handleTouchCancel"
-      class="bg-color-bg-base p-2 cursor-pointer transition-all duration-200 group h-36 w-full flex flex-col border border-t-4 border-t-color-primary relative rounded-b-lg hover:border-color-primary"
+      class="bg-color-bg-base p-2 cursor-pointer transition-all duration-200 group h-36 w-full flex flex-col border-t-4 border-t-color-primary relative hover:border-color-primary"
       :class="{ 'click-active': isClicking }"
       style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;"
       :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"
@@ -31,7 +31,7 @@
       
       <!-- Tag count badge in bottom-right corner -->
       <div v-if="note.tags && note.tags.length > 0" class="absolute bottom-1 right-1">
-        <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-gray-200 text-gray-600">
+        <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-color-bg-primary text-color-text-primary">
           {{ note.tags.length }}
         </span>
       </div>
