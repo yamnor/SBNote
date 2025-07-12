@@ -246,7 +246,7 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.5rem;
-  background-color: var(--theme-background-surface);
+  background-color: var(--color-bg-base);
   min-height: 2.5rem;
   align-items: flex-start;
 }
@@ -263,8 +263,8 @@ onMounted(() => {
   gap: 0.25rem;
   padding: 0.25rem 0.5rem;
   background-color: transparent;
-  color: var(--theme-brand);
-  border: 1px solid var(--theme-border);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border-primary);
   border-radius: 0.25rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -272,8 +272,8 @@ onMounted(() => {
 }
 
 .tag-chip:hover {
-  background-color: var(--theme-brand);
-  color: var(--theme-background-surface);
+  background-color: var(--color-primary);
+  color: var(--color-bg-base);
 }
 
 .tag-link {
@@ -315,11 +315,11 @@ onMounted(() => {
   outline: none;
   background: transparent;
   font-size: 0.875rem;
-  color: var(--theme-text);
+  color: var(--color-text-secondary);
 }
 
 .tag-input::placeholder {
-  color: var(--theme-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .suggestions-dropdown {
@@ -327,10 +327,10 @@ onMounted(() => {
   top: 100%;
   left: 0;
   right: 0;
-  background-color: var(--theme-background);
-  border: 1px solid var(--theme-border);
+  background-color: var(--color-bg-neutral);
+  border: 1px solid var(--color-border-primary);
   border-radius: 0.375rem;
-  box-shadow: var(--theme-shadow-md);
+  box-shadow: var(--color-shadow-md);
   z-index: 50;
   max-height: 200px;
   overflow-y: auto;
@@ -341,13 +341,13 @@ onMounted(() => {
   padding: 0.5rem 0.75rem;
   cursor: pointer;
   font-size: 0.875rem;
-  color: var(--theme-text);
+  color: var(--color-text-primary);
   transition: background-color 0.15s ease;
 }
 
 .suggestion-item:hover,
 .suggestion-item.selected {
-  background-color: var(--theme-background-elevated);
+  background-color: var(--color-bg-elevated);
 }
 
 .suggestion-item:first-child {

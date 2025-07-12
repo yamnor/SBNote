@@ -3,8 +3,8 @@
     <!-- Dropdown button -->
     <button
       @click="toggleDropdown"
-      class="flex items-center space-x-2 px-3 text-gray-600 hover:text-theme-brand transition-colors rounded"
-      :class="{ 'text-theme-brand': isOpen }"
+      class="flex items-center space-x-2 px-3 text-gray-600 hover:text-color-primary transition-colors rounded"
+      :class="{ 'text-color-primary': isOpen }"
     >
       <component :is="currentSortIcon" class="w-4 h-4" />
       <span class="text-sm font-medium">{{ currentSortLabel }}</span>
@@ -26,7 +26,7 @@
           :key="option.value"
           @click="selectOption(option)"
           class="flex items-center space-x-3 w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors"
-          :class="{ 'bg-gray-100 text-theme-brand': modelValue === option.value }"
+          :class="{ 'bg-gray-100 text-color-primary': modelValue === option.value }"
         >
           <component :is="getOptionIcon(option)" class="w-4 h-4" />
           <span>{{ option.label }}</span>

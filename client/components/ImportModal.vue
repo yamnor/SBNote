@@ -24,10 +24,10 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-lg bg-theme-background border border-theme-border p-6 text-left align-middle shadow-2xl transition-all">
+            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-lg bg-color-bg-neutral border border-color-border-primary p-6 text-left align-middle shadow-2xl transition-all">
               <DialogTitle
                 as="h3"
-                class="text-lg font-medium leading-6 text-theme-text mb-4"
+                class="text-lg font-medium leading-6 text-color-text-primary mb-4"
               >
                 Import File
               </DialogTitle>
@@ -36,12 +36,12 @@
                 
                 <!-- File Type Selection -->
                 <div class="mt-4">
-                  <label class="block text-sm font-medium text-theme-text mb-2">
+                  <label class="block text-sm font-medium text-color-text-primary mb-2">
                     File Type
                   </label>
                   <select 
                     v-model="selectedFileType"
-                    class="w-full px-3 py-2 border border-theme-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-theme-brand focus:border-theme-brand bg-theme-background text-theme-text"
+                    class="w-full px-3 py-2 border border-color-border-primary rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-color-primary focus:border-color-primary bg-color-bg-base text-color-text-primary"
                   >
                     <option value="markdown">Markdown</option>
                     <option value="image">Image (JPEG/PNG)</option>
@@ -52,7 +52,7 @@
                 
                 <!-- File Input -->
                 <div class="mt-4">
-                  <label class="block text-sm font-medium text-theme-text mb-2">
+                  <label class="block text-sm font-medium text-color-text-primary mb-2">
                     Select File
                   </label>
                   <input
@@ -60,20 +60,20 @@
                     type="file"
                     :accept="fileTypeAccept"
                     @change="onFileSelected"
-                    class="block w-full text-sm text-theme-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-theme-brand file:text-white hover:file:bg-theme-brand-dark file:cursor-pointer cursor-pointer"
+                    class="block w-full text-sm text-color-text-primary border border-color-border-primary rounded-lg cursor-pointer bg-color-bg-base focus:outline-none file:border-0 file:bg-transparent file:text-sm file:font-medium file:bg-color-button-primary-bg file:text-color-button-primary-fg hover:file:bg-color-button-primary-hover-bg file:cursor-pointer cursor-pointer"
                   />
                 </div>
                 
                 <!-- File Info -->
-                <div v-if="selectedFile" class="mt-4 p-3 bg-theme-background-subtle rounded-md">
+                <div v-if="selectedFile" class="mt-4 p-3 bg-color-bg-subtle rounded-md">
                   <div class="flex items-center justify-between">
                     <div class="flex-1">
-                      <p class="text-sm font-medium text-theme-text">{{ selectedFile.name }}</p>
-                      <p class="text-xs text-theme-text-muted">{{ formatFileSize(selectedFile.size) }}</p>
+                      <p class="text-sm font-medium text-color-text-primary">{{ selectedFile.name }}</p>
+                      <p class="text-xs text-color-text-secondary">{{ formatFileSize(selectedFile.size) }}</p>
                     </div>
                     <button
                       @click="clearFile"
-                      class="ml-2 p-1 text-theme-text-muted hover:text-theme-text"
+                      class="ml-2 p-1 text-color-text-secondary hover:text-color-text-primary"
                       title="Remove file"
                     >
                       <X class="w-4 h-4" />
@@ -90,7 +90,7 @@
               <div class="mt-6 flex justify-end space-x-3">
                 <button
                   type="button"
-                  class="inline-flex justify-center rounded-md border border-transparent bg-theme-background-subtle px-4 py-2 text-sm font-medium text-theme-text hover:bg-theme-background-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-brand"
+                  class="inline-flex justify-center rounded-md border border-transparent bg-color-button-secondary-grayed-bg px-4 py-2 text-sm font-medium text-color-button-secondary-grayed-fg hover:bg-color-button-secondary-grayed-hover-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-color-primary"
                   @click="closeModal"
                 >
                   Cancel
@@ -99,7 +99,7 @@
                 <button
                   type="button"
                   :disabled="!selectedFile || isImporting"
-                  class="inline-flex justify-center rounded-md border border-transparent bg-theme-brand px-4 py-2 text-sm font-medium text-white hover:bg-theme-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-brand disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="inline-flex justify-center rounded-md border border-transparent bg-color-button-primary-bg px-4 py-2 text-sm font-medium text-color-button-primary-fg hover:bg-color-button-primary-hover-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-color-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   @click="importFile"
                 >
                   <Loader2 v-if="isImporting" class="w-4 h-4 mr-2 animate-spin" />

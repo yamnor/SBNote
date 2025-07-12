@@ -15,9 +15,9 @@
         v-if="failedIconComponent"
         :is="failedIconComponent"
         size="48"
-        class="mb-4 text-theme-brand"
+        class="mb-4 text-color-primary"
       />
-      <span class="max-w-80 text-center text-lg text-theme-text-muted">{{
+      <span class="max-w-80 text-center text-lg text-color-text-secondary">{{
         failedMessage
       }}</span>
     </div>
@@ -72,14 +72,14 @@ defineExpose({ setLoading, setFailed, setLoaded });
 .loader,
 .loader:before,
 .loader:after {
-  background: var(--theme-brand);
+  background: var(--color-primary);
   -webkit-animation: load1 1s infinite ease-in-out;
   animation: load1 1s infinite ease-in-out;
   width: 1em;
   height: 4em;
 }
 .loader {
-  color: var(--theme-brand);
+  color: var(--color-primary);
   text-indent: -9999em;
   /* margin: 33% auto; */
   position: relative;

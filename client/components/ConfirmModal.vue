@@ -102,10 +102,10 @@ function getButtonClasses(style, type) {
   const baseClasses = "inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
   
   const styleClasses = {
-    cta: "bg-theme-brand text-white hover:bg-theme-brand-dark focus-visible:ring-theme-brand",
-    subtle: "bg-theme-background-subtle text-theme-text hover:bg-theme-background-elevated focus-visible:ring-theme-brand",
-    danger: "bg-theme-brand-accent text-white hover:bg-pink-600 focus-visible:ring-theme-brand-accent",
-    secondary: "bg-theme-button text-theme-text hover:bg-theme-button-hover focus-visible:ring-theme-brand"
+    cta: "bg-color-button-primary-bg text-color-button-primary-fg hover:bg-color-button-primary-hover-bg focus-visible:ring-color-primary",
+    subtle: "bg-color-button-secondary-grayed-bg text-color-button-secondary-grayed-fg border-color-button-secondary-grayed-border hover:bg-color-button-secondary-grayed-hover-bg focus-visible:ring-color-primary",
+    danger: "bg-color-button-danger-bg text-color-button-danger-fg border-color-button-danger-border hover:bg-color-button-danger-hover-bg focus-visible:ring-color-error focus:border-color-button-danger-focus-border",
+    secondary: "bg-color-button-secondary-bg text-color-button-secondary-fg border-color-button-secondary-border hover:bg-color-button-secondary-hover-bg focus-visible:ring-color-primary"
   };
   
   return `${baseClasses} ${styleClasses[style] || styleClasses.cta}`;

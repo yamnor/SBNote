@@ -38,7 +38,7 @@
       <input
         v-model="newTagName"
         type="text"
-        class="w-full px-3 py-2 border border-theme-border rounded-md focus:outline-none focus:ring-2 focus:ring-theme-brand focus:border-transparent bg-theme-background-surface text-theme-text placeholder-theme-text-muted"
+        class="w-full px-3 py-2 border border-color-border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-color-primary focus:border-transparent bg-color-bg-base text-color-text-primary placeholder-color-text-secondary"
         placeholder="Enter new tag name"
         @keyup.esc="cancelRenameTag"
         ref="renameInput"

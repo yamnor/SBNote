@@ -1,17 +1,17 @@
 <template>
-  <div class="fixed inset-0 z-50 bg-[var(--theme-background)]">
+  <div class="fixed inset-0 z-50 bg-color-bg-neutral">
     <!-- Header -->
     <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-center">
-      <div class="flex items-center justify-between gap-4 py-4 h-14 bg-[var(--theme-background)] backdrop-blur-sm w-full max-w-[var(--layout-width-note)]">
+      <div class="flex items-center justify-between gap-4 py-4 h-14 bg-color-bg-neutral backdrop-blur-sm w-full max-w-[var(--layout-width-note)]">
       <button
         @click="goToNote" 
-        class="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--theme-button)] hover:bg-[var(--theme-brand)] hover:text-white text-theme-text transition-colors cursor-pointer flex-shrink-0 shadow-sm"
+        class="flex items-center justify-center w-9 h-9 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-primary-bg hover:text-color-button-primary-fg text-color-button-secondary-fg transition-colors cursor-pointer flex-shrink-0 shadow-sm"
         title="Go to note"
       >
         <FileTextIcon class="w-4 h-4" />
       </button>
       
-      <h1 class="text-sm text-theme-text-muted truncate min-w-0 flex-1">
+      <h1 class="text-sm text-color-text-secondary truncate min-w-0 flex-1">
         {{ noteTitle }}
       </h1>
     </div>
@@ -20,12 +20,12 @@
     <!-- Error message -->
     <div v-if="error" class="h-screen flex items-center justify-center p-8">
       <div class="text-center">
-        <FileX class="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
-        <h2 class="text-xl font-semibold text-theme-text mb-2">Failed to load data</h2>
-        <p class="text-theme-text-muted mb-4">{{ error }}</p>
+        <FileX class="w-16 h-16 mx-auto text-color-text-secondary mb-4" />
+        <h2 class="text-xl font-semibold text-color-text-primary mb-2">Failed to load data</h2>
+        <p class="text-color-text-secondary mb-4">{{ error }}</p>
         <button
           @click="retryLoad"
-          class="inline-flex items-center px-4 py-2 bg-theme-brand text-white rounded-lg hover:bg-theme-brand-dark transition-colors"
+          class="inline-flex items-center px-4 py-2 bg-color-button-primary-bg text-color-button-primary-fg rounded-lg hover:bg-color-button-primary-hover-bg transition-colors"
         >
           <RefreshCw class="w-4 h-4 mr-2" />
           Retry
@@ -36,8 +36,8 @@
     <!-- Loading overlay -->
     <div v-else-if="isLoading" class="h-screen flex items-center justify-center bg-white/50 dark:bg-gray-900/50">
       <div class="text-center">
-        <Loader2 class="w-8 h-8 mx-auto text-theme-brand animate-spin mb-2" />
-        <p class="text-sm text-theme-text-muted">Loading data...</p>
+        <Loader2 class="w-8 h-8 mx-auto text-color-primary animate-spin mb-2" />
+        <p class="text-sm text-color-text-secondary">Loading data...</p>
       </div>
     </div>
 

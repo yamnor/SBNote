@@ -10,13 +10,13 @@
     <!-- Corner triangle for pinned tags in top-right -->
     <div 
       v-if="isPinned"
-      class="absolute top-0 right-0 w-0 h-0 border-l-[20px] border-l-transparent border-t-[20px] border-t-theme-brand"
+      class="absolute top-0 right-0 w-0 h-0 border-l-[20px] border-l-transparent border-t-[20px] border-t-color-primary"
     >
     </div>
     
     <!-- Recent note modification indicator in top-left corner -->
     <div v-if="hasRecentlyModifiedNote" class="absolute top-1 left-1">
-      <div class="w-2 h-2 rounded-full" style="background-color: var(--theme-brand-accent);"></div>
+      <div class="w-2 h-2 rounded-full" style="background-color: var(--color-accent);"></div>
     </div>
     
     <!-- Note count badge in bottom-right corner -->
@@ -30,7 +30,7 @@
     <div class="flex-1 flex items-center justify-center min-w-0">
       <h3 class="text-sm font-medium transition-colors leading-tight text-center"
           :class="isSelected ? 'text-white group-hover:text-gray-100' : 'text-gray-800 group-hover:text-gray-900'">
-        <span :class="isSelected ? 'text-white' : 'text-theme-brand'"># </span>{{ displayTagName }}
+        <span :class="isSelected ? 'text-color-text-inverse' : 'text-color-primary'"># </span>{{ displayTagName }}
       </h3>
     </div>
   </div>
@@ -84,11 +84,11 @@ const hasRecentlyModifiedNote = computed(() => {
 
 function getBackgroundClass() {
   if (props.isSelected) {
-    return 'bg-theme-brand border-theme-brand text-white';
+    return 'bg-color-button-primary-bg border-color-button-primary-bg text-color-button-primary-fg';
   } else if (props.hasAnySelection) {
-    return 'bg-gray-100 border-gray-100 hover:border-theme-brand';
+    return 'bg-color-bg-neutral border-color-bg-neutral hover:border-color-primary';
   } else {
-    return 'bg-white border-gray-300 hover:border-theme-brand';
+    return 'bg-color-bg-neutral border-color-bg-neutral hover:border-color-primary';
   }
 }
 

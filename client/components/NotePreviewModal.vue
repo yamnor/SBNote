@@ -24,14 +24,14 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full transform overflow-hidden rounded-lg bg-theme-background border border-theme-border shadow-2xl transition-all" style="max-width: var(--layout-width-note);">
+            <DialogPanel class="w-full transform overflow-hidden rounded-lg bg-color-bg-neutral border border-color-border-primary shadow-2xl transition-all" style="max-width: var(--layout-width-note);">
               <!-- Header -->
               <div class="flex items-center justify-end p-2 pb-0">
                 <div class="flex items-center space-x-2">
                   <!-- Open in editor button -->
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md border border-transparent bg-theme-brand p-2 text-white hover:bg-theme-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-brand"
+                    class="inline-flex justify-center rounded-md border border-transparent bg-color-button-primary-bg p-2 text-color-button-primary-fg hover:bg-color-button-primary-hover-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-color-primary"
                     @click="openInEditor"
                     title="Open in full editor"
                   >
@@ -41,7 +41,7 @@
                   <!-- Close button -->
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md border border-theme-border bg-theme-background-subtle p-2 text-theme-text hover:bg-theme-background-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-brand"
+                    class="inline-flex justify-center rounded-md border border-color-border-primary bg-color-button-secondary-grayed-bg p-2 text-color-button-secondary-grayed-fg hover:bg-color-button-secondary-grayed-hover-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-color-primary"
                     @click="closeModal"
                     title="Close"
                   >

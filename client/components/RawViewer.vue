@@ -38,49 +38,49 @@
 }
 
 :deep(.cm-editor .cm-gutters) {
-  background-color: var(--theme-background-subtle);
-  border-right: 1px solid var(--theme-border);
-  color: var(--theme-text-muted);
+  background-color: var(--color-bg-subtle);
+  border-right: 1px solid var(--color-border-primary);
+  color: var(--color-text-secondary);
 }
 
 :deep(.cm-editor .cm-lineNumbers) {
-  color: var(--theme-text-muted);
+  color: var(--color-text-secondary);
 }
 
 :deep(.cm-editor .cm-activeLineGutter) {
-  background-color: var(--theme-background-subtle);
+  background-color: var(--color-bg-subtle);
 }
 
 :deep(.cm-editor .cm-selectionBackground) {
-  background-color: var(--theme-brand-light);
+  background-color: var(--color-primary-light);
 }
 
 :deep(.cm-editor .cm-cursor) {
-  border-left-color: var(--theme-text);
+  border-left-color: var(--color-text-primary);
 }
 
 :deep(.cm-editor .cm-tooltip) {
-  background-color: var(--theme-background-surface);
-  border: 1px solid var(--theme-border);
-  color: var(--theme-text);
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-primary);
+  color: var(--color-text-primary);
 }
 
 :deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete) {
-  background-color: var(--theme-background-surface);
-  border: 1px solid var(--theme-border);
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-primary);
 }
 
 :deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete ul) {
-  background-color: var(--theme-background-surface);
+  background-color: var(--color-bg-base);
 }
 
 :deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete li) {
-  color: var(--theme-text);
+  color: var(--color-text-primary);
 }
 
 :deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete li[aria-selected]) {
-  background-color: var(--theme-brand-light);
-  color: var(--theme-text);
+  background-color: var(--color-primary-light);
+  color: var(--color-text-primary);
 }
 </style>
 
@@ -276,21 +276,21 @@ async function initializeEditor() {
           padding: "0"
         },
         ".cm-gutters": {
-          backgroundColor: "var(--theme-background-subtle)",
-          borderRight: "1px solid var(--theme-border)",
-          color: "var(--theme-text-muted)"
+          backgroundColor: "var(--color-bg-subtle)",
+          borderRight: "1px solid var(--color-border-primary)",
+          color: "var(--color-text-secondary)"
         },
         ".cm-lineNumbers": {
-          color: "var(--theme-text-muted)"
+          color: "var(--color-text-secondary)"
         },
         ".cm-activeLineGutter": {
-          backgroundColor: "var(--theme-background-subtle)"
+          backgroundColor: "var(--color-bg-subtle)"
         },
         ".cm-selectionBackground": {
-          backgroundColor: "var(--theme-brand-light)"
+          backgroundColor: "var(--color-primary-light)"
         },
         ".cm-cursor": {
-          borderLeftColor: "var(--theme-text)"
+          borderLeftColor: "var(--color-text-primary)"
         }
       }),
       EditorView.updateListener.of((update) => {
@@ -372,21 +372,21 @@ watch(() => props.language, async (newLanguage) => {
             padding: "0"
           },
           ".cm-gutters": {
-            backgroundColor: "var(--theme-background-subtle)",
-            borderRight: "1px solid var(--theme-border)",
-            color: "var(--theme-text-muted)"
+            backgroundColor: "var(--color-bg-subtle)",
+            borderRight: "1px solid var(--color-border-primary)",
+            color: "var(--color-text-secondary)"
           },
           ".cm-lineNumbers": {
-            color: "var(--theme-text-muted)"
+            color: "var(--color-text-secondary)"
           },
           ".cm-activeLineGutter": {
-            backgroundColor: "var(--theme-background-subtle)"
+            backgroundColor: "var(--color-bg-subtle)"
           },
           ".cm-selectionBackground": {
-            backgroundColor: "var(--theme-brand-light)"
+            backgroundColor: "var(--color-primary-light)"
           },
           ".cm-cursor": {
-            borderLeftColor: "var(--theme-text)"
+            borderLeftColor: "var(--color-text-primary)"
           }
         }),
         EditorView.updateListener.of((update) => {

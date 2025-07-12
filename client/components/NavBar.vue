@@ -7,8 +7,7 @@
         <div
           v-show="globalStore.isAuthenticated"
           :class="[
-            'absolute -top-1 -right-1 h-2 w-2 rounded-full',
-            globalStore.editMode ? 'bg-[var(--theme-brand-accent)]' : 'bg-[var(--theme-brand)]'
+            'absolute -top-1 -right-1 h-2 w-2 rounded-full bg-color-primary'
           ]"
           :title="globalStore.editMode ? 'Logged in (Edit Mode)' : 'Logged in'"
         ></div>
@@ -152,7 +151,7 @@
     
     <!-- Home Button -->
     <RouterLink :to="{ name: 'home' }" class="flex-shrink-0">
-      <button class="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--theme-button)] hover:bg-[var(--theme-brand)] hover:text-white text-theme-text transition-colors">
+      <button class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-primary-bg hover:text-color-button-primary-fg text-color-button-secondary-fg transition-colors">
         <LayoutGrid class="w-4 h-4" />
       </button>
     </RouterLink>
@@ -257,7 +256,7 @@
         <DropdownMenuItem 
           :icon="Trash2"
           @click="onDeleteTag"
-          class="text-[var(--theme-brand-accent)] hover:text-[var(--theme-brand-accent)]/80"
+          class="text-[var(--color-accent)] hover:text-[var(--color-accent)]/80"
         >
           Delete "{{ selectedTag }}"
         </DropdownMenuItem>

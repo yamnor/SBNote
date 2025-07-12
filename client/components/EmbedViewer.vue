@@ -9,7 +9,7 @@
         <div class="space-y-2">
           <button
             @click="retryLoad"
-            class="inline-flex items-center px-4 py-2 bg-theme-brand text-white rounded-lg hover:bg-theme-brand-dark transition-colors mr-2"
+            class="inline-flex items-center px-4 py-2 bg-color-button-primary-bg text-color-button-primary-fg rounded-lg hover:bg-color-button-primary-hover-bg transition-colors mr-2"
           >
             <RefreshCw class="w-4 h-4 mr-2" />
             Retry
