@@ -9,7 +9,7 @@
       @touchstart="handleTouchStart"
       @touchend="handleTouchEnd"
       @touchcancel="handleTouchCancel"
-      class="bg-color-bg-base p-2 cursor-pointer transition-all duration-200 group h-36 w-full flex flex-col border-t-4 border-t-color-primary relative hover:border-color-primary note-card"
+      class="bg-color-bg-base p-2 cursor-pointer duration-200 group h-36 w-full flex flex-col border-t-4 border-t-color-primary relative border border-color-bg-base hover:border-color-primary note-card"
       :class="{ 'click-active': isClicking }"
       style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;"
       :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"

@@ -65,6 +65,7 @@ export default {
         "color-button-secondary-fg": "var(--color-button-secondary-fg)",
         "color-button-secondary-border": "var(--color-button-secondary-border)",
         "color-button-secondary-hover-bg": "var(--color-button-secondary-hover-bg)",
+        "color-button-secondary-hover-fg": "var(--color-button-secondary-hover-fg)",
         "color-button-secondary-grayed-bg": "var(--color-button-secondary-grayed-bg)",
         "color-button-secondary-grayed-fg": "var(--color-button-secondary-grayed-fg)",
         "color-button-secondary-grayed-border": "var(--color-button-secondary-grayed-border)",

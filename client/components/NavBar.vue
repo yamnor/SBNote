@@ -151,7 +151,7 @@
     
     <!-- Home Button -->
     <RouterLink :to="{ name: 'home' }" class="flex-shrink-0">
-      <button class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-primary-bg hover:text-color-button-primary-fg text-color-button-secondary-fg transition-colors">
+      <button class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg text-color-button-secondary-fg transition-colors">
         <LayoutGrid class="w-4 h-4" />
       </button>
     </RouterLink>

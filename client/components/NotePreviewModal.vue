@@ -24,14 +24,27 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full transform overflow-hidden rounded-lg bg-color-bg-neutral border border-color-border-primary shadow-2xl transition-all note-preview-modal" style="max-width: var(--layout-width-note);">
+            <DialogPanel class="w-full transform overflow-hidden rounded-lg bg-color-bg-neutral shadow-2xl transition-all note-preview-modal" style="max-width: var(--layout-width-note);">
               <!-- Header -->
-              <div class="flex items-center justify-end p-2 pb-0">
+              <div class="flex items-center justify-between p-2 pb-0">
+                <!-- Left side - Slide view button -->
+                <div class="flex items-center">
+                  <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    @click="openInSlide"
+                    title="Open in slide view"
+                  >
+                    <Presentation class="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <!-- Right side - Editor and Close buttons -->
                 <div class="flex items-center space-x-2">
                   <!-- Open in editor button -->
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md border border-transparent bg-color-button-primary-bg p-2 text-color-button-primary-fg hover:bg-color-button-primary-hover-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-color-primary"
+                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
                     @click="openInEditor"
                     title="Open in full editor"
                   >
@@ -41,7 +54,7 @@
                   <!-- Close button -->
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md border border-color-border-primary bg-color-button-secondary-grayed-bg p-2 text-color-button-secondary-grayed-fg hover:bg-color-button-secondary-grayed-hover-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-color-primary"
+                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
                     @click="closeModal"
                     title="Close"
                   >
@@ -51,7 +64,7 @@
               </div>
               
               <!-- Content -->
-              <div class="pt-2 max-h-96 overflow-y-auto overflow-x-hidden">
+              <div class="max-h-96 overflow-y-auto overflow-x-hidden">
                 <Editor
                   ref="toastEditor"
                   :key="`editor-${note.filename}`"
@@ -63,7 +76,7 @@
               </div>
               
               <!-- Tags section at bottom -->
-              <div class="mt-2 mb-2 p-2">
+              <div class="mt-4 mb-4">
                 <TagInput 
                   v-model="editingTags"
                   :readonly="false"
@@ -82,7 +95,7 @@
 import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import { onMounted, ref, watch, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { X, ExternalLink } from "lucide-vue-next";
+import { X, ExternalLink, Presentation } from "lucide-vue-next";
 import { useGlobalStore } from "../globalStore.js";
 import TagInput from "./TagInput.vue";
 import Editor from "./Editor.vue";
@@ -126,6 +139,14 @@ function openInEditor() {
   closeModal();
   router.push({ 
     name: 'note', 
+    params: { filename: props.note.filename.replace(/\.md$/, '') } 
+  });
+}
+
+function openInSlide() {
+  closeModal();
+  router.push({ 
+    name: 'slide', 
     params: { filename: props.note.filename.replace(/\.md$/, '') } 
   });
 }

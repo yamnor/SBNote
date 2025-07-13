@@ -141,13 +141,14 @@
         --color-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         
         /* Button color system */
-        --color-button-primary-bg: var(--color-blue-500);
+        --color-button-primary-bg: var(--color-primary);
         --color-button-primary-fg: var(--color-bg-base);
         --color-button-primary-hover-bg: var(--color-blue-600);
         --color-button-secondary-bg: var(--color-bg-base);
         --color-button-secondary-fg: var(--color-text-primary);
-        --color-button-secondary-border: var(--color-border-primary);
-        --color-button-secondary-hover-bg: #f5fbff;
+        --color-button-secondary-border: var(--color-primary);
+        --color-button-secondary-hover-bg: var(--color-primary);
+        --color-button-secondary-hover-fg: var(--color-bg-base);
         --color-button-secondary-grayed-bg: var(--color-bg-neutral-lighter);
         --color-button-secondary-grayed-fg: var(--color-text-primary);
         --color-button-secondary-grayed-border: var(--color-border-primary);
