@@ -9,6 +9,7 @@
         <router-link
           :to="{ name: 'tag', params: { tagName: tag } }"
           class="tag-link"
+          :title="tag"
         >
           {{ tag }}
         </router-link>
@@ -261,14 +262,16 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
+  padding: 0.125rem 0.5rem;
   background-color: transparent;
   color: var(--color-primary);
-  border: 1px solid var(--color-border-primary);
-  border-radius: 0.25rem;
+  border: 1px dashed var(--color-border-primary);
+  border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
   transition: all 0.2s ease;
+  max-width: 200px; /* Maximum width for tags */
+  min-width: 0; /* Allow shrinking */
 }
 
 .tag-chip:hover {
@@ -279,6 +282,11 @@ onMounted(() => {
 .tag-link {
   color: inherit;
   text-decoration: none;
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Show ellipsis for overflow */
+  max-width: 150px; /* Maximum width for tag text */
+  min-width: 0; /* Allow shrinking */
 }
 
 .tag-link:hover {
@@ -358,5 +366,16 @@ onMounted(() => {
 .suggestion-item:last-child {
   border-bottom-left-radius: 0.375rem;
   border-bottom-right-radius: 0.375rem;
+}
+
+/* Responsive design for mobile devices */
+@media (max-width: 768px) {
+  .tag-chip {
+    max-width: 150px; /* Smaller max-width on mobile */
+  }
+  
+  .tag-link {
+    max-width: 100px; /* Smaller max-width for tag text on mobile */
+  }
 }
 </style> 
