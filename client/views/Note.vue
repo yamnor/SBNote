@@ -40,20 +40,6 @@
           />
         </div>
 
-        <!-- Note Information Display -->
-        <div class="text-xs text-gray-500 flex flex-col gap-1 p-1 note-content-width">
-          <div class="flex flex-row justify-between">
-            <div class="flex flex-col">
-              <span v-if="note.category">Category: {{ note.category }}</span>
-              <span v-if="note.visibility">Visibility: {{ note.visibility }}</span>
-            </div>
-            <div class="flex flex-col items-end">
-              <span v-if="note.lastModifiedAsString">Modified: {{ note.lastModifiedAsString }}</span>
-              <span v-if="note.createdTimeAsString">Created: {{ note.createdTimeAsString }}</span>
-            </div>
-          </div>
-        </div>
-
         <!-- Tags section at bottom -->
         <div class="mt-2 mb-2 note-content-width">
           <TagInput 
@@ -61,6 +47,30 @@
             :readonly="!canModify"
             @tagConfirmed="onTagConfirmed"
           />
+        </div>
+
+        <!-- Note Information Display -->
+        <div class="note-content-width">
+          <!-- Header with toggle -->
+          <div class="flex items-center justify-between p-1 border-b border-color-bg-base cursor-pointer hover:bg-color-bg-base transition-colors" @click="toggleInfoSection">
+            <Info class="w-4 h-4 text-color-text-secondary" />
+            <ChevronDown v-if="uiState.isInfoExpanded" class="w-4 h-4 text-color-text-secondary" />
+            <ChevronRight v-else class="w-4 h-4 text-color-text-secondary" />
+          </div>
+          
+          <!-- Collapsible content -->
+          <div v-show="uiState.isInfoExpanded" class="text-xs text-color-text-secondary flex flex-col gap-1 p-1">
+            <div class="flex flex-row justify-between">
+              <div class="flex flex-col">
+                <span v-if="note.category">Category: {{ note.category }}</span>
+                <span v-if="note.visibility">Visibility: {{ note.visibility }}</span>
+              </div>
+              <div class="flex flex-col items-end">
+                <span v-if="note.lastModifiedAsString">Modified: {{ note.lastModifiedAsString }}</span>
+                <span v-if="note.createdTimeAsString">Created: {{ note.createdTimeAsString }}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Tag Grid section -->
@@ -144,7 +154,7 @@
 </style>
 
 <script setup>
-import { FileX } from "lucide-vue-next";
+import { FileX, ChevronDown, ChevronRight, Info } from "lucide-vue-next";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useRoute } from "vue-router";
@@ -214,7 +224,8 @@ const noteState = ref({
 const uiState = ref({
   isDeleteModalVisible: false,
   isFileSizeModalVisible: false,
-  unsavedChanges: false
+  unsavedChanges: false,
+  isInfoExpanded: false
 });
 
 const autoSaveState = ref({
@@ -952,6 +963,21 @@ function closeFileSizeModal() {
   updateUIState({ isFileSizeModalVisible: false });
 }
 
+// Toggle info section and save to localStorage
+function toggleInfoSection() {
+  const newExpandedState = !uiState.value.isInfoExpanded;
+  updateUIState({ isInfoExpanded: newExpandedState });
+  localStorage.setItem('noteInfoExpanded', newExpandedState.toString());
+}
+
+// Load info section state from localStorage
+function loadInfoSectionState() {
+  const savedState = localStorage.getItem('noteInfoExpanded');
+  if (savedState !== null) {
+    updateUIState({ isInfoExpanded: savedState === 'true' });
+  }
+}
+
 function setBeforeUnloadConfirmation(enable = true) {
   if (enable) {
     window.onbeforeunload = () => {
@@ -1094,6 +1120,9 @@ watch(canModify, (newCanModify) => {
 
 onMounted(async () => {
   await init();
+  
+  // Load info section state from localStorage
+  loadInfoSectionState();
   
   // Listen for file menu events from NavBar
   window.addEventListener('note-close', closeHandler);
