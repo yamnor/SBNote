@@ -36,19 +36,19 @@
       <div
         v-if="showTerminal"
         :class="[
-          'absolute bottom-0 left-0 right-0 z-20 border-t border-gray-700',
-          isTerminalMinimized ? 'h-12 min-h-[40px] bg-gray-900/50 backdrop-blur-sm' : 'h-64 bg-gray-900/50 backdrop-blur-sm'
+          'absolute bottom-0 left-0 right-0 z-20 border-t border-color-border-primary',
+          isTerminalMinimized ? 'h-12 min-h-[40px] backdrop-blur-md' : 'h-64 bg-color-bg-base/0 backdrop-blur-md'
         ]"
       >
         <!-- Minimize/Restore Button -->
         <button
           @click.stop="toggleTerminal"
-          class="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full bg-gray-800/80 hover:bg-gray-700 border border-gray-600 shadow transition-colors focus:outline-none"
+          class="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg border border-color-border-primary transition-colors focus:outline-none"
           :title="isTerminalMinimized ? 'Restore Terminal' : 'Minimize Terminal'"
           style="z-index:21;"
         >
-          <ChevronUp v-if="isTerminalMinimized" class="w-5 h-5 text-gray-200" />
-          <ChevronDown v-else class="w-5 h-5 text-gray-200" />
+          <ChevronUp v-if="isTerminalMinimized" class="w-5 h-5 text-color-button-secondary-fg hover:text-color-button-secondary-hover-fg" />
+          <ChevronDown v-else class="w-6 h-6 text-color-button-secondary-fg hover:text-color-button-secondary-hover-fg" />
         </button>
         <div v-show="!isTerminalMinimized" ref="terminalContainer" class="w-full h-full"></div>
       </div>
@@ -141,7 +141,7 @@ async function loadMolecule() {
     viewer = new Miew({
       container: miewViewer.value,
       settings: {
-        bg: { color: '#000000' },
+        bg: { color: '#ffffff' },
       }
     });
     
@@ -251,29 +251,14 @@ function initializeTerminal() {
     // Create new xterm.js terminal
     terminal = new XTerm({
       cursorBlink: true,
-      fontSize: 12,
+      fontSize: 14,
       fontFamily: 'Noto Sans Mono, Consolas, Lucida Console, Monaco, monospace',
       theme: {
-        background: '#1f2937',
-        foreground: '#f9fafb',
-        cursor: '#f9fafb',
-        selection: '#374151',
-        black: '#000000',
-        red: '#ef4444',
-        green: '#10b981',
-        yellow: '#f59e0b',
-        blue: '#3b82f6',
-        magenta: '#8b5cf6',
-        cyan: '#06b6d4',
-        white: '#f9fafb',
-        brightBlack: '#6b7280',
-        brightRed: '#f87171',
-        brightGreen: '#34d399',
-        brightYellow: '#fbbf24',
-        brightBlue: '#60a5fa',
-        brightMagenta: '#a78bfa',
-        brightCyan: '#22d3ee',
-        brightWhite: '#ffffff'
+        background: '#ffffff',
+        foreground: '#000000',
+        cursor: '#3ea8ff',
+        brightGreen: '#10b981',
+        selectionBackground: '#e0efff',
       }
     });
     
