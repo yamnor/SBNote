@@ -104,10 +104,25 @@ function setupKeyboardShortcuts() {
       return;
     }
     
+    // Check if any modal is open (including NotePreviewModal)
+    const activeElement = document.activeElement;
+    const isInModal = activeElement && (
+      activeElement.closest('[role="dialog"]') ||
+      activeElement.closest('.modal') ||
+      activeElement.closest('[data-modal]') ||
+      activeElement.closest('.note-preview-modal') ||
+      // Check for specific modal selectors
+      activeElement.closest('.fixed.inset-0') ||
+      activeElement.closest('.relative.z-50')
+    );
+    
+    if (isInModal) {
+      return; // Don't trigger search focus when any modal is open
+    }
+    
     // Check if we're on a note page and if the editor is focused
     if (route.name === 'note') {
       // Check if any input or textarea is focused
-      const activeElement = document.activeElement;
       const isEditing = activeElement && (
         activeElement.tagName === 'INPUT' ||
         activeElement.tagName === 'TEXTAREA' ||
@@ -123,7 +138,6 @@ function setupKeyboardShortcuts() {
     }
     
     // Check if search input is already focused
-    const activeElement = document.activeElement;
     const isSearchInputFocused = activeElement && (
       activeElement.closest('.search-input') ||
       activeElement.tagName === 'INPUT' && activeElement.type === 'text'

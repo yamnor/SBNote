@@ -24,7 +24,7 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full transform overflow-hidden rounded-lg bg-color-bg-neutral border border-color-border-primary shadow-2xl transition-all" style="max-width: var(--layout-width-note);">
+            <DialogPanel class="w-full transform overflow-hidden rounded-lg bg-color-bg-neutral border border-color-border-primary shadow-2xl transition-all note-preview-modal" style="max-width: var(--layout-width-note);">
               <!-- Header -->
               <div class="flex items-center justify-end p-2 pb-0">
                 <div class="flex items-center space-x-2">
@@ -263,10 +263,15 @@ function handleKeydownCapture(event) {
                           target.tagName === 'TEXTAREA' || 
                           target.contentEditable === 'true' ||
                           target.closest('.tag-input-container') ||
-                          target.closest('.toastui-editor');
+                          target.closest('.toastui-editor') ||
+                          target.closest('.note-preview-modal');
     
+    // Always stop propagation when modal is visible to prevent search input capture
+    event.stopPropagation();
+    
+    // Only allow input events to continue for actual input elements
     if (!isInputElement) {
-      event.stopPropagation();
+      event.preventDefault();
     }
   }
 }
