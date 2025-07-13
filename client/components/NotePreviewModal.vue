@@ -48,6 +48,17 @@
                   >
                     <ExternalLink class="w-4 h-4" />
                   </button>
+                  
+                  <!-- MolViewer button (only show for coordinate category) -->
+                  <button
+                    v-if="note.category === 'coordinate'"
+                    type="button"
+                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    @click="openInMol"
+                    title="Open in molecular viewer"
+                  >
+                    <Atom class="w-4 h-4" />
+                  </button>
                 </div>
                 
                 <!-- Right side - Copy Link, Editor and Close buttons -->
@@ -116,7 +127,7 @@
 import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import { onMounted, ref, watch, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { X, Maximize2, Presentation, ExternalLink, Link2 } from "lucide-vue-next";
+import { X, Maximize2, Presentation, ExternalLink, Link2, Atom } from "lucide-vue-next";
 import { useGlobalStore } from "../globalStore.js";
 import TagInput from "./TagInput.vue";
 import Editor from "./Editor.vue";
@@ -176,6 +187,14 @@ function openInEmbed() {
   closeModal();
   router.push({ 
     name: 'embed', 
+    params: { filename: props.note.filename.replace(/\.md$/, '') } 
+  });
+}
+
+function openInMol() {
+  closeModal();
+  router.push({ 
+    name: 'mol', 
     params: { filename: props.note.filename.replace(/\.md$/, '') } 
   });
 }
