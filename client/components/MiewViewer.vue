@@ -87,7 +87,7 @@ const miewViewer = ref(null);
 const terminalContainer = ref(null);
 const isLoading = ref(false);
 const error = ref(null);
-const showTerminal = ref(true); // 最初から表示
+const showTerminal = ref(true);
 let viewer = null;
 let terminal = null;
 let fitAddon = null;
@@ -141,10 +141,7 @@ async function loadMolecule() {
     viewer = new Miew({
       container: miewViewer.value,
       settings: {
-        backgroundColor: { r: 1, g: 1, b: 1 }, // White background
-        camera: {
-          position: { x: 0, y: 0, z: 10 }
-        }
+        bg: { color: '#000000' },
       }
     });
     
@@ -171,7 +168,22 @@ async function loadMolecule() {
     // Load the molecule
     if (typeof viewer.load === 'function') {
       // Create a blob URL for the file content
-      const blob = new Blob([props.fileContent], { type: 'text/plain' });
+      let mimeType = 'text/plain';
+      if (fileExtension === 'xyz') {
+        mimeType = 'chemical/x-xyz';
+      } else if (fileExtension === 'pdb') {
+        mimeType = 'chemical/x-pdb';
+      } else if (fileExtension === 'mol' || fileExtension === 'sdf') {
+        mimeType = 'chemical/x-mdl-molfile';
+      }
+      
+      // Ensure proper line endings for Miew
+      let processedContent = props.fileContent;
+      if (!processedContent.endsWith('\n')) {
+        processedContent += '\n';
+      }
+      
+      const blob = new Blob([processedContent], { type: mimeType });
       const url = URL.createObjectURL(blob);
       
       try {
@@ -223,7 +235,6 @@ function retryLoad() {
   loadMolecule();
 }
 
-// toggleTerminal関数は最小化/復元のみの用途に簡略化
 function toggleTerminal() {
   isTerminalMinimized.value = !isTerminalMinimized.value;
 }
