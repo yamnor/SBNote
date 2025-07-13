@@ -6,7 +6,7 @@
         type="text"
         id="username"
         placeholder="Username"
-        class="w-full rounded-md border border-color-border-primary px-3 py-2 focus:outline-none dark:bg-color-bg-elevated mb-3"
+        class="w-full rounded-md px-3 py-2 focus:outline-none mb-3"
         autocomplete="username"
         required
       />
@@ -15,7 +15,7 @@
         type="password"
         id="password"
         placeholder="Password"
-        class="w-full rounded-md border border-color-border-primary px-3 py-2 focus:outline-none dark:bg-color-bg-elevated mb-3"
+        class="w-full rounded-md px-3 py-2 focus:outline-none mb-3"
         autocomplete="current-password"
         required
       />
@@ -25,7 +25,7 @@
         type="text"
         id="one-time-code"
         placeholder="2FA Code"
-        class="w-full rounded-md border border-color-border-primary px-3 py-2 focus:outline-none dark:bg-color-bg-elevated mb-3"
+        class="w-full rounded-md border border-color-border-primary px-3 py-2 focus:outline-none mb-3"
         autocomplete="one-time-code"
         required
       />
