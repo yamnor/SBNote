@@ -30,11 +30,11 @@
       </div>
       
       <!-- Tag count badge in bottom-right corner -->
-      <div v-if="note.tags && note.tags.length > 0" class="absolute bottom-1 right-1">
+      <!--<div v-if="note.tags && note.tags.length > 0" class="absolute bottom-1 right-1">
         <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-color-bg-primary text-color-text-primary">
           {{ note.tags.length }}
         </span>
-      </div>
+      </div>-->
       
       <div class="flex-1 min-w-0">
         <h3 class="text-gray-800 text-sm font-medium group-hover:text-gray-900 transition-colors leading-tight line-clamp-3 search-highlights">
