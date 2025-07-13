@@ -3,9 +3,9 @@
     ref="cardElement"
     @click="handleClick"
     @dblclick="handleDoubleClick"
-    class="p-2 cursor-pointer transition-all duration-300 group h-36 w-full flex flex-col relative rounded-lg border"
+    class="p-2 cursor-pointer group h-36 w-full flex flex-col relative rounded-lg border"
     :class="[getBackgroundClass(), { 'pin-animation': showPinAnimation, 'long-press-active': isLongPressing }]"
-    style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;"
+    style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; z-index: 10;"
   >
     <!-- Corner triangle for pinned tags in top-right -->
     <div 
@@ -21,14 +21,15 @@
     
     <!-- Note count badge in bottom-right corner -->
     <div class="absolute bottom-1 right-1">
-      <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-color-bg-primary text-color-text-primary">
+      <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded"
+            :class="isSelected ? 'bg-color-bg-base text-color-text-primary' : 'bg-color-bg-primary text-color-text-primary'">
         {{ tagData.count }}
       </span>
     </div>
     
     <!-- Centered tag name -->
     <div class="flex-1 flex items-center justify-center min-w-0">
-      <h3 class="text-sm font-medium transition-colors leading-tight text-center"
+      <h3 class="text-sm font-medium leading-tight text-center"
           :class="isSelected ? 'text-white group-hover:text-gray-100' : 'text-gray-800 group-hover:text-gray-900'">
         <span :class="isSelected ? 'text-color-text-inverse' : 'text-color-primary'"># </span>{{ displayTagName }}
       </h3>

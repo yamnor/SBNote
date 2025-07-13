@@ -9,7 +9,7 @@
       @touchstart="handleTouchStart"
       @touchend="handleTouchEnd"
       @touchcancel="handleTouchCancel"
-      class="bg-color-bg-base p-2 cursor-pointer transition-all duration-200 group h-36 w-full flex flex-col border-t-4 border-t-color-primary relative hover:border-color-primary"
+      class="bg-color-bg-base p-2 cursor-pointer transition-all duration-200 group h-36 w-full flex flex-col border-t-4 border-t-color-primary relative hover:border-color-primary note-card"
       :class="{ 'click-active': isClicking }"
       style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;"
       :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"
@@ -203,4 +203,29 @@ function formatDate(timestamp) {
   transform: scale(0.98);
   transition: transform 0.1s ease-out;
 }
+
+/* Smooth transition for all card properties */
+.bg-color-bg-base {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+
+/* Animation styles for note cards */
+.note-card.leaving {
+  transition: all 0.5s ease-in-out !important;
+  transform: translateX(-100px) !important;
+  opacity: 0 !important;
+  z-index: 1 !important;
+}
+
+/* General leaving animation class */
+.leaving {
+  transition: all 0.5s ease-in-out !important;
+  transform: translateX(-100px) !important;
+  opacity: 0 !important;
+  z-index: 1 !important;
+}
+
+
 </style> 

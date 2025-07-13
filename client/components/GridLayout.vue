@@ -19,18 +19,14 @@
       />
       
       <!-- Note Card with CSS animation delay -->
-      <Transition
+      <div 
         v-else-if="item.type === 'note'"
-        name="note-fade"
-        appear
+        :style="{ '--animation-index': getNoteAnimationIndex(index) }"
+        class="note-card-wrapper"
+        :key="item.key"
       >
-        <div 
-          :style="{ '--animation-index': getNoteAnimationIndex(index) }"
-          class="note-card-wrapper"
-        >
-          <NoteCard :note="item.data" />
-        </div>
-      </Transition>
+        <NoteCard :note="item.data" />
+      </div>
     </template>
   </div>
 </template>
@@ -52,6 +48,7 @@ const emit = defineEmits(['tag-click', 'tag-dblclick', 'tag-longpress']);
 
 const gridContainer = ref(null);
 const containerWidth = ref(0);
+const isMobile = ref(false);
 
 // Calculate grid columns based on container width
 const gridColsClass = computed(() => {
@@ -93,18 +90,10 @@ function getNoteAnimationIndex(index) {
   const row = Math.floor(noteIndex / columns);
   const col = noteIndex % columns;
   
-  // Calculate animation index: right to left, bottom to top
-  // Start from the bottom-right corner
-  const maxRow = Math.floor((noteItems.length - 1) / columns);
-  const maxCol = columns - 1;
-  
-  // Calculate distance from bottom-right corner
-  const rowDistance = maxRow - row;
-  const colDistance = maxCol - col;
-  
-  // Animation index: higher number = earlier animation
-  // This makes cards appear from bottom-right to top-left
-  return (rowDistance * columns) + colDistance;
+  // Calculate animation index: left to right, top to bottom for leave animation
+  // This makes cards disappear from left to right, top to bottom
+  // For leave animation, we want the opposite of enter animation
+  return (row * columns) + col;
 }
 
 // Resize observer to watch container width changes
@@ -115,6 +104,9 @@ onMounted(() => {
     // Initial width measurement
     containerWidth.value = gridContainer.value.offsetWidth;
     
+    // Check if mobile device
+    isMobile.value = window.innerWidth < 768;
+    
     // Set up resize observer
     resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
@@ -123,6 +115,11 @@ onMounted(() => {
     });
     
     resizeObserver.observe(gridContainer.value);
+    
+    // Listen for window resize to update mobile detection
+    window.addEventListener('resize', () => {
+      isMobile.value = window.innerWidth < 768;
+    });
   }
 });
 
@@ -130,6 +127,10 @@ onUnmounted(() => {
   if (resizeObserver) {
     resizeObserver.disconnect();
   }
+  // Remove resize listener
+  window.removeEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 768;
+  });
 });
 
 // Event handlers for tag interactions
@@ -147,38 +148,18 @@ function onTagLongPress(tagName) {
 </script>
 
 <style scoped>
-/* Note card staged animation with CSS animation-delay */
-.note-fade-enter-active {
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  transition-delay: calc(var(--animation-index, 0) * 0.1s);
-}
-
-.note-fade-leave-active {
-  transition: all 0.3s ease-in;
-}
-
-.note-fade-enter-from {
-  opacity: 0;
-  transform: translateX(-40px) scale(0.95);
-}
-
-.note-fade-leave-to {
-  opacity: 0;
-  transform: translateX(15px) scale(0.95);
-}
-
-.note-fade-enter-to {
-  opacity: 1;
-  transform: translateX(0) scale(1);
-}
-
-.note-fade-leave-from {
-  opacity: 1;
-  transform: translateX(0) scale(1);
-}
-
-/* Wrapper for note card */
+/* Note card animation styles */
 .note-card-wrapper {
   display: contents;
+  position: relative;
 }
+
+.note-card-wrapper.leaving {
+  transition: all 0.5s ease-in-out !important;
+  transform: translateX(-100px) !important;
+  opacity: 0 !important;
+  z-index: 1 !important;
+}
+
+
 </style> 

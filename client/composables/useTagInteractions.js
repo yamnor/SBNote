@@ -4,15 +4,34 @@ export function useTagInteractions() {
   const router = useRouter();
 
   // Handle tag click for selection/deselection
-  const handleTagClick = (tagName, selectedTag, setSelectedTag, clearNotes) => {
-    // If the same tag is clicked again, clear the notes
+  const handleTagClick = (tagName, selectedTag, setSelectedTag, clearNotes, startAnimation, stopAnimation) => {
+    // If the same tag is clicked again, clear the notes with animation delay
     if (selectedTag === tagName) {
-      clearNotes();
       setSelectedTag(null);
+      // Start animation first
+      if (startAnimation) startAnimation();
+      // Clear notes after animation delay (0.5 second)
+      setTimeout(() => {
+        clearNotes();
+        if (stopAnimation) stopAnimation();
+      }, 500);
       return;
     }
     
-    // Clear previous notes and set new selected tag
+    // If clicking a different tag and there are currently displayed notes, animate them out first
+    if (selectedTag && startAnimation) {
+      // Start animation first
+      startAnimation();
+      // Clear notes after animation delay
+      setTimeout(() => {
+        clearNotes();
+        setSelectedTag(tagName);
+        if (stopAnimation) stopAnimation();
+      }, 500);
+      return;
+    }
+    
+    // If no animation function or no current selection, switch immediately
     clearNotes();
     setSelectedTag(tagName);
   };

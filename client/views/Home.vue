@@ -135,18 +135,158 @@ async function onTagClick(tagName) {
   try {
     const previousSelectedTag = selectedTag.value;
     
-    handleTagClick(tagName, selectedTag.value, (tag) => selectedTag.value = tag, () => displayedNotes.value = []);
-    
-    // Only fetch notes if a new tag was selected (not the same tag)
-    if (selectedTag.value === tagName && previousSelectedTag !== tagName) {
-      // Get notes for the selected tag using config limit
-      const limit = globalStore.config.quickAccessLimit || 12;
-      const notes = await fetchNotesByTag(getNotesByTag, tagName, "lastModified", "desc", limit);
-      displayedNotes.value = notes;
+    // If clicking the same tag, start animation and clear notes with delay
+    if (selectedTag.value === tagName) {
+      // Start animation first
+      startNoteAnimation();
+      
+      // Wait for animation to complete before clearing notes
+      setTimeout(() => {
+        // Clear notes after animation is done
+        displayedNotes.value = [];
+        selectedTag.value = null;
+        stopNoteAnimation();
+      }, 500); // Wait for animation to complete
+      return;
     }
+    
+    // If clicking a different tag and there are currently displayed notes, animate them out first
+    if (selectedTag.value && displayedNotes.value.length > 0) {
+      // Start animation first
+      startNoteAnimation();
+      
+      // Wait for animation to complete before switching to new tag
+      setTimeout(async () => {
+        // Clear previous notes and set new selected tag
+        displayedNotes.value = [];
+        selectedTag.value = tagName;
+        stopNoteAnimation();
+        
+        // Fetch notes for the new selected tag
+        const limit = globalStore.config.quickAccessLimit || 12;
+        const notes = await fetchNotesByTag(getNotesByTag, tagName, "lastModified", "desc", limit);
+        displayedNotes.value = notes;
+        
+        // Start enter animation for new notes
+        startNoteEnterAnimation();
+      }, 500); // Wait for animation to complete
+      return;
+    }
+    
+    // If no current notes are displayed, switch immediately
+    displayedNotes.value = [];
+    selectedTag.value = tagName;
+    stopNoteAnimation();
+    
+    // Fetch notes for the new selected tag
+    const limit = globalStore.config.quickAccessLimit || 12;
+    const notes = await fetchNotesByTag(getNotesByTag, tagName, "lastModified", "desc", limit);
+    displayedNotes.value = notes;
+    
+    // Start enter animation for new notes
+    startNoteEnterAnimation();
   } catch (error) {
     console.error('Failed to get notes for tag:', error);
   }
+}
+
+// Start note animation by adding classes to DOM elements
+function startNoteAnimation() {
+  const selectors = [
+    '.note-card-wrapper',
+    '.note-card'
+  ];
+  
+  let foundCards = [];
+  
+  selectors.forEach(selector => {
+    const cards = document.querySelectorAll(selector);
+    foundCards = foundCards.concat(Array.from(cards));
+  });
+  
+  // Remove duplicates
+  foundCards = [...new Set(foundCards)];
+  
+  if (foundCards.length === 0) {
+    setTimeout(startNoteAnimation, 100);
+    return;
+  }
+  
+  foundCards.forEach((card, index) => {
+    card.classList.add('leaving');
+    card.style.setProperty('--animation-index', index);
+  });
+}
+
+// Start note enter animation by adding classes to DOM elements
+function startNoteEnterAnimation() {
+  // Use nextTick to ensure DOM is updated
+  nextTick(() => {
+    const selectors = [
+      '.note-card-wrapper',
+      '.note-card'
+    ];
+    
+    let foundCards = [];
+    
+    selectors.forEach(selector => {
+      const cards = document.querySelectorAll(selector);
+      foundCards = foundCards.concat(Array.from(cards));
+    });
+    
+    // Remove duplicates
+    foundCards = [...new Set(foundCards)];
+    
+    if (foundCards.length === 0) {
+      // If no cards found, try again after a short delay
+      setTimeout(startNoteEnterAnimation, 50);
+      return;
+    }
+    
+    // Set initial state for all cards
+    foundCards.forEach((card, index) => {
+      // Set initial position (left side, invisible)
+      card.style.transform = 'translateX(-100px)';
+      card.style.opacity = '0';
+      card.style.transition = 'all 0.5s ease-in-out';
+      card.style.zIndex = '1';
+    });
+    
+    // Force browser reflow to ensure initial state is applied
+    foundCards[0]?.offsetHeight;
+    
+    // Animate to final position
+    requestAnimationFrame(() => {
+      foundCards.forEach((card) => {
+        card.style.transform = 'translateX(0)';
+        card.style.opacity = '1';
+      });
+    });
+    
+    // Clean up after animation
+    setTimeout(() => {
+      foundCards.forEach(card => {
+        card.style.transform = '';
+        card.style.opacity = '';
+        card.style.transition = '';
+        card.style.zIndex = '';
+      });
+    }, 500);
+  });
+}
+
+// Stop note animation by removing classes
+function stopNoteAnimation() {
+  const noteCards = document.querySelectorAll('.note-card-wrapper');
+  const noteCardElements = document.querySelectorAll('.note-card');
+  
+  noteCards.forEach(card => {
+    card.classList.remove('leaving');
+  });
+  
+  noteCardElements.forEach(card => {
+    card.classList.remove('leaving');
+  });
 }
 
 // Handle tag double click - navigate to search page
@@ -270,6 +410,9 @@ async function refreshHomeData() {
         const limit = globalStore.config.quickAccessLimit || 12;
         const notes = await fetchNotesByTag(getNotesByTag, selectedTag.value, "lastModified", "desc", limit);
         displayedNotes.value = notes;
+        
+        // Start enter animation for refreshed notes
+        startNoteEnterAnimation();
       } catch (error) {
         console.error('Failed to refresh selected tag notes:', error);
         // If the selected tag no longer exists, clear the selection
@@ -305,6 +448,9 @@ async function init() {
         const limit = globalStore.config.quickAccessLimit || 12;
         const notes = await fetchNotesByTag(getNotesByTag, tagToSelect, "lastModified", "desc", limit);
         displayedNotes.value = notes;
+        
+        // Start enter animation for loaded notes
+        startNoteEnterAnimation();
       } catch (error) {
         console.error('Failed to load tag notes:', error);
         selectedTag.value = null;
@@ -318,6 +464,9 @@ async function init() {
         const limit = globalStore.config.quickAccessLimit || 12;
         const notes = await fetchNotesByTag(getNotesByTag, selectedTag.value, "lastModified", "desc", limit);
         displayedNotes.value = notes;
+        
+        // Start enter animation for loaded notes
+        startNoteEnterAnimation();
       } catch (error) {
         console.error('Failed to load saved tag notes:', error);
         // If the saved tag no longer exists or has issues, clear the selection
