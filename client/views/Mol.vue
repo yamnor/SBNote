@@ -5,10 +5,10 @@
       <div class="flex items-center justify-between gap-4 py-4 h-14 bg-color-bg-neutral backdrop-blur-sm w-full max-w-[var(--layout-width-note)]">
       <button
         @click="goToNote" 
-        class="flex items-center justify-center w-9 h-9 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-primary-bg hover:text-color-button-primary-fg text-color-button-secondary-fg transition-colors cursor-pointer flex-shrink-0 shadow-sm"
+        class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg text-color-button-secondary-fg transition-colors cursor-pointer flex-shrink-0"
         title="Go to note"
       >
-        <FileTextIcon class="w-4 h-4" />
+        <ArrowLeft class="w-6 h-6" />
       </button>
       
       <h1 class="text-sm text-color-text-secondary truncate min-w-0 flex-1">
@@ -23,7 +23,7 @@
           :class="viewMode === 'raw' ? '!bg-color-button-primary-bg !text-color-button-primary-fg' : ''"
           :title="viewMode === 'raw' ? 'Current view' : 'Raw View'"
         >
-          <Grip class="w-4 h-4" />
+          <Grip class="w-6 h-6" />
         </button>
         
         <!-- Mol button -->
@@ -33,7 +33,7 @@
           :class="viewMode === 'mol' ? '!bg-color-button-primary-bg !text-color-button-primary-fg' : ''"
           :title="viewMode === 'mol' ? 'Current view' : 'Mol View'"
         >
-          <Eye class="w-4 h-4" />
+          <Eye class="w-6 h-6" />
         </button>
         
         <!-- Chem button -->
@@ -43,7 +43,7 @@
           :class="viewMode === 'chem' ? '!bg-color-button-primary-bg !text-color-button-primary-fg' : ''"
           :title="viewMode === 'chem' ? 'Current view' : 'Chem View'"
         >
-          <SquareTerminal class="w-4 h-4" />
+          <Terminal class="w-6 h-6" />
         </button>
       </div>
     </div>
@@ -110,7 +110,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { FileText as FileTextIcon, Eye, Grip, FileX, Loader2, RefreshCw, ScanEye, SquareTerminal } from 'lucide-vue-next';
+import { ArrowLeft, Eye, Grip, FileX, Loader2, RefreshCw, ScanEye, Terminal } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
 import MolViewer from '../components/MolViewer.vue';
 import MiewViewer from '../components/MiewViewer.vue';

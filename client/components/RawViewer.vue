@@ -268,26 +268,25 @@ async function initializeEditor() {
           fontFamily: "Noto Sans Mono, Consolas, Lucida Console, Monaco, Andale Mono, monospace"
         },
         ".cm-content": {
-          padding: "1rem",
+          padding: "0.5rem !important",
           whiteSpace: "pre-wrap",
-          wordWrap: "break-word"
+          wordWrap: "break-word",
+          backgroundColor: "var(--color-bg-base)"
         },
         ".cm-line": {
           padding: "0"
         },
         ".cm-gutters": {
-          backgroundColor: "var(--color-bg-subtle)",
-          borderRight: "1px solid var(--color-border-primary)",
-          color: "var(--color-text-secondary)"
+          backgroundColor: "var(--color-bg-neutral) !important",
+          borderRight: "1px solid var(--color-bg-base) !important",
+          color: "var(--color-text-muted) !important"
         },
-        ".cm-lineNumbers": {
-          color: "var(--color-text-secondary)"
+        ".cm-activeLine": {
+          backgroundColor: "var(--color-primary-light) !important"
         },
         ".cm-activeLineGutter": {
-          backgroundColor: "var(--color-bg-subtle)"
-        },
-        ".cm-selectionBackground": {
-          backgroundColor: "var(--color-primary-light)"
+          backgroundColor: "var(--color-primary) !important",
+          color: "var(--color-text-inverse) !important"
         },
         ".cm-cursor": {
           borderLeftColor: "var(--color-text-primary)"
