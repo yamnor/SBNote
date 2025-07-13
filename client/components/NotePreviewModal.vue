@@ -27,8 +27,8 @@
             <DialogPanel class="w-full transform overflow-hidden rounded-lg bg-color-bg-neutral shadow-2xl transition-all note-preview-modal" style="max-width: var(--layout-width-note);">
               <!-- Header -->
               <div class="flex items-center justify-between p-2 pb-0">
-                <!-- Left side - Slide view button -->
-                <div class="flex items-center">
+                <!-- Left side - Slide view button and Embed button -->
+                <div class="flex items-center space-x-2">
                   <button
                     type="button"
                     class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
@@ -37,10 +37,31 @@
                   >
                     <Presentation class="w-4 h-4" />
                   </button>
+                  
+                  <!-- Embed button (only show for embed category) -->
+                  <button
+                    v-if="note.category === 'embed'"
+                    type="button"
+                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    @click="openInEmbed"
+                    title="Open in embed view"
+                  >
+                    <ExternalLink class="w-4 h-4" />
+                  </button>
                 </div>
                 
-                <!-- Right side - Editor and Close buttons -->
+                <!-- Right side - Copy Link, Editor and Close buttons -->
                 <div class="flex items-center space-x-2">
+                  <!-- Copy Link button -->
+                  <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    @click="copyLink"
+                    title="Copy link"
+                  >
+                    <Link2 class="w-4 h-4" />
+                  </button>
+                  
                   <!-- Open in editor button -->
                   <button
                     type="button"
@@ -48,7 +69,7 @@
                     @click="openInEditor"
                     title="Open in full editor"
                   >
-                    <ExternalLink class="w-4 h-4" />
+                    <Maximize2 class="w-4 h-4" />
                   </button>
                   
                   <!-- Close button -->
@@ -95,7 +116,7 @@
 import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import { onMounted, ref, watch, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { X, ExternalLink, Presentation } from "lucide-vue-next";
+import { X, Maximize2, Presentation, ExternalLink, Link2 } from "lucide-vue-next";
 import { useGlobalStore } from "../globalStore.js";
 import TagInput from "./TagInput.vue";
 import Editor from "./Editor.vue";
@@ -148,6 +169,26 @@ function openInSlide() {
   router.push({ 
     name: 'slide', 
     params: { filename: props.note.filename.replace(/\.md$/, '') } 
+  });
+}
+
+function openInEmbed() {
+  closeModal();
+  router.push({ 
+    name: 'embed', 
+    params: { filename: props.note.filename.replace(/\.md$/, '') } 
+  });
+}
+
+function copyLink() {
+  const filename = props.note.filename.replace(/\.md$/, '');
+  const url = `${window.location.origin}/${filename}`;
+  
+  navigator.clipboard.writeText(url).then(() => {
+    // Could add a toast notification here if needed
+    console.log('Link copied to clipboard:', url);
+  }).catch(err => {
+    console.error('Failed to copy link:', err);
   });
 }
 
