@@ -167,7 +167,6 @@
         /* Layout */
         --layout-width-note: 768px;
         --layout-width-grid: 1024px;
-        --layout-width-split-view: calc(var(--layout-width-note) * 2);
         
         /* Legacy variables for backward compatibility (temporary) */
         --theme-brand: var(--color-primary);
