@@ -45,7 +45,6 @@ export default {
         // テキスト色
         "color-text-primary": "var(--color-text-primary)",
         "color-text-secondary": "var(--color-text-secondary)",
-        "color-text-muted": "var(--color-text-muted)",
         "color-text-disabled": "var(--color-text-disabled)",
         "color-text-link": "var(--color-text-link)",
         "color-text-link-visited": "var(--color-text-link-visited)",

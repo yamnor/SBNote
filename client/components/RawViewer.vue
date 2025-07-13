@@ -279,7 +279,7 @@ async function initializeEditor() {
         ".cm-gutters": {
           backgroundColor: "var(--color-bg-neutral) !important",
           borderRight: "1px solid var(--color-bg-base) !important",
-          color: "var(--color-text-muted) !important"
+          color: "var(--color-text-secondary) !important"
         },
         ".cm-activeLine": {
           backgroundColor: "var(--color-primary-light) !important"

@@ -122,8 +122,7 @@
         
         /* Text colors */
         --color-text-primary: #343434;
-        --color-text-secondary: #8891a1;
-        --color-text-muted: var(--color-gray-700);
+        --color-text-secondary: var(--color-gray-700);
         --color-text-disabled: var(--color-gray-600);
         --color-text-link: var(--color-blue-600);
         --color-text-link-visited: #4b4f52;
@@ -145,7 +144,7 @@
         --color-button-primary-fg: var(--color-bg-base);
         --color-button-primary-hover-bg: var(--color-blue-600);
         --color-button-secondary-bg: var(--color-bg-base);
-        --color-button-secondary-fg: var(--color-text-primary);
+        --color-button-secondary-fg: var(--color-text-secondary);
         --color-button-secondary-border: var(--color-primary);
         --color-button-secondary-hover-bg: var(--color-primary);
         --color-button-secondary-hover-fg: var(--color-bg-base);
@@ -219,7 +218,7 @@
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--color-text-muted);
+        background: var(--color-text-secondary);
     }
 
     /* Firefox scrollbar styling */
