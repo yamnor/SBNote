@@ -49,9 +49,9 @@
                     <ExternalLink class="w-4 h-4" />
                   </button>
                   
-                  <!-- MolViewer button (only show for coordinate category) -->
-                  <button
-                    v-if="note.category === 'coordinate'"
+                          <!-- 3DmolViewer button (only show for coordinate category) -->
+        <button
+          v-if="note.category === 'coordinate'"
                     type="button"
                     class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
                     @click="openInMol"
@@ -97,7 +97,7 @@
               
               <!-- Content -->
               <div class="max-h-96 overflow-y-auto overflow-x-hidden">
-                <Editor
+                <ToastUIEditor
                   ref="toastEditor"
                   :key="`editor-${note.filename}`"
                   :initialValue="editingContent"
@@ -130,7 +130,7 @@ import { useRouter } from "vue-router";
 import { X, Maximize2, Presentation, ExternalLink, Link2, Atom } from "lucide-vue-next";
 import { useGlobalStore } from "../globalStore.js";
 import TagInput from "./TagInput.vue";
-import Editor from "./Editor.vue";
+import ToastUIEditor from "./ToastUIEditor.vue";
 import { updateNote } from "../api.js";
 
 const props = defineProps({
@@ -373,6 +373,6 @@ onUnmounted(() => {
 @import "@toast-ui/editor/dist/toastui-editor-viewer.css";
 @import "prismjs/themes/prism.css";
 @import "@toast-ui/editor-plugin-code-syntax-highlight/dist/toastui-editor-plugin-code-syntax-highlight.css";
-@import "./EditorStyles.scss";
-@import "./EditorStylesCustom.scss";
+@import "./ToastUIEditor.scss";
+@import "./ToastUIEditorCustom.scss";
 </style> 

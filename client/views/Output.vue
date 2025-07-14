@@ -43,9 +43,9 @@
 
     <!-- Content -->
     <div v-else class="h-screen">
-      <!-- RawViewer component -->
+      <!-- CodeMirrorEditor component -->
       <div class="h-full pt-14">
-        <RawViewer
+        <CodeMirrorEditor
           :file-content="fileContent"
           :language="language"
           :is-loading="false"
@@ -62,7 +62,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ArrowLeft, FileX, Loader2, RefreshCw } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
-import RawViewer from '../components/RawViewer.vue';
+import CodeMirrorEditor from '../components/CodeMirrorEditor.vue';
 
 const props = defineProps({
   filename: String,

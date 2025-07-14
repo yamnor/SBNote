@@ -24,7 +24,7 @@
       <div class="flex flex-col h-full">
         <!-- Content -->
         <div class="flex-1 editor-container">
-          <Editor
+          <ToastUIEditor
             v-if="canModify"
             ref="toastEditor"
             :key="note.filename || 'new-note'"
@@ -34,7 +34,7 @@
             :previewStyle="globalStore.previewStyle"
             @change="handleEditorChange"
           />
-          <EditorViewer
+          <ToastUIEditorViewer
             v-else
             :initialValue="note.content"
           />
@@ -175,8 +175,8 @@ import ConfirmModal from "../components/ConfirmModal.vue";
 
 import Loading from "../components/Loading.vue";
 import TagInput from "../components/TagInput.vue";
-import Editor from "../components/Editor.vue";
-import EditorViewer from "../components/EditorViewer.vue";
+import ToastUIEditor from "../components/ToastUIEditor.vue";
+import ToastUIEditorViewer from "../components/ToastUIEditorViewer.vue";
 import SortDropdown from "../components/SortDropdown.vue";
 import GridLayout from "../components/GridLayout.vue";
 

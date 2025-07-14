@@ -75,9 +75,9 @@
 
     <!-- Content -->
     <div v-else class="h-screen">
-      <!-- MolViewer component -->
+      <!-- 3DmolViewer component -->
       <div v-if="viewMode === 'coordinate'" class="h-full pt-14">
-        <MolViewer 
+        <ThreeDmolViewer 
           :attachment-filename="attachmentFilename"
           :note-title="noteTitle"
           :file-content="fileContent"
@@ -93,9 +93,9 @@
         />
       </div>
       
-      <!-- RawViewer component -->
+      <!-- CodeMirrorEditor component -->
       <div v-else-if="viewMode === 'output'" class="h-full pt-14">
-        <RawViewer
+        <CodeMirrorEditor
           :file-content="fileContent"
           :language="language"
           :is-loading="false"
@@ -112,9 +112,9 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ArrowLeft, Eye, Grip, FileX, Loader2, RefreshCw, ScanEye, Terminal } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
-import MolViewer from '../components/MolViewer.vue';
+import ThreeDmolViewer from '../components/3DmolViewer.vue';
 import MiewViewer from '../components/MiewViewer.vue';
-import RawViewer from '../components/RawViewer.vue';
+import CodeMirrorEditor from '../components/CodeMirrorEditor.vue';
 
 const props = defineProps({
   filename: String,

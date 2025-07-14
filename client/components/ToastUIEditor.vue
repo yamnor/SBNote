@@ -6,7 +6,7 @@
 import Editor from "@toast-ui/editor";
 import { onMounted, ref, watch, nextTick } from "vue";
 
-import { getEditorOptions } from "./EditorOptions.js";
+import { getEditorOptions } from "./ToastUIEditorOptions.js";
 
 const props = defineProps({
   initialValue: String,
@@ -82,7 +82,7 @@ defineExpose({ getMarkdown, isWysiwygMode });
 @import "@toast-ui/editor/dist/toastui-editor.css";
 @import "prismjs/themes/prism.css";
 @import "@toast-ui/editor-plugin-code-syntax-highlight/dist/toastui-editor-plugin-code-syntax-highlight.css";
-@import "./EditorStyles.scss";
-@import "./EditorStylesCustom.scss";
+@import "./ToastUIEditor.scss";
+@import "./ToastUIEditorCustom.scss";
 
 </style>
