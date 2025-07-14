@@ -263,9 +263,9 @@ onMounted(() => {
   align-items: center;
   gap: 0.25rem;
   padding: 0.125rem 0.5rem;
-  background-color: transparent;
-  color: var(--color-primary);
-  border: 1px dashed var(--color-border-primary);
+  background-color: var(--color-button-secondary-bg);
+  color: var(--color-button-secondary-fg);
+  border: 1px solid var(--color-border-primary);
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -275,8 +275,8 @@ onMounted(() => {
 }
 
 .tag-chip:hover {
-  background-color: var(--color-primary);
-  color: var(--color-bg-base);
+  background-color: var(--color-button-secondary-hover-bg);
+  color: var(--color-button-secondary-hover-fg);
 }
 
 .tag-link {
