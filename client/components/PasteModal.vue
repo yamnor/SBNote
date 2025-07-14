@@ -75,7 +75,7 @@
               v-model="category"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="plaintext">Plaintext</option>
+              <option value="output">Output</option>
               <option value="coordinate">Coordinate</option>
             </select>
           </div>
@@ -152,7 +152,7 @@ const router = useRouter();
 const textArea = ref();
 const text = ref('');
 const extension = ref('');
-const category = ref('plaintext');
+const category = ref('output');
 const tags = ref([]);
 const textError = ref('');
 const extensionError = ref('');
@@ -260,7 +260,7 @@ function closeModal() {
   // Reset form
   text.value = '';
   extension.value = '';
-  category.value = 'plaintext';
+  category.value = 'output';
   tags.value = [];
   textError.value = '';
   extensionError.value = '';

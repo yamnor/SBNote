@@ -511,8 +511,8 @@ const showMolView = computed(() => {
 });
 
 const showRawView = computed(() => {
-  // Check if we're on a note page and the note has 'plaintext' category
-  return route.name === 'note' && route.params.filename && globalStore.currentNoteCategory === 'plaintext';
+  // Check if we're on a note page and the note has 'output' category
+  return route.name === 'note' && route.params.filename && globalStore.currentNoteCategory === 'output';
 });
 
 const showEmbedView = computed(() => {

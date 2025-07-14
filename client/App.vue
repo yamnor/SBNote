@@ -51,7 +51,7 @@
 import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { RouterView, useRoute } from "vue-router";
 
-import { apiErrorHandler, getConfig, getNotes, getAuthStatus, importNote, importImage, importXyz, importPlaintext } from "./api.js";
+import { apiErrorHandler, getConfig, getNotes, getAuthStatus, importNote, importImage, importCoordinate, importOutput } from "./api.js";
 import { useGlobalStore } from "./globalStore.js";
 import NavBar from "./components/NavBar.vue";
 import { loadStoredToken, getStoredToken, clearStoredToken } from "./tokenStorage.js";
@@ -338,10 +338,10 @@ async function onImportFile(importData) {
       importedNote = await importNote(importData.content, tags);
     } else if (importData.type === 'image') {
       importedNote = await importImage(importData.file, tags);
-    } else if (importData.type === 'xyz') {
-      importedNote = await importXyz(importData.file, tags);
-    } else if (importData.type === 'plaintext') {
-      importedNote = await importPlaintext(importData.file, tags);
+    } else if (importData.type === 'coordinate') {
+      importedNote = await importCoordinate(importData.file, tags);
+    } else if (importData.type === 'output') {
+      importedNote = await importOutput(importData.file, tags);
     }
     
     // Show success message

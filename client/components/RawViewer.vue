@@ -106,7 +106,7 @@ const props = defineProps({
   },
   language: {
     type: String,
-    default: "plaintext"
+            default: "output"
   },
   isLoading: {
     type: Boolean,
@@ -173,14 +173,14 @@ function detectLanguage(filename) {
     'fish': 'shell',
     'ps1': 'powershell',
     'md': 'markdown',
-    'txt': 'plaintext',
-    'log': 'plaintext',
+    'txt': 'output',
+    'log': 'output',
     'ini': 'ini',
     'conf': 'ini',
     'toml': 'toml',
     'lock': 'json'
   };
-  return languageMap[ext] || 'plaintext';
+  return languageMap[ext] || 'output';
 }
 
 function isTextFile(content) {
@@ -218,7 +218,7 @@ const languageMap = {
   'yml': yaml(),
   'markdown': markdown(),
   'md': markdown(),
-  'plaintext': null
+      'output': null
 };
 
 // Get language support for CodeMirror

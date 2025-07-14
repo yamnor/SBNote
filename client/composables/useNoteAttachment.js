@@ -24,7 +24,7 @@ export function useNoteAttachment() {
       noteData.value = note;
       
       // Generate attachment filename with extension from note data
-      const attachmentFilename = getAttachmentFilename(basename, note.attachment_extension);
+      const attachmentFilename = getAttachmentFilename(basename, note.attachment_extension, note.category);
       
       return { noteData: note, attachmentFilename };
     } catch (err) {
@@ -40,10 +40,23 @@ export function useNoteAttachment() {
    * Generate attachment filename with extension from note data
    * @param {string} basename - The basename without extension
    * @param {string} attachmentExtension - The attachment extension from note data
+   * @param {string} category - The category from note data (optional)
    * @returns {string} The complete attachment filename
    */
-  function getAttachmentFilename(basename, attachmentExtension) {
-    // Generate attachment filename with extension from note data
+  function getAttachmentFilename(basename, attachmentExtension, category = null) {
+    // For new directory structure, construct the path based on category
+    if (category) {
+      let extension = attachmentExtension;
+      if (category === 'output') {
+        extension = 'txt';
+      } else if (!extension) {
+        // Fallback for coordinate and image
+        extension = category === 'coordinate' ? 'xyz' : 'png';
+      }
+      return `${basename}/${category}.${extension}`;
+    }
+    
+    // Fallback to old structure
     if (attachmentExtension) {
       return `${basename}.${attachmentExtension}`;
     }

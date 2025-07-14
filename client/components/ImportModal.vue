@@ -45,8 +45,8 @@
                   >
                     <option value="markdown">Markdown</option>
                     <option value="image">Image (JPEG/PNG)</option>
-                    <option value="xyz">XYZ File</option>
-                    <option value="plaintext">Plain Text</option>
+                    <option value="coordinate">Coordinate File</option>
+                    <option value="output">Output</option>
                   </select>
                 </div>
                 
@@ -141,10 +141,10 @@ const fileTypeAccept = computed(() => {
     return '.md,.markdown';
   } else if (selectedFileType.value === 'image') {
     return '.jpg,.jpeg,.png';
-  } else if (selectedFileType.value === 'xyz') {
+  } else if (selectedFileType.value === 'coordinate') {
     return '.xyz';
-  } else if (selectedFileType.value === 'plaintext') {
-    return ''; // Accept any file type for plaintext
+  } else if (selectedFileType.value === 'output') {
+    return ''; // Accept any file type for output
   }
   return '';
 });
@@ -177,14 +177,14 @@ function onFileSelected(event) {
       clearFile();
       return;
     }
-  } else if (selectedFileType.value === 'xyz') {
+  } else if (selectedFileType.value === 'coordinate') {
     if (!file.name.toLowerCase().endsWith('.xyz')) {
-      errorMessage.value = 'Please select an XYZ file (.xyz)';
+      errorMessage.value = 'Please select a coordinate file (.xyz)';
       clearFile();
       return;
     }
-  } else if (selectedFileType.value === 'plaintext') {
-    // No file extension validation for plaintext - accept any file
+  } else if (selectedFileType.value === 'output') {
+    // No file extension validation for output - accept any file
   }
   
   // Validate file size (10MB limit)
@@ -226,10 +226,10 @@ async function importFile() {
       emit("imported", { type: 'markdown', content });
     } else if (selectedFileType.value === 'image') {
       emit("imported", { type: 'image', file: selectedFile.value });
-    } else if (selectedFileType.value === 'xyz') {
-      emit("imported", { type: 'xyz', file: selectedFile.value });
-    } else if (selectedFileType.value === 'plaintext') {
-      emit("imported", { type: 'plaintext', file: selectedFile.value });
+    } else if (selectedFileType.value === 'coordinate') {
+      emit("imported", { type: 'coordinate', file: selectedFile.value });
+    } else if (selectedFileType.value === 'output') {
+      emit("imported", { type: 'output', file: selectedFile.value });
     }
     closeModal();
   } catch (error) {

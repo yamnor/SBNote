@@ -137,7 +137,7 @@ const categoryIcon = computed(() => {
       return Image;
     case 'coordinate':
       return Bolt;
-    case 'plaintext':
+    case 'output':
       return FileText;
     case 'embed':
       return ExternalLink;

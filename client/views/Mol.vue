@@ -138,15 +138,15 @@ const noteTitle = computed(() => {
 });
 
 const language = computed(() => {
-  if (!attachmentFilename.value) return 'plaintext';
+  if (!attachmentFilename.value) return 'output';
   const ext = attachmentFilename.value.split('.').pop().toLowerCase();
   const languageMap = {
-    'xyz': 'plaintext',
-    'pdb': 'plaintext',
-    'mol': 'plaintext',
-    'sdf': 'plaintext'
+    'xyz': 'output',
+    'pdb': 'output',
+    'mol': 'output',
+    'sdf': 'output'
   };
-  return languageMap[ext] || 'plaintext';
+  return languageMap[ext] || 'output';
 });
 
 // Methods

@@ -85,7 +85,7 @@ const noteTitle = computed(() => {
 });
 
 const language = computed(() => {
-  if (!attachmentFilename.value) return 'plaintext';
+  if (!attachmentFilename.value) return 'output';
   const ext = attachmentFilename.value.split('.').pop().toLowerCase();
   const languageMap = {
     'js': 'javascript',
@@ -125,14 +125,14 @@ const language = computed(() => {
     'fish': 'shell',
     'ps1': 'powershell',
     'md': 'markdown',
-    'txt': 'plaintext',
-    'log': 'plaintext',
+    'txt': 'output',
+    'log': 'output',
     'ini': 'ini',
     'conf': 'ini',
     'toml': 'toml',
     'lock': 'json'
   };
-  return languageMap[ext] || 'plaintext';
+  return languageMap[ext] || 'output';
 });
 
 // Methods

@@ -61,10 +61,54 @@ class FileSystemAttachments(BaseAttachments):
             raise FileNotFoundError(f"'{filename}' not found.")
         return FileResponse(filepath)
 
+    def get_by_basename_and_category(self, basename: str, category: str, original_extension: str = None) -> FileResponse:
+        """Get an attachment by basename and category."""
+        # Determine the extension based on category
+        if category == "output":
+            extension = "txt"
+        else:
+            # For coordinate and image, use the original extension
+            extension = original_extension or "xyz"  # fallback for coordinate
+        
+        # Construct the filename
+        filename = f"{category}.{extension}"
+        
+        # Create the directory path
+        dir_path = os.path.join(self.storage_path, basename)
+        filepath = os.path.join(dir_path, filename)
+        
+        if not os.path.isfile(filepath):
+            raise FileNotFoundError(f"'{filename}' not found in '{basename}' directory.")
+        
+        return FileResponse(filepath)
+
     def _save_file(self, file: UploadFile):
         filepath = os.path.join(self.storage_path, file.filename)
         with open(filepath, "xb") as f:
             shutil.copyfileobj(file.file, f)
+
+    def _save_file_with_category(self, file: UploadFile, basename: str, category: str, original_extension: str = None):
+        """Save a file with category-based naming."""
+        # Determine the extension based on category
+        if category == "output":
+            extension = "txt"
+        else:
+            # For coordinate and image, use the original extension
+            extension = original_extension or "xyz"  # fallback for coordinate
+        
+        # Create the directory
+        dir_path = os.path.join(self.storage_path, basename)
+        os.makedirs(dir_path, exist_ok=True)
+        
+        # Construct the filename
+        filename = f"{category}.{extension}"
+        filepath = os.path.join(dir_path, filename)
+        
+        # Save the file
+        with open(filepath, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+        
+        return filename
 
     def _generate_random_filename_with_extension(self, original_filename: str) -> str:
         """Generate a random filename with the original file extension."""

@@ -206,9 +206,6 @@ class FileSystemNotes(BaseNotes):
         # Generate title from original filename
         title = data.original_filename
         
-        # Create markdown content with original filename on first line and image link on third line
-        content = f"{data.original_filename}\n\n![Image](/a/{os.path.splitext(filename)[0]})"
-        
         # Use the same filename as the attachment (without extension)
         note_filename = os.path.splitext(filename)[0]
         
@@ -226,6 +223,9 @@ class FileSystemNotes(BaseNotes):
         
         # Extract attachment extension (without dot)
         attachment_extension = os.path.splitext(filename)[1].lstrip('.')
+        
+        # Create markdown content with original filename on first line and image link on third line
+        content = f"{data.original_filename}\n\n![Image](/a/{note_filename})"
         
         # Create markdown with frontmatter
         markdown_content = create_markdown_with_frontmatter(
@@ -258,9 +258,6 @@ class FileSystemNotes(BaseNotes):
         # Generate title from original filename
         title = data.original_filename
         
-        # Create markdown content with original filename on first line and xyz file link on third line
-        content = f"{data.original_filename}\n\n[Coordinate](/a/{os.path.splitext(filename)[0]})"
-        
         # Use the same filename as the attachment (without extension)
         note_filename = os.path.splitext(filename)[0]
         
@@ -278,6 +275,9 @@ class FileSystemNotes(BaseNotes):
         
         # Extract attachment extension (without dot)
         attachment_extension = os.path.splitext(filename)[1].lstrip('.')
+        
+        # Create markdown content with original filename on first line and xyz file link on third line
+        content = f"{data.original_filename}\n\n[Coordinate](/a/{note_filename})"
         
         # Create markdown with frontmatter
         markdown_content = create_markdown_with_frontmatter(
@@ -310,9 +310,6 @@ class FileSystemNotes(BaseNotes):
         # Generate title from original filename
         title = data.original_filename
         
-        # Create markdown content with original filename on first line and plaintext file link on third line
-        content = f"{data.original_filename}\n\n[Plaintext](/a/{os.path.splitext(filename)[0]})"
-        
         # Use the same filename as the attachment (without extension)
         note_filename = os.path.splitext(filename)[0]
         
@@ -331,13 +328,16 @@ class FileSystemNotes(BaseNotes):
         # Extract attachment extension (without dot)
         attachment_extension = os.path.splitext(filename)[1].lstrip('.')
         
+        # Create markdown content with original filename on first line and plaintext file link on third line
+        content = f"{data.original_filename}\n\n[Plaintext](/a/{note_filename})"
+        
         # Create markdown with frontmatter
         markdown_content = create_markdown_with_frontmatter(
             title=title,
             content=content,
             tags=data.tags or [],
             created=created_time,
-            category="plaintext",
+            category="output",
             visibility="private",
             attachment_extension=attachment_extension
         )
@@ -362,9 +362,6 @@ class FileSystemNotes(BaseNotes):
         # Generate title from category (capitalized)
         title = data.category.capitalize()
         
-        # Create markdown content with original filename on first line and text file link on third line
-        content = f"{data.original_filename}\n\n[Text](/a/{os.path.splitext(filename)[0]})"
-        
         # Use the same filename as the attachment (without extension)
         note_filename = os.path.splitext(filename)[0]
         
@@ -385,6 +382,220 @@ class FileSystemNotes(BaseNotes):
         
         # Use the category from the data
         category = data.category
+        
+        # Create markdown content with original filename on first line and text file link on third line
+        content = f"{data.original_filename}\n\n[Text](/a/{note_filename})"
+        
+        # Create markdown with frontmatter
+        markdown_content = create_markdown_with_frontmatter(
+            title=title,
+            content=content,
+            tags=data.tags or [],
+            created=created_time,
+            category=category,
+            visibility="private",
+            attachment_extension=attachment_extension
+        )
+        
+        self._write_file(filepath, markdown_content)
+        
+        # Update the search indexes
+        self._sync_index_with_retry()
+        
+        return Note(
+            title=title,
+            content=content,
+            last_modified=os.path.getmtime(filepath),
+            created_time=created_time.timestamp(),
+            tags=data.tags or [],
+            filename=note_filename + MARKDOWN_EXT,
+            attachment_extension=attachment_extension,
+        )
+
+    def import_image_new(self, data: NoteImageImport, basename: str, original_extension: str) -> Note:
+        """Import an image file with new directory structure."""
+        # Generate title from original filename
+        title = data.original_filename
+        
+        # Use the provided basename
+        note_filename = basename
+        
+        # Ensure filename is unique for markdown file
+        while os.path.exists(os.path.join(self.storage_path, note_filename + MARKDOWN_EXT)):
+            # Add suffix if duplicate
+            base_name = note_filename
+            counter = 1
+            while os.path.exists(os.path.join(self.storage_path, f"{base_name}_{counter}{MARKDOWN_EXT}")):
+                counter += 1
+            note_filename = f"{base_name}_{counter}"
+        
+        filepath = os.path.join(self.storage_path, note_filename + MARKDOWN_EXT)
+        created_time = datetime.now()
+        
+        # Use the original extension
+        attachment_extension = original_extension
+        
+        # Create markdown content with original filename on first line and image link on third line
+        content = f"{data.original_filename}\n\n![Image](/a/{note_filename})"
+        
+        # Create markdown with frontmatter
+        markdown_content = create_markdown_with_frontmatter(
+            title=title,
+            content=content,
+            tags=data.tags or [],
+            created=created_time,
+            category="image",
+            visibility="private",
+            attachment_extension=attachment_extension
+        )
+        
+        self._write_file(filepath, markdown_content)
+        
+        # Update the search indexes
+        self._sync_index_with_retry()
+        
+        return Note(
+            title=title,
+            content=content,
+            last_modified=os.path.getmtime(filepath),
+            created_time=created_time.timestamp(),
+            tags=data.tags or [],
+            filename=note_filename + MARKDOWN_EXT,
+            attachment_extension=attachment_extension,
+        )
+
+    def import_coordinate_new(self, data: NoteXyzImport, basename: str, original_extension: str) -> Note:
+        """Import a coordinate file with new directory structure."""
+        # Generate title from original filename
+        title = data.original_filename
+        
+        # Use the provided basename
+        note_filename = basename
+        
+        # Ensure filename is unique for markdown file
+        while os.path.exists(os.path.join(self.storage_path, note_filename + MARKDOWN_EXT)):
+            # Add suffix if duplicate
+            base_name = note_filename
+            counter = 1
+            while os.path.exists(os.path.join(self.storage_path, f"{base_name}_{counter}{MARKDOWN_EXT}")):
+                counter += 1
+            note_filename = f"{base_name}_{counter}"
+        
+        filepath = os.path.join(self.storage_path, note_filename + MARKDOWN_EXT)
+        created_time = datetime.now()
+        
+        # Use the original extension
+        attachment_extension = original_extension
+        
+        # Create markdown content with original filename on first line and coordinate file link on third line
+        content = f"{data.original_filename}\n\n[Coordinate](/a/{note_filename})"
+        
+        # Create markdown with frontmatter
+        markdown_content = create_markdown_with_frontmatter(
+            title=title,
+            content=content,
+            tags=data.tags or [],
+            created=created_time,
+            category="coordinate",
+            visibility="private",
+            attachment_extension=attachment_extension
+        )
+        
+        self._write_file(filepath, markdown_content)
+        
+        # Update the search indexes
+        self._sync_index_with_retry()
+        
+        return Note(
+            title=title,
+            content=content,
+            last_modified=os.path.getmtime(filepath),
+            created_time=created_time.timestamp(),
+            tags=data.tags or [],
+            filename=note_filename + MARKDOWN_EXT,
+            attachment_extension=attachment_extension,
+        )
+
+    def import_output_new(self, data: NotePlaintextImport, basename: str, original_extension: str) -> Note:
+        """Import an output file with new directory structure."""
+        # Generate title from original filename
+        title = data.original_filename
+        
+        # Use the provided basename
+        note_filename = basename
+        
+        # Ensure filename is unique for markdown file
+        while os.path.exists(os.path.join(self.storage_path, note_filename + MARKDOWN_EXT)):
+            # Add suffix if duplicate
+            base_name = note_filename
+            counter = 1
+            while os.path.exists(os.path.join(self.storage_path, f"{base_name}_{counter}{MARKDOWN_EXT}")):
+                counter += 1
+            note_filename = f"{base_name}_{counter}"
+        
+        filepath = os.path.join(self.storage_path, note_filename + MARKDOWN_EXT)
+        created_time = datetime.now()
+        
+        # Use the original extension
+        attachment_extension = original_extension
+        
+        # Create markdown content with original filename on first line and output file link on third line
+        content = f"{data.original_filename}\n\n[Output](/a/{note_filename})"
+        
+        # Create markdown with frontmatter
+        markdown_content = create_markdown_with_frontmatter(
+            title=title,
+            content=content,
+            tags=data.tags or [],
+            created=created_time,
+            category="output",
+            visibility="private",
+            attachment_extension=attachment_extension
+        )
+        
+        self._write_file(filepath, markdown_content)
+        
+        # Update the search indexes
+        self._sync_index_with_retry()
+        
+        return Note(
+            title=title,
+            content=content,
+            last_modified=os.path.getmtime(filepath),
+            created_time=created_time.timestamp(),
+            tags=data.tags or [],
+            filename=note_filename + MARKDOWN_EXT,
+            attachment_extension=attachment_extension,
+        )
+
+    def import_paste_new(self, data: NotePasteImport, basename: str, original_extension: str) -> Note:
+        """Import a pasted text file with new directory structure."""
+        # Generate title from category (capitalized)
+        title = data.category.capitalize()
+        
+        # Use the provided basename
+        note_filename = basename
+        
+        # Ensure filename is unique for markdown file
+        while os.path.exists(os.path.join(self.storage_path, note_filename + MARKDOWN_EXT)):
+            # Add suffix if duplicate
+            base_name = note_filename
+            counter = 1
+            while os.path.exists(os.path.join(self.storage_path, f"{base_name}_{counter}{MARKDOWN_EXT}")):
+                counter += 1
+            note_filename = f"{base_name}_{counter}"
+        
+        filepath = os.path.join(self.storage_path, note_filename + MARKDOWN_EXT)
+        created_time = datetime.now()
+        
+        # Use the original extension
+        attachment_extension = original_extension
+        
+        # Use the category from the data
+        category = data.category
+        
+        # Create markdown content with original filename on first line and text file link on third line
+        content = f"{data.original_filename}\n\n[Text](/a/{note_filename})"
         
         # Create markdown with frontmatter
         markdown_content = create_markdown_with_frontmatter(

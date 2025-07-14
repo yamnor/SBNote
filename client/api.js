@@ -134,23 +134,18 @@ export async function importNote(content, tags = []) {
 
 export async function importImage(file, tags = []) {
   try {
-    // First upload the image file
+    // Use new import endpoint with directory structure
     const formData = new FormData();
     formData.append("file", file);
-    const uploadResponse = await api.post("api/files", formData, {
+    formData.append("image_data", JSON.stringify({
+      original_filename: file.name,
+      tags: tags,
+    }));
+    
+    const response = await api.post("api/notes/import-image-new", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    });
-    
-    // Then create a note with the image link
-    const response = await api.post("api/notes/import-image", {
-      original_filename: uploadResponse.data.originalFilename,
-      tags: tags,
-    }, {
-      params: {
-        attachment_filename: uploadResponse.data.filename
-      }
     });
     return new Note(response.data);
   } catch (error) {
@@ -158,25 +153,20 @@ export async function importImage(file, tags = []) {
   }
 }
 
-export async function importXyz(file, tags = []) {
+export async function importCoordinate(file, tags = []) {
   try {
-    // First upload the xyz file
+    // Use new import endpoint with directory structure
     const formData = new FormData();
     formData.append("file", file);
-    const uploadResponse = await api.post("api/files", formData, {
+    formData.append("coordinate_data", JSON.stringify({
+      original_filename: file.name,
+      tags: tags,
+    }));
+    
+    const response = await api.post("api/notes/import-coordinate-new", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    });
-    
-    // Then create a note with the xyz file link
-    const response = await api.post("api/notes/import-xyz", {
-      original_filename: uploadResponse.data.originalFilename,
-      tags: tags,
-    }, {
-      params: {
-        attachment_filename: uploadResponse.data.filename
-      }
     });
     return new Note(response.data);
   } catch (error) {
@@ -184,25 +174,20 @@ export async function importXyz(file, tags = []) {
   }
 }
 
-export async function importPlaintext(file, tags = []) {
+export async function importOutput(file, tags = []) {
   try {
-    // First upload the plaintext file
+    // Use new import endpoint with directory structure
     const formData = new FormData();
     formData.append("file", file);
-    const uploadResponse = await api.post("api/files", formData, {
+    formData.append("output_data", JSON.stringify({
+      original_filename: file.name,
+      tags: tags,
+    }));
+    
+    const response = await api.post("api/notes/import-output-new", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    });
-    
-    // Then create a note with the plaintext file link
-    const response = await api.post("api/notes/import-plaintext", {
-      original_filename: uploadResponse.data.originalFilename,
-      tags: tags,
-    }, {
-      params: {
-        attachment_filename: uploadResponse.data.filename
-      }
     });
     return new Note(response.data);
   } catch (error) {
@@ -210,26 +195,21 @@ export async function importPlaintext(file, tags = []) {
   }
 }
 
-export async function importPaste(file, tags = [], category = 'plaintext') {
+export async function importPaste(file, tags = [], category = 'output') {
   try {
-    // First upload the pasted text file
+    // Use new import endpoint with directory structure
     const formData = new FormData();
     formData.append("file", file);
-    const uploadResponse = await api.post("api/files", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    
-    // Then create a note with the text file link and category information
-    const response = await api.post("api/notes/import-paste", {
-      original_filename: uploadResponse.data.originalFilename,
+    formData.append("paste_data", JSON.stringify({
+      original_filename: file.name,
       category: category,
       tags: tags,
-    }, {
-      params: {
-        attachment_filename: uploadResponse.data.filename
-      }
+    }));
+    
+    const response = await api.post("api/notes/import-paste-new", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
     return new Note(response.data);
   } catch (error) {

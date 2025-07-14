@@ -1,6 +1,7 @@
+import os
 from typing import List, Literal
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, UploadFile, Request, Query
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, UploadFile, Request, Query, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -214,6 +215,218 @@ if global_config.auth_type != AuthType.READ_ONLY:
             )
         except Exception as e:
             logger.error(f"Unexpected error in import_image: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Import failed: {str(e)}",
+            )
+
+    # Import Image with new directory structure
+    @router.post(
+        "/api/notes/import-image-new",
+        dependencies=auth_deps,
+        response_model=Note,
+    )
+    def import_image_new(file: UploadFile, image_data: str = Form(...)):
+        """Import an image file with new directory structure."""
+        try:
+            import json
+            # Parse image_data from form
+            image_data_obj = json.loads(image_data)
+            
+            # Generate random basename
+            import random
+            import string
+            basename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+            
+            # Extract original extension
+            original_extension = os.path.splitext(file.filename)[1].lstrip('.')
+            
+            # Save file with new structure
+            saved_filename = attachment_storage._save_file_with_category(
+                file, basename, "image", original_extension
+            )
+            
+            # Create note data
+            import_data = NoteImageImport(
+                original_filename=image_data_obj.get('original_filename', file.filename),
+                tags=image_data_obj.get('tags', [])
+            )
+            
+            # Create note with the basename
+            return note_storage.import_image_new(import_data, basename, original_extension)
+        except ValueError as e:
+            logger.error(f"ValueError in import_image_new: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=api_messages.invalid_note_title,
+            )
+        except FileExistsError as e:
+            logger.error(f"FileExistsError in import_image_new: {e}")
+            raise HTTPException(
+                status_code=409, detail=api_messages.note_exists
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in import_image_new: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Import failed: {str(e)}",
+            )
+
+    # Import Output with new directory structure
+    @router.post(
+        "/api/notes/import-output-new",
+        dependencies=auth_deps,
+        response_model=Note,
+    )
+    def import_output_new(file: UploadFile, output_data: str = Form(...)):
+        """Import an output file with new directory structure."""
+        try:
+            import json
+            # Parse output_data from form
+            output_data_obj = json.loads(output_data)
+            
+            # Generate random basename
+            import random
+            import string
+            basename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+            
+            # Extract original extension
+            original_extension = os.path.splitext(file.filename)[1].lstrip('.')
+            
+            # Save file with new structure
+            saved_filename = attachment_storage._save_file_with_category(
+                file, basename, "output", original_extension
+            )
+            
+            # Create note data
+            import_data = NotePlaintextImport(
+                original_filename=output_data_obj.get('original_filename', file.filename),
+                tags=output_data_obj.get('tags', [])
+            )
+            
+            # Create note with the basename
+            return note_storage.import_output_new(import_data, basename, original_extension)
+        except ValueError as e:
+            logger.error(f"ValueError in import_output_new: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=api_messages.invalid_note_title,
+            )
+        except FileExistsError as e:
+            logger.error(f"FileExistsError in import_output_new: {e}")
+            raise HTTPException(
+                status_code=409, detail=api_messages.note_exists
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in import_output_new: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Import failed: {str(e)}",
+            )
+
+    # Import Paste with new directory structure
+    @router.post(
+        "/api/notes/import-paste-new",
+        dependencies=auth_deps,
+        response_model=Note,
+    )
+    def import_paste_new(file: UploadFile, paste_data: str = Form(...)):
+        """Import a pasted text file with new directory structure."""
+        try:
+            import json
+            # Parse paste_data from form
+            paste_data_obj = json.loads(paste_data)
+            
+            # Generate random basename
+            import random
+            import string
+            basename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+            
+            # Extract original extension
+            original_extension = os.path.splitext(file.filename)[1].lstrip('.')
+            
+            # Get category from data
+            category = paste_data_obj.get('category', 'output')
+            
+            # Save file with new structure
+            saved_filename = attachment_storage._save_file_with_category(
+                file, basename, category, original_extension
+            )
+            
+            # Create note data
+            import_data = NotePasteImport(
+                original_filename=paste_data_obj.get('original_filename', file.filename),
+                category=category,
+                tags=paste_data_obj.get('tags', [])
+            )
+            
+            # Create note with the basename
+            return note_storage.import_paste_new(import_data, basename, original_extension)
+        except ValueError as e:
+            logger.error(f"ValueError in import_paste_new: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=api_messages.invalid_note_title,
+            )
+        except FileExistsError as e:
+            logger.error(f"FileExistsError in import_paste_new: {e}")
+            raise HTTPException(
+                status_code=409, detail=api_messages.note_exists
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in import_paste_new: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Import failed: {str(e)}",
+            )
+
+    # Import Coordinate with new directory structure
+    @router.post(
+        "/api/notes/import-coordinate-new",
+        dependencies=auth_deps,
+        response_model=Note,
+    )
+    def import_coordinate_new(file: UploadFile, coordinate_data: str = Form(...)):
+        """Import a coordinate file with new directory structure."""
+        try:
+            import json
+            # Parse coordinate_data from form
+            coordinate_data_obj = json.loads(coordinate_data)
+            
+            # Generate random basename
+            import random
+            import string
+            basename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+            
+            # Extract original extension
+            original_extension = os.path.splitext(file.filename)[1].lstrip('.')
+            
+            # Save file with new structure
+            saved_filename = attachment_storage._save_file_with_category(
+                file, basename, "coordinate", original_extension
+            )
+            
+            # Create note data
+            import_data = NoteXyzImport(
+                original_filename=coordinate_data_obj.get('original_filename', file.filename),
+                tags=coordinate_data_obj.get('tags', [])
+            )
+            
+            # Create note with the basename
+            return note_storage.import_coordinate_new(import_data, basename, original_extension)
+        except ValueError as e:
+            logger.error(f"ValueError in import_coordinate_new: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=api_messages.invalid_note_title,
+            )
+        except FileExistsError as e:
+            logger.error(f"FileExistsError in import_coordinate_new: {e}")
+            raise HTTPException(
+                status_code=409, detail=api_messages.note_exists
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in import_coordinate_new: {e}")
             raise HTTPException(
                 status_code=400,
                 detail=f"Import failed: {str(e)}",
@@ -683,6 +896,31 @@ def get_attachment(filename: str):
             status_code=404, detail=api_messages.attachment_not_found
         )
 
+# Get Attachment by directory structure (new format)
+@router.get(
+    "/files/{basename}/{filename}",
+    include_in_schema=False,
+)
+def get_attachment_by_directory(basename: str, filename: str):
+    """Download an attachment using the new directory structure."""
+    try:
+        # Extract category and extension from filename
+        if '.' in filename:
+            category, extension = filename.split('.', 1)
+        else:
+            raise ValueError("Invalid filename format")
+        
+        return attachment_storage.get_by_basename_and_category(basename, category, extension)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=api_messages.invalid_attachment_filename,
+        )
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404, detail=api_messages.attachment_not_found
+        )
+
 # Attachment redirect endpoint
 @router.get(
     "/a/{basename}",
@@ -700,12 +938,20 @@ def get_attachment_by_basename(basename: str):
                 status_code=404, detail="No attachment extension found"
             )
         
-        # Construct the full filename with extension
-        filename = f"{basename}.{note.attachment_extension}"
+        # Get the category from the note
+        category = getattr(note, 'category', 'output')
         
-        # Redirect to the actual file
-        from fastapi.responses import RedirectResponse
-        return RedirectResponse(url=f"/files/{filename}")
+        # Try to get the attachment using the new directory structure
+        try:
+            attachment_storage.get_by_basename_and_category(basename, category, note.attachment_extension)
+            # If successful, redirect to the new structure
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(url=f"/files/{basename}/{category}.{note.attachment_extension}")
+        except FileNotFoundError:
+            # Fallback to old structure for backward compatibility
+            filename = f"{basename}.{note.attachment_extension}"
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(url=f"/files/{filename}")
         
     except FileNotFoundError:
         raise HTTPException(
