@@ -63,9 +63,10 @@ class FileSystemAttachments(BaseAttachments):
 
     def get_by_basename_and_category(self, basename: str, category: str, original_extension: str = None) -> FileResponse:
         """Get an attachment by basename and category."""
-        # Determine the extension based on category
+        # Determine the extension based on category and original_extension
         if category == "output":
-            extension = "txt"
+            # For output category, use original_extension if provided, otherwise default to txt
+            extension = original_extension or "txt"
         else:
             # For coordinate and image, use the original extension
             extension = original_extension or "xyz"  # fallback for coordinate
