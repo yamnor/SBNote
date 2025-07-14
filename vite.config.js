@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 
-const devApiUrl = "http://127.0.0.1:8000";
+const devApiUrl = "http://127.0.0.1:9000";
 
 export default defineConfig({
   plugins: [
@@ -84,7 +84,7 @@ export default defineConfig({
   },
   server: {
     // Note: The SBNOTE_PATH_PREFIX environment variable is not supported by the dev server
-    port: 8080,
+    port: 3000,
     proxy: {
       "/api/": {
         target: devApiUrl,

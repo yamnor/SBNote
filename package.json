@@ -10,7 +10,7 @@
     "watch": "vite build --watch",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "vite",
-    "dev:backend": "pipenv run python -m uvicorn main:app --app-dir server --host 0.0.0.0 --port 8000 --reload"
+    "dev:backend": "pipenv run python -m uvicorn main:app --app-dir server --host 0.0.0.0 --port 9000 --reload"
   },
   "author": "Adam Dullage",
   "license": "MIT",
