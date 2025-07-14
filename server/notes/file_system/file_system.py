@@ -5,6 +5,7 @@ import shutil
 import string
 import time
 import asyncio
+import pickle
 from datetime import datetime
 from typing import List, Literal, Set, Tuple, Optional
 import random
@@ -20,6 +21,13 @@ from whoosh.qparser.dateparse import DateParserPlugin
 from whoosh.query import Every
 from whoosh.searching import Hit
 from whoosh.support.charset import accent_map
+
+# Try to import cclib, but don't fail if it's not available
+try:
+    import cclib
+    CCLIB_AVAILABLE = True
+except ImportError:
+    CCLIB_AVAILABLE = False
 
 from helpers import get_env, parse_markdown_with_frontmatter, create_markdown_with_frontmatter
 from logger import logger
@@ -541,6 +549,50 @@ class FileSystemNotes(BaseNotes):
         
         # Create markdown content with original filename on first line and output file link on third line
         content = f"{data.original_filename}\n\n[Output](/a/{note_filename})"
+        
+        # cclib processing
+        if CCLIB_AVAILABLE:
+            try:
+                # Build file paths
+                output_file_path = os.path.join(self.base_path, "files", basename, "output.txt")
+                pickle_file_path = os.path.join(self.base_path, "files", basename, "output.pkl")
+                
+                # Check if output file exists
+                if not os.path.exists(output_file_path):
+                    raise FileNotFoundError(f"Output file not found: {output_file_path}")
+                
+                # Check if directory exists
+                output_dir = os.path.dirname(output_file_path)
+                if not os.path.exists(output_dir):
+                    raise FileNotFoundError(f"Output directory not found: {output_dir}")
+                
+                # Parse with cclib
+                parser = cclib.io.ccopen(output_file_path)
+                if parser is None:
+                    raise ValueError(f"cclib could not determine file format for: {output_file_path}")
+                
+                data_obj = parser.parse()
+                if data_obj is None:
+                    raise ValueError(f"cclib parsing failed for: {output_file_path}")
+                
+                # Save as pickle
+                with open(pickle_file_path, 'wb') as f:
+                    pickle.dump(data_obj, f)
+                
+                # Add success message to content
+                content += f"\n\n## cclib Processing\n✅ Successfully parsed and saved to `output.pkl`"
+                
+            except Exception as e:
+                # Add error message to content
+                error_msg = str(e)
+                content += f"\n\n## cclib Processing\n❌ Error: {error_msg}"
+                logger.warning(f"cclib processing failed for {basename}: {error_msg}")
+                logger.warning(f"Output file path: {output_file_path if 'output_file_path' in locals() else 'not defined'}")
+                logger.warning(f"Exception type: {type(e).__name__}")
+        else:
+            # cclib is not available
+            content += f"\n\n## cclib Processing\n⚠️ cclib library is not available"
+            logger.warning(f"cclib library is not available for {basename}")
         
         # Create markdown with frontmatter
         markdown_content = create_markdown_with_frontmatter(
