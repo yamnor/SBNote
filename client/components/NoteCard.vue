@@ -52,7 +52,7 @@
     </div>
 
     <!-- Note Preview Modal -->
-    <NotePreviewModal
+    <PreviewNoteModal
       v-model="showPreviewModal"
       :note="note"
       @close="showPreviewModal = false"
@@ -63,7 +63,7 @@
 <script setup>
 import { computed, ref } from "vue";
 import { useGlobalStore } from "../globalStore.js";
-import NotePreviewModal from "./NotePreviewModal.vue";
+import PreviewNoteModal from "./PreviewNoteModal.vue";
 import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, ExternalLink } from "lucide-vue-next";
 
 const props = defineProps({

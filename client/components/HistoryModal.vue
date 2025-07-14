@@ -72,7 +72,7 @@
   </div>
   
   <!-- Preview Modal -->
-  <PreviewModal 
+  <HistoryPreviewModal 
     v-model="showPreviewModal"
     :content="previewContent"
     :title="previewTitle"
@@ -93,7 +93,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { getNoteHistory, getNoteVersion, restoreNoteVersion } from '../api.js';
-import PreviewModal from './PreviewModal.vue';
+import HistoryPreviewModal from './HistoryPreviewModal.vue';
 import ConfirmModal from './ConfirmModal.vue';
 
 const props = defineProps({
