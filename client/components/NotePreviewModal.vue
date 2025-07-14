@@ -194,7 +194,7 @@ function openInEmbed() {
 function openInMol() {
   closeModal();
   router.push({ 
-    name: 'mol', 
+    name: 'coordinate', 
     params: { filename: props.note.filename.replace(/\.md$/, '') } 
   });
 }

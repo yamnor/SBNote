@@ -82,22 +82,22 @@
         Slide View
       </DropdownMenuItem>
       
-      <!-- Mol View (only for notes with 'xyz' category) -->
+      <!-- Coordinate View (only for notes with 'coordinate' category) -->
       <DropdownMenuItem 
         v-if="showMolView"
         :icon="Atom"
         @click="onMolView"
       >
-        Mol View
+        Coordinate View
       </DropdownMenuItem>
       
-      <!-- Raw View (for all notes) -->
+      <!-- Output View (for all notes) -->
       <DropdownMenuItem 
         v-if="showRawView"
         :icon="Grip"
         @click="onRawView"
       >
-        Raw View
+        Output View
       </DropdownMenuItem>
       
       <!-- Embed View (only for notes with 'embed' category) -->
@@ -637,13 +637,13 @@ function onSlideView() {
 }
 
 function onMolView() {
-  // Navigate to mol view
-  router.push({ name: 'mol', params: { filename: route.params.filename } });
+  // Navigate to coordinate view
+  router.push({ name: 'coordinate', params: { filename: route.params.filename } });
 }
 
 function onRawView() {
-  // Navigate to raw view
-  router.push({ name: 'raw', params: { filename: route.params.filename } });
+  // Navigate to output view
+  router.push({ name: 'output', params: { filename: route.params.filename } });
 }
 
 function onEmbedView() {

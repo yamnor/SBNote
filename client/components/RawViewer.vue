@@ -120,7 +120,7 @@ const editorContainer = ref();
 const editor = ref(null);
 const isInitialized = ref(false);
 
-// Utility functions moved from Raw.vue
+// Utility functions moved from Output.vue
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;

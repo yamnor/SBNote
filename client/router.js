@@ -25,17 +25,17 @@ const router = createRouter({
       }),
     },
     {
-      path: "/mol/:filename",
-      name: "mol",
-      component: () => import("./views/Mol.vue"),
+      path: "/coordinate/:filename",
+      name: "coordinate",
+      component: () => import("./views/Coordinate.vue"),
       props: (route) => ({ 
         filename: route.params.filename.replace(/\.md$/, '') 
       }),
     },
     {
-      path: "/raw/:filename",
-      name: "raw",
-      component: () => import("./views/Raw.vue"),
+      path: "/output/:filename",
+      name: "output",
+      component: () => import("./views/Output.vue"),
       props: (route) => ({ 
         filename: route.params.filename.replace(/\.md$/, '') 
       }),
@@ -89,8 +89,8 @@ router.afterEach((to) => {
   const viewNames = {
     note: "Note",
     slide: "Slide", 
-    mol: "Mol",
-    raw: "Raw",
+    coordinate: "Coordinate",
+    output: "Output",
     embed: "Embed"
   };
   
