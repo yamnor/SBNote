@@ -53,6 +53,8 @@ router = APIRouter()
 app = FastAPI(
     docs_url=global_config.path_prefix + "/docs",
     openapi_url=global_config.path_prefix + "/openapi.json",
+    # Increase file upload size limit to 100MB
+    max_request_size=100 * 1024 * 1024,
 )
 replace_base_href("client/dist/index.html", global_config.path_prefix)
 

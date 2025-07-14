@@ -13,6 +13,7 @@ class GlobalConfig:
         self.quick_access_sort: str = self._quick_access_sort()
         self.quick_access_limit: int = self._quick_access_limit()
         self.path_prefix: str = self._load_path_prefix()
+        self.max_file_size: int = self._load_max_file_size()
 
     def load_auth(self):
         if self.auth_type in (AuthType.NONE, AuthType.READ_ONLY):
@@ -90,6 +91,12 @@ class GlobalConfig:
             )
             sys.exit(1)
         return value
+
+    def _load_max_file_size(self):
+        key = "SBNOTE_MAX_FILE_SIZE_MB"
+        value = get_env(key, mandatory=False, default=100, cast_int=True)
+        # Convert MB to bytes
+        return value * 1024 * 1024
 
 
 class AuthType(str, Enum):

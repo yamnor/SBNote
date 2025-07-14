@@ -187,9 +187,9 @@ function onFileSelected(event) {
     // No file extension validation for output - accept any file
   }
   
-  // Validate file size (10MB limit)
-  if (file.size > 10 * 1024 * 1024) {
-    errorMessage.value = 'File size must be less than 10MB';
+  // Validate file size (100MB limit)
+  if (file.size > 100 * 1024 * 1024) {
+    errorMessage.value = 'File size must be less than 100MB';
     clearFile();
     return;
   }
