@@ -29,6 +29,28 @@ try:
 except ImportError:
     CCLIB_AVAILABLE = False
 
+def _create_xyz_file(data_obj, xyz_file_path):
+    """Create xyz file from cclib data object using writexyz() method."""
+    try:
+        # Check if writexyz method is available
+        if not hasattr(data_obj, 'writexyz'):
+            logger.warning("writexyz method not available in cclib data object")
+            return False
+        
+        # Generate xyz content using cclib's writexyz method
+        # This will use the last (final) coordinate set by default
+        xyz_content = data_obj.writexyz()
+        
+        # Write xyz file
+        with open(xyz_file_path, 'w') as f:
+            f.write(xyz_content)
+        
+        return True
+        
+    except Exception as e:
+        logger.warning(f"Failed to create xyz file: {str(e)}")
+        return False
+
 from helpers import get_env, parse_markdown_with_frontmatter, create_markdown_with_frontmatter
 from logger import logger
 
@@ -579,8 +601,15 @@ class FileSystemNotes(BaseNotes):
                 with open(pickle_file_path, 'wb') as f:
                     pickle.dump(data_obj, f)
                 
+                # Create xyz file from coordinates
+                xyz_file_path = os.path.join(self.base_path, "files", basename, "output.xyz")
+                xyz_created = _create_xyz_file(data_obj, xyz_file_path)
+                
                 # Add success message to content
-                content += f"\n\n## cclib Processing\n✅ Successfully parsed and saved to `output.pkl`"
+                if xyz_created:
+                    content += f"\n\n## cclib Processing\n✅ Successfully parsed and saved to `output.pkl`\n✅ Created `output.xyz` from final coordinates"
+                else:
+                    content += f"\n\n## cclib Processing\n✅ Successfully parsed and saved to `output.pkl`\n⚠️ Could not create `output.xyz` (no coordinates available)"
                 
             except Exception as e:
                 # Add error message to content
