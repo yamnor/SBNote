@@ -51,11 +51,11 @@
 <script setup>
 import { onMounted, ref, watch, computed } from "vue";
 import { useRouter } from "vue-router";
-import { apiErrorHandler, getNotes, getNotesByTag } from "../api.js";
-import SortDropdown from "../components/SortDropdown.vue";
-import Grid from "../components/Grid.vue";
-import GridLayout from "../components/GridLayout.vue";
-import { params } from "../constants.js";
+import { apiErrorHandler, getNotes, getNotesByTag } from "../lib/api.js";
+import SortDropdown from "../components/sort/SortDropdown.vue";
+import Grid from "../components/layout/Grid.vue";
+import GridLayout from "../components/layout/GridLayout.vue";
+import { params } from "../lib/constants.js";
 import { useSorting } from "../composables/useSorting.js";
 import { useGridData } from "../composables/useGridData.js";
 import { useTagInteractions } from "../composables/useTagInteractions.js";

@@ -130,7 +130,7 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { X, Loader2 } from 'lucide-vue-next';
-import { importPaste } from '../api.js';
+import { importPaste } from '../lib/api.js';
 import TagInput from './TagInput.vue';
 
 const props = defineProps({

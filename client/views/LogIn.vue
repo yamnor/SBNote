@@ -52,11 +52,11 @@ import { LogIn } from "lucide-vue-next";
 import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
-import { apiErrorHandler, getToken } from "../api.js";
-import { authTypes } from "../constants.js";
-import { useGlobalStore } from "../globalStore.js";
+import { apiErrorHandler, getToken } from "../lib/api.js";
+import { authTypes } from "../lib/constants.js";
+import { useGlobalStore } from "../lib/globalStore.js";
 
-import { storeToken } from "../tokenStorage.js";
+import { storeToken } from "../lib/tokenStorage.js";
 
 const props = defineProps({ redirect: String });
 

@@ -44,7 +44,7 @@
 
 <script setup>
 import { ref } from "vue";
-import Loading from "./Loading.vue";
+import Loading from "../ui/Loading.vue";
 import GridLayout from "./GridLayout.vue";
 
 const props = defineProps({

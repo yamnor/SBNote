@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { getNote } from '../api.js';
+import { getNote } from '../lib/api.js';
 
 export function useNoteAttachment() {
   const noteData = ref(null);

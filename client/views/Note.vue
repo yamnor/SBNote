@@ -169,19 +169,19 @@ import {
   updateNote,
   getNotesByTag,
   getTagsWithCounts,
-} from "../api.js";
-import { Note } from "../classes.js";
-import ConfirmModal from "../components/ConfirmModal.vue";
+} from "../lib/api.js";
+import { Note } from "../lib/classes.js";
+import ConfirmModal from "../components/modal/ConfirmModal.vue";
 
-import Loading from "../components/Loading.vue";
-import TagInput from "../components/TagInput.vue";
-import ToastUIEditor from "../components/ToastUIEditor.vue";
-import ToastUIEditorViewer from "../components/ToastUIEditorViewer.vue";
-import SortDropdown from "../components/SortDropdown.vue";
-import GridLayout from "../components/GridLayout.vue";
+import Loading from "../components/ui/Loading.vue";
+import TagInput from "../components/input/TagInput.vue";
+import ToastUIEditor from "../components/editor/ToastUIEditor.vue";
+import ToastUIEditorViewer from "../components/editor/ToastUIEditorViewer.vue";
+import SortDropdown from "../components/sort/SortDropdown.vue";
+import GridLayout from "../components/layout/GridLayout.vue";
 
-import { noteConstants, params } from "../constants.js";
-import { useGlobalStore } from "../globalStore.js";
+import { noteConstants, params } from "../lib/constants.js";
+import { useGlobalStore } from "../lib/globalStore.js";
 import { useSorting } from "../composables/useSorting.js";
 import { useGridData } from "../composables/useGridData.js";
 import { useTagInteractions } from "../composables/useTagInteractions.js";

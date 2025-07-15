@@ -51,13 +51,13 @@
 import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { RouterView, useRoute } from "vue-router";
 
-import { apiErrorHandler, getConfig, getNotes, getAuthStatus, importNote, importImage, importCoordinate, importOutput } from "./api.js";
-import { useGlobalStore } from "./globalStore.js";
-import NavBar from "./components/NavBar.vue";
-import { loadStoredToken, getStoredToken, clearStoredToken } from "./tokenStorage.js";
-import Loading from "./components/Loading.vue";
-import Toast from "./components/Toast.vue";
-import ImportModal from "./components/ImportModal.vue";
+import { apiErrorHandler, getConfig, getNotes, getAuthStatus, importNote, importImage, importCoordinate, importOutput } from "./lib/api.js";
+import { useGlobalStore } from "./lib/globalStore.js";
+import NavBar from "./components/nav/NavBar.vue";
+import { loadStoredToken, getStoredToken, clearStoredToken } from "./lib/tokenStorage.js";
+import Loading from "./components/ui/Loading.vue";
+import Toast from "./components/ui/Toast.vue";
+import ImportModal from "./components/modal/ImportModal.vue";
 import router from "./router.js";
 
 const globalStore = useGlobalStore();

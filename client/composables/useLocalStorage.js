@@ -1,5 +1,5 @@
 import { ref, watch } from 'vue';
-import { localStorageKeys, saveToLocalStorage, loadFromLocalStorage } from '../helpers.js';
+import { localStorageKeys, saveToLocalStorage, loadFromLocalStorage } from '../lib/helpers.js';
 
 export function useLocalStorage() {
   // Create reactive ref with localStorage persistence

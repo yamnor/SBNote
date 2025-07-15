@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { apiErrorHandler } from '../api.js';
+import { apiErrorHandler } from '../lib/api.js';
 
 export function useDataFetching() {
   const isLoading = ref(false);

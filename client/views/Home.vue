@@ -62,16 +62,16 @@
 import { onMounted, ref, watch, onUnmounted, computed, nextTick } from "vue";
 import { useRouter } from "vue-router";
 
-import { apiErrorHandler, getTagsWithCounts, getNotesByTag, renameTag, deleteTag } from "../api.js";
-import SortDropdown from "../components/SortDropdown.vue";
-import Grid from "../components/Grid.vue";
-import { useGlobalStore } from "../globalStore.js";
+import { apiErrorHandler, getTagsWithCounts, getNotesByTag, renameTag, deleteTag } from "../lib/api.js";
+import SortDropdown from "../components/sort/SortDropdown.vue";
+import Grid from "../components/layout/Grid.vue";
+import { useGlobalStore } from "../lib/globalStore.js";
 import { useLocalStorage } from "../composables/useLocalStorage.js";
 import { useSorting } from "../composables/useSorting.js";
 import { useGridData } from "../composables/useGridData.js";
 import { useTagInteractions } from "../composables/useTagInteractions.js";
 import { useDataFetching } from "../composables/useDataFetching.js";
-import ConfirmModal from "../components/ConfirmModal.vue";
+import ConfirmModal from "../components/modal/ConfirmModal.vue";
 
 const globalStore = useGlobalStore();
 const router = useRouter();

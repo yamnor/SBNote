@@ -128,10 +128,10 @@ import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessu
 import { onMounted, ref, watch, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { X, Maximize2, Presentation, ExternalLink, Link2, Atom } from "lucide-vue-next";
-import { useGlobalStore } from "../globalStore.js";
+import { useGlobalStore } from "../lib/globalStore.js";
 import TagInput from "./TagInput.vue";
 import ToastUIEditor from "./ToastUIEditor.vue";
-import { updateNote } from "../api.js";
+import { updateNote } from "../lib/api.js";
 
 const props = defineProps({
   note: {
@@ -373,6 +373,6 @@ onUnmounted(() => {
 @import "@toast-ui/editor/dist/toastui-editor-viewer.css";
 @import "prismjs/themes/prism.css";
 @import "@toast-ui/editor-plugin-code-syntax-highlight/dist/toastui-editor-plugin-code-syntax-highlight.css";
-@import "./ToastUIEditor.scss";
-@import "./ToastUIEditorCustom.scss";
+@import "../styles/ToastUIEditor.scss";
+@import "../styles/ToastUIEditorCustom.scss";
 </style> 

@@ -62,8 +62,8 @@
 
 <script setup>
 import { computed, ref } from "vue";
-import { useGlobalStore } from "../globalStore.js";
-import PreviewNoteModal from "./PreviewNoteModal.vue";
+import { useGlobalStore } from "../lib/globalStore.js";
+import PreviewNoteModal from "../modal/PreviewNoteModal.vue";
 import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, ExternalLink } from "lucide-vue-next";
 
 const props = defineProps({

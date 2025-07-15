@@ -15,9 +15,9 @@ import 'reveal.js/dist/reveal.css';
 import 'reveal.js/dist/theme/white.css';
 import RevealMarkdown from 'reveal.js/plugin/markdown/markdown.esm.js';
 
-import { getNote } from "../api.js";
-import { noteConstants } from "../constants.js";
-import Loading from "../components/Loading.vue";
+import { getNote } from "../lib/api.js";
+import { noteConstants } from "../lib/constants.js";
+import Loading from "../components/ui/Loading.vue";
 
 const props = defineProps({
   filename: String,
