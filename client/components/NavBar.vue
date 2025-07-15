@@ -1,7 +1,30 @@
 <template>
   <nav class="mb-4 flex justify-between items-center gap-4 relative z-40">
+    <!-- Home Button -->
+    <RouterLink :to="{ name: 'home' }" class="flex-shrink-0">
+      <button class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg text-color-button-secondary-fg transition-colors">
+        <LayoutGrid class="w-6 h-6" />
+      </button>
+    </RouterLink>
+    
+    <!-- Search Input -->
+    <div class="flex-1 mx-auto relative overflow-visible">
+      <SearchInput
+        ref="searchInput"
+        :incremental="true"
+        :searchResults="incrementalSearchResults"
+        placeholder="Search notes..."
+        @search="onSearch"
+        @incrementalSearch="onIncrementalSearch"
+        @selectResult="onSelectResult"
+        @closeResults="onCloseResults"
+        @confirmSelection="onConfirmSelection"
+        @clearSearch="onClearSearch"
+      />
+    </div>
+    
     <!-- Menu Dropdown -->
-    <DropdownMenu :trigger-icon="Menu" :menu-position="'left'" @close="onMenuClose">
+    <DropdownMenu :trigger-icon="Menu" :menu-position="'right'" @close="onMenuClose">
       <template #indicator>
         <!-- Login Status Indicator -->
         <div
@@ -132,29 +155,6 @@
         Logout
       </DropdownMenuItem>
     </DropdownMenu>
-    
-    <!-- Search Input -->
-    <div class="flex-1 mx-auto relative overflow-visible">
-      <SearchInput
-        ref="searchInput"
-        :incremental="true"
-        :searchResults="incrementalSearchResults"
-        placeholder="Search notes..."
-        @search="onSearch"
-        @incrementalSearch="onIncrementalSearch"
-        @selectResult="onSelectResult"
-        @closeResults="onCloseResults"
-        @confirmSelection="onConfirmSelection"
-        @clearSearch="onClearSearch"
-      />
-    </div>
-    
-    <!-- Home Button -->
-    <RouterLink :to="{ name: 'home' }" class="flex-shrink-0">
-      <button class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg text-color-button-secondary-fg transition-colors">
-        <LayoutGrid class="w-6 h-6" />
-      </button>
-    </RouterLink>
     
     <!-- New Note Button with Dropdown -->
     <DropdownMenu 
