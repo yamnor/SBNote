@@ -405,15 +405,15 @@ import {
   History
 } from "lucide-vue-next";
 
-import SearchInput from "../input/SearchInput.vue";
-import DropdownMenu from "../ui/DropdownMenu.vue";
-import DropdownMenuItem from "../ui/DropdownMenuItem.vue";
-import EmbedModal from "../modal/EmbedModal.vue";
-import PasteModal from "../modal/PasteModal.vue";
-import HistoryModal from "../modal/HistoryModal.vue";
-import { authTypes } from "../../lib/constants.js";
-import { useGlobalStore } from "../../lib/globalStore.js";
-import { clearStoredToken } from "../../lib/tokenStorage.js";
+import SearchInput from "./SearchInput.vue";
+import DropdownMenu from "./DropdownMenu.vue";
+import DropdownMenuItem from "./DropdownMenuItem.vue";
+import EmbedModal from "./EmbedModal.vue";
+import PasteModal from "./PasteModal.vue";
+import HistoryModal from "./HistoryModal.vue";
+import { authTypes } from "../lib/constants.js";
+import { useGlobalStore } from "../lib/globalStore.js";
+import { clearStoredToken } from "../lib/tokenStorage.js";
 
 const props = defineProps({
   incrementalSearchResults: {

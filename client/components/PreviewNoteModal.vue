@@ -57,7 +57,7 @@
                     @click="openInMol"
                     title="Open in molecular viewer"
                   >
-                    <Atom class="w-4 h-4" />
+                    <Bolt class="w-4 h-4" />
                   </button>
                   
                   <!-- Output button (only show for output category) -->
@@ -138,11 +138,11 @@
 import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import { onMounted, ref, watch, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { X, Maximize2, Presentation, ExternalLink, Link2, Atom, Grip } from "lucide-vue-next";
-import { useGlobalStore } from "../../lib/globalStore.js";
-import TagInput from "../input/TagInput.vue";
-import ToastUIEditor from "../editor/ToastUIEditor.vue";
-import { updateNote } from "../../lib/api.js";
+import { X, Maximize2, Presentation, ExternalLink, Link2, Bolt, Grip } from "lucide-vue-next";
+import { useGlobalStore } from "../lib/globalStore.js";
+import TagInput from "./TagInput.vue";
+import ToastUIEditor from "./ToastUIEditor.vue";
+import { updateNote } from "../lib/api.js";
 
 const props = defineProps({
   note: {
@@ -392,6 +392,6 @@ onUnmounted(() => {
 @import "@toast-ui/editor/dist/toastui-editor-viewer.css";
 @import "prismjs/themes/prism.css";
 @import "@toast-ui/editor-plugin-code-syntax-highlight/dist/toastui-editor-plugin-code-syntax-highlight.css";
-@import "../styles/ToastUIEditor.scss";
-@import "../styles/ToastUIEditorCustom.scss";
+@import "./ToastUIEditor.scss";
+@import "./ToastUIEditorCustom.scss";
 </style> 

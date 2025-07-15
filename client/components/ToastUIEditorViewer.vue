@@ -43,6 +43,6 @@ defineExpose({ getMarkdown });
 @import "@toast-ui/editor/dist/toastui-editor-viewer.css";
 @import "prismjs/themes/prism.css";
 @import "@toast-ui/editor-plugin-code-syntax-highlight/dist/toastui-editor-plugin-code-syntax-highlight.css";
-@import "../styles/ToastUIEditor.scss";
-@import "../styles/ToastUIEditorCustom.scss";
+@import "./ToastUIEditor.scss";
+@import "./ToastUIEditorCustom.scss";
 </style>

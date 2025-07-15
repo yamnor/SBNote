@@ -33,8 +33,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import NoteCard from '../card/NoteCard.vue';
-import TagCard from '../card/TagCard.vue';
+import NoteCard from './NoteCard.vue';
+import TagCard from './TagCard.vue';
 
 const props = defineProps({
   items: {

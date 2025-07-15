@@ -39,7 +39,7 @@
 
 <script setup>
 import { onMounted, ref, onUnmounted, computed, watch } from "vue";
-import { createDoubleClickHandler, addTouchEventListeners, addLongPressDetection } from "../../lib/helpers.js";
+import { createDoubleClickHandler, addTouchEventListeners, addLongPressDetection } from "../lib/helpers.js";
 
 const props = defineProps({
   tagData: {

@@ -171,14 +171,14 @@ import {
   getTagsWithCounts,
 } from "../lib/api.js";
 import { Note } from "../lib/classes.js";
-import ConfirmModal from "../components/modal/ConfirmModal.vue";
+import ConfirmModal from "../components/ConfirmModal.vue";
 
-import Loading from "../components/ui/Loading.vue";
-import TagInput from "../components/input/TagInput.vue";
-import ToastUIEditor from "../components/editor/ToastUIEditor.vue";
-import ToastUIEditorViewer from "../components/editor/ToastUIEditorViewer.vue";
-import SortDropdown from "../components/sort/SortDropdown.vue";
-import GridLayout from "../components/layout/GridLayout.vue";
+import Loading from "../components/Loading.vue";
+import TagInput from "../components/TagInput.vue";
+import ToastUIEditor from "../components/ToastUIEditor.vue";
+import ToastUIEditorViewer from "../components/ToastUIEditorViewer.vue";
+import SortDropdown from "../components/SortDropdown.vue";
+import GridLayout from "../components/GridLayout.vue";
 
 import { noteConstants, params } from "../lib/constants.js";
 import { useGlobalStore } from "../lib/globalStore.js";

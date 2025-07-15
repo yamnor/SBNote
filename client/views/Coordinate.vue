@@ -112,9 +112,9 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ArrowLeft, Eye, Grip, FileX, Loader2, RefreshCw, ScanEye, Terminal } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
-import ThreeDmolViewer from '../components/viewer/3DmolViewer.vue';
-import MiewViewer from '../components/viewer/MiewViewer.vue';
-import CodeMirrorEditor from '../components/editor/CodeMirrorEditor.vue';
+import ThreeDmolViewer from '../components/3DmolViewer.vue';
+import MiewViewer from '../components/MiewViewer.vue';
+import CodeMirrorEditor from '../components/CodeMirrorEditor.vue';
 
 const props = defineProps({
   filename: String,

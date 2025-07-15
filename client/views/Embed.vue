@@ -61,7 +61,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ArrowLeft, FileX, Loader2, RefreshCw } from 'lucide-vue-next';
 import { getNote } from '../lib/api.js';
-import EmbedViewer from '../components/viewer/EmbedViewer.vue';
+import EmbedViewer from '../components/EmbedViewer.vue';
 
 const props = defineProps({
   filename: String,

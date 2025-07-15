@@ -17,7 +17,7 @@ import RevealMarkdown from 'reveal.js/plugin/markdown/markdown.esm.js';
 
 import { getNote } from "../lib/api.js";
 import { noteConstants } from "../lib/constants.js";
-import Loading from "../components/ui/Loading.vue";
+import Loading from "../components/Loading.vue";
 
 const props = defineProps({
   filename: String,
