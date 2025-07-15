@@ -364,4 +364,4 @@ function addLongPressDetectionWithCallbacks(element, longPressHandler, startHand
   transform: scale(0.95);
   transition: transform 0.2s ease-out;
 }
-</style> 
+</style> // another test comment

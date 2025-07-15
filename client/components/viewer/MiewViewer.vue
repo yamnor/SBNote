@@ -21,7 +21,13 @@
       <div
         ref="miewViewer"
         class="w-full h-full"
-        :class="{ 'opacity-50': isLoading }"
+        :class="{ 
+          'opacity-50': isLoading,
+          'opacity-50 pointer-events-none': isResizing 
+        }"
+        @mousedown.stop
+        @mousemove.stop
+        @mouseup.stop
       ></div>
       
       <!-- Loading overlay -->
@@ -35,11 +41,20 @@
       <!-- Terminal panel -->
       <div
         v-if="showTerminal"
+        ref="terminalPanel"
         :class="[
-          'absolute bottom-0 left-0 right-0 z-20 border-t border-color-border-primary',
-          isTerminalMinimized ? 'h-12 min-h-[40px] backdrop-blur-md' : 'h-1/2 bg-color-bg-base/0 backdrop-blur-md'
+          'absolute bottom-0 left-0 right-0 z-20 border-t border-color-border-primary terminal-panel',
+          isTerminalMinimized ? 'h-12 min-h-[40px] backdrop-blur-md' : 'backdrop-blur-md'
         ]"
+        :style="!isTerminalMinimized ? { height: `${terminalHeight}px` } : {}"
       >
+        <!-- Resize handle -->
+        <div 
+          v-if="!isTerminalMinimized"
+          class="absolute top-0 left-0 right-0 h-1 hover:bg-color-border-primary cursor-ns-resize transition-colors"
+          @mousedown.stop="startResize"
+          title="Drag to resize terminal"
+        ></div>
         <!-- Minimize/Restore Button -->
         <button 
           @click.stop="toggleTerminal"
@@ -50,7 +65,7 @@
           <ChevronUp v-if="isTerminalMinimized" class="w-5 h-5 text-color-button-secondary-fg hover:text-color-button-secondary-hover-fg" />
           <ChevronDown v-else class="w-6 h-6 text-color-button-secondary-fg hover:text-color-button-secondary-hover-fg" />
         </button>
-        <div v-show="!isTerminalMinimized" ref="terminalContainer" class="w-full h-full"></div>
+        <div v-show="!isTerminalMinimized" ref="terminalContainer" class="w-full h-full pt-1"></div>
       </div>
     </div>
   </div>
@@ -86,6 +101,7 @@ const emit = defineEmits(['error', 'loading', 'loaded']);
 // State
 const miewViewer = ref(null);
 const terminalContainer = ref(null);
+const terminalPanel = ref(null);
 const isLoading = ref(false);
 const error = ref(null);
 const showTerminal = ref(true);
@@ -97,6 +113,13 @@ const currentLine = ref('');
 const commandHistory = ref([]);
 const historyIndex = ref(-1);
 const molecularData = ref(null); // Store molecular data from ccget
+
+// Resize state
+const terminalHeight = ref(300); // Default 30% of screen height
+const isResizing = ref(false);
+const resizeStartY = ref(0);
+const resizeStartHeight = ref(0);
+let resizeObserver = null; // Store resize observer reference
 
 // Command parsing function
 function parseCommand(input) {
@@ -712,6 +735,112 @@ function retryLoad() {
 
 function toggleTerminal() {
   isTerminalMinimized.value = !isTerminalMinimized.value;
+  
+  // Set default height (30%) when restoring from minimized state
+  if (!isTerminalMinimized.value && terminalHeight.value < 100) {
+    terminalHeight.value = window.innerHeight * 0.3;
+  }
+}
+
+// Resize functions
+function startResize(event) {
+  isResizing.value = true;
+  resizeStartY.value = event.clientY;
+  resizeStartHeight.value = terminalHeight.value;
+  
+  // Disconnect resize observer during resize to prevent interference
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+  }
+  
+  // Add resizing class to disable transitions
+  if (terminalPanel.value) {
+    terminalPanel.value.classList.add('resizing');
+  }
+  
+  // Disable xterm.js resize handling during resize
+  if (terminal && typeof terminal.resize === 'function') {
+    // Store current terminal size to prevent auto-resize
+    const currentCols = terminal.cols;
+    const currentRows = terminal.rows;
+    terminal.resize(currentCols, currentRows);
+  }
+  
+  // Disable Miew hot keys and focus during resize
+  if (viewer && typeof viewer.enableHotKeys === 'function') {
+    viewer.enableHotKeys(false);
+  }
+  
+  // Focus terminal to prevent Miew from stealing focus
+  if (terminal) {
+    terminal.focus();
+  }
+  
+  // Add global event listeners with capture to ensure they're called first
+  document.addEventListener('mousemove', handleResize, { capture: true });
+  document.addEventListener('mouseup', stopResize, { capture: true });
+  
+  // Set cursor style
+  document.body.style.cursor = 'ns-resize';
+  document.body.style.userSelect = 'none';
+  
+  // Stop event propagation to prevent Miew from handling the event
+  event.stopPropagation();
+  event.preventDefault();
+}
+
+function handleResize(event) {
+  if (!isResizing.value) return;
+  
+  const deltaY = resizeStartY.value - event.clientY;
+  const newHeight = resizeStartHeight.value + deltaY;
+  
+  // Apply height constraints
+  const minHeight = 100;
+  const maxHeight = window.innerHeight * 0.9;
+  const clampedHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+  
+  // Direct DOM manipulation to avoid Vue reactivity delays
+  if (terminalPanel.value) {
+    terminalPanel.value.style.height = `${clampedHeight}px`;
+  }
+  
+  // Update Vue state for consistency
+  terminalHeight.value = clampedHeight;
+}
+
+function stopResize() {
+  isResizing.value = false;
+  
+  // Remove global event listeners with capture
+  document.removeEventListener('mousemove', handleResize, { capture: true });
+  document.removeEventListener('mouseup', stopResize, { capture: true });
+  
+  // Restore cursor style
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+  
+  // Remove resizing class to re-enable transitions
+  if (terminalPanel.value) {
+    terminalPanel.value.classList.remove('resizing');
+  }
+  
+  // Re-enable Miew hot keys
+  if (viewer && typeof viewer.enableHotKeys === 'function') {
+    viewer.enableHotKeys(true);
+  }
+  
+  // Reconnect resize observer to terminal panel
+  if (resizeObserver && terminalPanel.value) {
+    resizeObserver.observe(terminalPanel.value);
+  }
+  
+  // Force xterm.js to recalculate size with a delay to ensure DOM is stable
+  setTimeout(() => {
+    if (fitAddon) {
+      fitAddon.fit();
+    }
+  }, 50);
 }
 
 function initializeTerminal() {
@@ -782,13 +911,19 @@ function initializeTerminal() {
       }
     });
     
-    // Handle window resize
-    const resizeObserver = new ResizeObserver(() => {
-      if (fitAddon) {
-        fitAddon.fit();
+    // Handle window resize - simplified to only handle non-resize events
+    resizeObserver = new ResizeObserver(() => {
+      // Only fit if not currently resizing and terminal is ready
+      if (fitAddon && !isResizing.value && terminal) {
+        // Small delay to ensure DOM is stable
+        setTimeout(() => {
+          if (!isResizing.value) {
+            fitAddon.fit();
+          }
+        }, 10);
       }
     });
-    resizeObserver.observe(terminalContainer.value);
+    resizeObserver.observe(terminalPanel.value);
     
     // Focus the terminal
     terminal.focus();
@@ -814,6 +949,12 @@ function destroyTerminal() {
     fitAddon = null;
   }
   
+  // Disconnect resize observer
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
+  
   // Re-enable hot keys
   if (viewer && typeof viewer.enableHotKeys === 'function') {
     viewer.enableHotKeys(true);
@@ -829,6 +970,27 @@ watch([() => props.fileContent, () => props.attachmentFilename], ([newContent, n
 
 // Lifecycle
 onMounted(() => {
+  // Set default height to 30% of screen height
+  terminalHeight.value = window.innerHeight * 0.3;
+  
+  // Handle window resize
+  const handleWindowResize = () => {
+    if (!isTerminalMinimized.value) {
+      // Adjust height if it exceeds maximum
+      const maxHeight = window.innerHeight * 0.9;
+      if (terminalHeight.value > maxHeight) {
+        terminalHeight.value = maxHeight;
+      }
+    }
+  };
+  
+  window.addEventListener('resize', handleWindowResize);
+  
+  // Cleanup
+  onUnmounted(() => {
+    window.removeEventListener('resize', handleWindowResize);
+  });
+  
   // Initial load will be handled by the watcher
 });
 
@@ -867,5 +1029,42 @@ onUnmounted(() => {
 .xterm .xterm-viewport {
   overflow-y: hidden;
   background-color: transparent !important;
+}
+
+/* Resize handle styles */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #d1d5db;
+  cursor: ns-resize;
+  transition: background-color 0.2s;
+}
+
+.resize-handle:hover {
+  background-color: #9ca3af;
+}
+
+/* Resizing state */
+.resizing {
+  user-select: none;
+  transition: none !important;
+}
+
+/* Terminal panel styles */
+.terminal-panel {
+  transition: height 0.2s ease;
+}
+
+.terminal-panel.resizing {
+  transition: none !important;
+}
+
+/* Miew viewer during resize */
+.miew-viewer-resizing {
+  opacity: 0.5;
+  pointer-events: none;
 }
 </style> 

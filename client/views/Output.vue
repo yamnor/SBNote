@@ -45,16 +45,6 @@
         >
           <Terminal class="w-6 h-6" />
         </button>
-        
-        <!-- Embed button -->
-        <button
-          @click="setViewMode('embed')"
-          class="flex items-center justify-center w-9 h-9 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-primary-bg hover:text-color-button-primary-fg text-color-button-secondary-fg transition-colors shadow-sm"
-          :class="viewMode === 'embed' ? '!bg-color-button-primary-bg !text-color-button-primary-fg' : ''"
-          :title="viewMode === 'embed' ? 'Current view' : 'Embed View'"
-        >
-          <ExternalLink class="w-6 h-6" />
-        </button>
       </div>
     </div>
     </div>
@@ -114,15 +104,7 @@
         />
       </div>
       
-      <!-- EmbedViewer component -->
-      <div v-else-if="viewMode === 'embed'" class="h-full pt-14">
-        <EmbedViewer
-          :note-content="embedContent"
-          @error="onEmbedError"
-          @loading="onEmbedLoading"
-          @loaded="onEmbedLoaded"
-        />
-      </div>
+
     </div>
   </div>
 </template>
@@ -130,12 +112,11 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { ArrowLeft, Eye, Grip, FileX, Loader2, RefreshCw, Terminal, ExternalLink } from 'lucide-vue-next';
+import { ArrowLeft, Eye, Grip, FileX, Loader2, RefreshCw, Terminal } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
 import ThreeDmolViewer from '../components/viewer/3DmolViewer.vue';
 import MiewViewer from '../components/viewer/MiewViewer.vue';
 import CodeMirrorEditor from '../components/editor/CodeMirrorEditor.vue';
-import EmbedViewer from '../components/viewer/EmbedViewer.vue';
 
 const props = defineProps({
   filename: String,
@@ -150,8 +131,7 @@ const viewMode = ref('3dmol'); // Default to 3Dmol view
 const isLoading = ref(false);
 const error = ref(null);
 
-// Fixed content for EmbedViewer
-const embedContent = ref('JupyterLite - cclib\nhttps://jupyterlite.yamlab.app/lab/?path=sbnote_cclib.ipynb');
+
 
 // Use composable for note data and attachment handling
 const { noteData, loadNoteDataAndAttachment } = useNoteAttachment();
@@ -291,18 +271,7 @@ function onEditorError(error) {
   console.error('Editor error:', error);
 }
 
-function onEmbedError(errorMessage) {
-  // Handle embed-specific errors if needed
-  console.error('Embed error:', errorMessage);
-}
 
-function onEmbedLoading(loading) {
-  // Handle embed loading state if needed
-}
-
-function onEmbedLoaded() {
-  // Handle embed loaded state if needed
-}
 
 // Lifecycle
 onMounted(async () => {

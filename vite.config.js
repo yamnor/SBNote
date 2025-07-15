@@ -119,5 +119,9 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    watch: {
+      usePolling: true,
+      interval: 1000,
+    },
   },
 });
