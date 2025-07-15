@@ -49,9 +49,9 @@
                     <ExternalLink class="w-4 h-4" />
                   </button>
                   
-                          <!-- 3DmolViewer button (only show for coordinate category) -->
-        <button
-          v-if="note.category === 'coordinate'"
+                  <!-- 3DmolViewer button (only show for coordinate category) -->
+                  <button
+                    v-if="note.category === 'coordinate'"
                     type="button"
                     class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
                     @click="openInMol"
@@ -142,7 +142,8 @@ import { X, Maximize2, Presentation, ExternalLink, Link2, Bolt, Grip } from "luc
 import { useGlobalStore } from "../lib/globalStore.js";
 import TagInput from "./TagInput.vue";
 import ToastUIEditor from "./ToastUIEditor.vue";
-import { updateNote } from "../lib/api.js";
+import { updateNote, apiErrorHandler } from "../lib/api.js";
+import { noteConstants } from "../lib/constants.js";
 
 const props = defineProps({
   note: {
@@ -151,7 +152,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(["close", "note-updated"]);
 const isVisible = defineModel({ type: Boolean });
 const router = useRouter();
 const globalStore = useGlobalStore();
@@ -163,14 +164,23 @@ const toastEditor = ref();
 const editingContent = ref('');
 const editingTags = ref([]);
 
-// Auto-save state
+// Auto-save state (Note.vueと同様の状態管理)
 let autoSaveTimeout = null;
 let contentChangedTimeout = null;
-const isAutoSaving = ref(false);
+let titleGenerationTimeout = null;
 
-// Constants
-const AUTO_SAVE_DELAY = 3000; // 3 seconds
-const CONTENT_CHANGE_DELAY = 500; // 500ms
+// ✅ 修正: 定数を正しく使用
+const AUTO_SAVE_DELAY = noteConstants.AUTO_SAVE_DELAY; // 1000ms
+const CONTENT_CHANGE_DELAY = noteConstants.CONTENT_CHANGE_DELAY; // 1000ms
+const TITLE_GENERATION_DELAY = noteConstants.TITLE_GENERATION_DELAY; // 500ms
+
+// Title generation state
+const generatedTitle = ref('');
+
+// Constants (Note.vueと統一)
+// noteConstants.AUTO_SAVE_DELAY = 1000ms
+// noteConstants.CONTENT_CHANGE_DELAY = 1000ms
+// noteConstants.TITLE_GENERATION_DELAY = 2000ms
 
 function closeModal() {
   isVisible.value = false;
@@ -223,24 +233,96 @@ function copyLink() {
   const url = `${window.location.origin}/${filename}`;
   
   navigator.clipboard.writeText(url).then(() => {
-    // Could add a toast notification here if needed
-    console.log('Link copied to clipboard:', url);
+    // Show success toast notification
+    globalStore.toast?.addToast(
+      'Note URL copied to clipboard',
+      'Copy Link',
+      'success'
+    );
   }).catch(err => {
     console.error('Failed to copy link:', err);
+    // Show error toast notification
+    globalStore.toast?.addToast(
+      'Failed to copy URL to clipboard',
+      'Copy Link Error',
+      'error'
+    );
   });
 }
 
 function initializeEditing() {
   editingContent.value = props.note.content || '';
   editingTags.value = [...(props.note.tags || [])];
+  generatedTitle.value = '';
+}
+
+// Title generation function (Note.vueと同様)
+function generateTitleFromContent(content) {
+  if (!content) return "";
+  
+  // Split content into lines and get the first non-empty line
+  const lines = content.split('\n');
+  let firstLine = "";
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (trimmedLine) {
+      firstLine = trimmedLine;
+      break;
+    }
+  }
+  
+  if (!firstLine) return "";
+  
+  // Remove markdown formatting
+  let title = firstLine
+    .replace(/^#+\s*/, '') // Remove heading markers
+    .replace(/^\*\s*/, '') // Remove list markers
+    .replace(/^-\s*/, '') // Remove list markers
+    .replace(/^>\s*/, '') // Remove blockquote markers
+    .replace(/^`+/, '') // Remove code markers at start
+    .replace(/`+$/, '') // Remove code markers at end
+    .replace(/^\|/, '') // Remove table markers
+    .replace(/\|$/, '') // Remove table markers
+    .trim();
+  
+  // Limit title length
+  if (title.length > 100) {
+    title = title.substring(0, 100) + '...';
+  }
+  
+  return title;
 }
 
 function handleEditorChange() {
+  if (autoSaveState.value.isAutoSavingInProgress) {
+    return;
+  }
+  
   startContentChangedTimeout();
+
+  const content = toastEditor.value.getMarkdown();
+  if (generateTitleFromContent(content) !== props.note.title) {
+    // Title has changed, update generated title
+    const newGeneratedTitle = generateTitleFromContent(content);
+    if (newGeneratedTitle && newGeneratedTitle !== generatedTitle.value) {
+      generatedTitle.value = newGeneratedTitle;
+    }
+  }
+
+  // Auto-generate title from first line (Note.vueと同様)
+  clearTimeout(titleGenerationTimeout);
+  titleGenerationTimeout = setTimeout(() => {
+    const content = toastEditor.value.getMarkdown();
+    const newGeneratedTitle = generateTitleFromContent(content);
+    if (newGeneratedTitle && newGeneratedTitle !== generatedTitle.value) {
+      generatedTitle.value = newGeneratedTitle;
+    }
+  }, TITLE_GENERATION_DELAY);
 }
 
 function handleTagConfirmed() {
-  // Force save immediately for tag changes
+  // Force save immediately for tag changes (Note.vueと同様)
   if (autoSaveTimeout) {
     clearTimeout(autoSaveTimeout);
     autoSaveTimeout = null;
@@ -260,10 +342,26 @@ function clearContentChangedTimeout() {
   }
 }
 
+// ✅ 修正: contentChangedHandlerをNote.vueと同様に改善
 function contentChangedHandler() {
+  if (autoSaveState.value.isAutoSavingInProgress) {
+    return; // 重要な: 保存中は処理をスキップ
+  }
+  
   if (hasChanges()) {
     startAutoSaveTimeout();
   }
+  
+  // Auto-generate title from first line
+  clearTimeout(titleGenerationTimeout);
+  titleGenerationTimeout = setTimeout(() => {
+    const content = toastEditor.value ? toastEditor.value.getMarkdown() : editingContent.value;
+    const generatedTitle = generateTitleFromContent(content);
+    if (generatedTitle && generatedTitle !== props.note.title) {
+      // タイトルが変更された場合のみ更新
+      props.note.title = generatedTitle;
+    }
+  }, TITLE_GENERATION_DELAY);
 }
 
 function startAutoSaveTimeout() {
@@ -278,25 +376,64 @@ function clearAutoSaveTimeout() {
   }
 }
 
+function clearTitleGenerationTimeout() {
+  if (titleGenerationTimeout) {
+    clearTimeout(titleGenerationTimeout);
+    titleGenerationTimeout = null;
+  }
+}
+
 function autoSaveHandler() {
   if (hasChanges()) {
     performSave();
   }
 }
 
+// ✅ 修正: hasChanges関数をNote.vueと同様に最適化
 function hasChanges() {
-  const currentContent = toastEditor.value ? toastEditor.value.getMarkdown() : editingContent.value;
+  if (!toastEditor.value) return false;
   
-  return (
-    currentContent !== props.note.content ||
-    JSON.stringify(editingTags.value) !== JSON.stringify(props.note.tags || [])
-  );
+  const currentContent = toastEditor.value.getMarkdown();
+  const currentTags = editingTags.value;
+  
+  // コンテンツの変更チェック
+  if (currentContent !== props.note.content) {
+    return true;
+  }
+  
+  // タグの変更チェック（最適化）
+  if (currentTags.length !== props.note.tags.length) {
+    return true;
+  }
+  
+  // タグの内容チェック（順序を考慮）
+  const sortedCurrentTags = [...currentTags].sort();
+  const sortedOriginalTags = [...props.note.tags].sort();
+  
+  for (let i = 0; i < sortedCurrentTags.length; i++) {
+    if (sortedCurrentTags[i] !== sortedOriginalTags[i]) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+// ✅ 修正: resetAutoSaveState関数を追加
+function resetAutoSaveState() {
+  updateAutoSaveState({ 
+    isAutoSaving: false, 
+    isAutoSavingInProgress: false 
+  });
 }
 
 async function performSave() {
-  if (isAutoSaving.value) return;
+  if (autoSaveState.value.isAutoSaving) return;
   
-  isAutoSaving.value = true;
+  updateAutoSaveState({ 
+    isAutoSaving: true, 
+    isAutoSavingInProgress: true 
+  });
   
   try {
     const currentContent = toastEditor.value ? toastEditor.value.getMarkdown() : editingContent.value;
@@ -304,28 +441,40 @@ async function performSave() {
     
     const updatedNote = await updateNote(
       filenameWithExtension,
-      props.note.title, // Use original title
+      props.note.title,
       currentContent,
       editingTags.value
     );
     
-    // Update the note prop (this will trigger parent component updates)
-    Object.assign(props.note, updatedNote);
+    // ✅ 修正: Props直接変更を避けてemitを使用
+    emit('note-updated', updatedNote);
     
-    // Update editing content to match saved content
-    editingContent.value = updatedNote.content;
+    // Update local state
+    editingContent.value = currentContent;
+    editingTags.value = [...updatedNote.tags];
+    
+    // Clear timeouts
+    clearTimeout(autoSaveTimeout);
+    clearTimeout(contentChangedTimeout);
+    autoSaveTimeout = null;
+    contentChangedTimeout = null;
     
   } catch (error) {
-    console.error('Failed to save note:', error);
-    // Could add error handling here if needed
+    console.error('Error saving note:', error);
+    apiErrorHandler(error);
   } finally {
-    isAutoSaving.value = false;
+    resetAutoSaveState(); // ✅ 修正: 新しい関数を使用
   }
+}
+
+function updateAutoSaveState(updates) {
+  Object.assign(autoSaveState.value, updates);
 }
 
 function cleanup() {
   clearContentChangedTimeout();
   clearAutoSaveTimeout();
+  clearTitleGenerationTimeout();
 }
 
 // Initialize editing when modal becomes visible

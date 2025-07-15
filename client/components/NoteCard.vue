@@ -56,6 +56,7 @@
       v-model="showPreviewModal"
       :note="note"
       @close="showPreviewModal = false"
+      @note-updated="handleNoteUpdated"
     />
   </div>
 </template>
@@ -82,6 +83,12 @@ const isClicking = ref(false);
 // Handle click to show preview modal
 function handleClick() {
   showPreviewModal.value = true;
+}
+
+// Handle note updates from PreviewNoteModal
+function handleNoteUpdated(updatedNote) {
+  // Update the note object with the updated data
+  Object.assign(props.note, updatedNote);
 }
 
 // Mouse event handlers for desktop
