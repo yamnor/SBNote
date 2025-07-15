@@ -1,7 +1,7 @@
 <template>
   <!-- Confirm Deletion Modal -->
   <ConfirmModal
-    v-model="uiState.isDeleteModalVisible"
+    v-model="fileOperations.uiState.isDeleteModalVisible"
     title="Confirm Deletion"
     :message="`Are you sure you want to delete the note '${note.title}'?`"
     confirmButtonText="Delete"
@@ -11,34 +11,25 @@
 
   <!-- File Size Limit Modal -->
   <ConfirmModal
-    v-model="uiState.isFileSizeModalVisible"
+    v-model="fileOperations.uiState.isFileSizeModalVisible"
     title="File Too Large"
-    :message="fileSizeModalMessage"
+    :message="fileOperations.fileSizeModalMessage"
     confirmButtonText="OK"
     confirmButtonStyle="cta"
-    @confirm="closeFileSizeModal"
+    @confirm="fileOperations.closeFileSizeModal"
   />
 
   <div :class="`w-full mx-auto flex flex-col overflow-visible h-full`">
     <Loading ref="loadingIndicator" class="flex-1 overflow-visible">
       <div class="flex flex-col h-full">
         <!-- Content -->
-        <div class="flex-1 editor-container">
-          <ToastUIEditor
-            v-if="canModify"
-            ref="toastEditor"
-            :key="note.filename || 'new-note'"
-            :initialValue="getInitialEditorValue()"
-            :initialEditType="loadDefaultEditorMode()"
-            :addImageBlobHook="addImageBlobHook"
-            :previewStyle="globalStore.previewStyle"
-            @change="handleEditorChange"
-          />
-          <ToastUIEditorViewer
-            v-else
-            :initialValue="note.content"
-          />
-        </div>
+        <NoteEditor
+          :note="note"
+          :can-modify="canModify"
+          :is-new-note="isNewNote"
+          :add-image-blob-hook="fileOperations.addImageBlobHook"
+          @editor-change="handleEditorChange"
+        />
 
         <!-- Tags section at bottom -->
         <div class="mt-2 mb-2 note-content-width">
@@ -50,59 +41,15 @@
         </div>
 
         <!-- Note Information Display -->
-        <div class="note-content-width">
-          <!-- Header with toggle -->
-          <div class="flex items-center justify-between p-1 border-b border-color-bg-base cursor-pointer hover:bg-color-bg-base transition-colors" @click="toggleInfoSection">
-            <Info class="w-4 h-4 text-color-text-secondary" />
-            <ChevronDown v-if="uiState.isInfoExpanded" class="w-4 h-4 text-color-text-secondary" />
-            <ChevronRight v-else class="w-4 h-4 text-color-text-secondary" />
-          </div>
-          
-          <!-- Collapsible content -->
-          <div v-show="uiState.isInfoExpanded" class="text-xs text-color-text-secondary flex flex-col gap-1 p-1">
-            <div class="flex flex-row justify-between">
-              <div class="flex flex-col">
-                <span v-if="note.category">Category: {{ note.category }}</span>
-                <span v-if="note.visibility">Visibility: {{ note.visibility }}</span>
-              </div>
-              <div class="flex flex-col items-end">
-                <span v-if="note.lastModifiedAsString">Modified: {{ note.lastModifiedAsString }}</span>
-                <span v-if="note.createdTimeAsString">Created: {{ note.createdTimeAsString }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <NoteInfoPanel :note="note" />
 
         <!-- Tag Grid section -->
-        <div v-if="noteTags.length > 0" class="mt-2 tag-grid-container" :style="noteContainerStyle">
-          <div>
-            <!-- Sort Controls -->
-            <div class="flex items-center justify-end w-full mb-2 space-x-2">
-              <SortDropdown
-                v-if="selectedNoteTag && displayedTagNotes.length > 0"
-                v-model="noteTagSortBy"
-                :sort-order="noteTagSortOrder"
-                @update:sort-order="updateNoteTagSortOrder"
-                :options="noteSortOptions"
-                label="Sort Notes by"
-              />
-              <SortDropdown
-                v-model="tagSortBy"
-                :sort-order="tagSortOrder"
-                @update:sort-order="updateTagSortOrder"
-                :options="tagSortOptions"
-                label="Sort Tags by"
-              />
-            </div>
-
-            <!-- Grid Content -->
-            <GridLayout
-              :items="tagGridItems"
-              @tag-click="onNoteTagClick"
-              @tag-dblclick="onNoteTagDoubleClick"
-            />
-          </div>
-        </div>
+        <NoteTagGrid
+          :note-tags="noteTags"
+          :note-container-style="noteContainerStyle"
+          @tag-click="onNoteTagClick"
+          @tag-dblclick="onNoteTagDoubleClick"
+        />
       </div>
     </Loading>
   </div>
@@ -128,22 +75,6 @@
   overflow: visible;
 }
 
-/* Editor container styling */
-.editor-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: visible;
-}
-
-/* Tag grid container styling for split view */
-.tag-grid-container {
-  max-width: var(--layout-width-note);
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-}
-
 /* Note content width styling */
 .note-content-width {
   max-width: var(--layout-width-note);
@@ -154,46 +85,101 @@
 </style>
 
 <script setup>
-import { FileX, ChevronDown, ChevronRight, Info } from "lucide-vue-next";
+import { FileX } from "lucide-vue-next";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useRoute } from "vue-router";
 
-
-import {
-  apiErrorHandler,
-  createAttachment,
-  createNote,
-  deleteNote,
-  getNote,
-  updateNote,
-  getNotesByTag,
-  getTagsWithCounts,
-} from "../lib/api.js";
 import { Note } from "../lib/classes.js";
 import ConfirmModal from "../components/modal/ConfirmModal.vue";
-
 import Loading from "../components/ui/Loading.vue";
 import TagInput from "../components/input/TagInput.vue";
-import ToastUIEditor from "../components/editor/ToastUIEditor.vue";
-import ToastUIEditorViewer from "../components/editor/ToastUIEditorViewer.vue";
-import SortDropdown from "../components/sort/SortDropdown.vue";
-import GridLayout from "../components/layout/GridLayout.vue";
+import { NoteEditor, NoteTagGrid, NoteInfoPanel } from "../components/note/index.js";
 
 import { noteConstants, params } from "../lib/constants.js";
 import { useGlobalStore } from "../lib/globalStore.js";
-import { useSorting } from "../composables/useSorting.js";
-import { useGridData } from "../composables/useGridData.js";
-import { useTagInteractions } from "../composables/useTagInteractions.js";
-import { useDataFetching } from "../composables/useDataFetching.js";
+import { useNoteEditor } from "../composables/useNoteEditor.js";
+import { useNoteAutoSave } from "../composables/useNoteAutoSave.js";
+import { useNoteFileOperations } from "../composables/useNoteFileOperations.js";
+import { useNoteTagGrid } from "../composables/useNoteTagGrid.js";
 
 const props = defineProps({
   filename: String,
 });
 
 const route = useRoute();
-
+const router = useRouter();
 const globalStore = useGlobalStore();
+const loadingIndicator = ref();
+
+// Composables
+const {
+  toastEditor,
+  newTitle,
+  newTags,
+  generateTitleFromContent,
+  ensureTitle,
+  saveDefaultEditorMode,
+  loadDefaultEditorMode,
+  getInitialEditorValue
+} = useNoteEditor();
+
+const {
+  autoSaveState,
+  uiState: autoSaveUIState,
+  setBeforeUnloadConfirmation,
+  startContentChangedTimeout,
+  clearContentChangedTimeout,
+  startAutoSaveTimeout,
+  clearAutoSaveTimeout,
+  clearTitleGenerationTimeout,
+  resetAutoSaveState,
+  contentChangedHandler,
+  autoSaveHandler: autoSaveHandlerFromComposable,
+  handleContentChange,
+  handleEditorChange: handleAutoSaveEditorChange,
+  isContentChanged,
+  cleanup: cleanupAutoSave
+} = useNoteAutoSave();
+
+const {
+  fileSizeModalMessage,
+  uiState: fileOperationsUIState,
+  createEmptyNote: createEmptyNoteFromComposable,
+  saveNewNote,
+  saveExistingNote,
+  deleteNoteHandler,
+  loadNote,
+  changeNoteVisibility: changeNoteVisibilityFromComposable,
+  addImageBlobHook,
+  postAttachment,
+  handleSaveFailure,
+  showFileSizeModal,
+  closeFileSizeModal
+} = useNoteFileOperations();
+
+const {
+  tagGridState,
+  tagCountsState,
+  selectedNoteTag,
+  displayedTagNotes,
+  noteTagSortBy,
+  noteTagSortOrder,
+  tagSortBy,
+  tagSortOrder,
+  noteTags: computedNoteTags,
+  sortedTagNotes,
+  tagGridItems,
+  updateTagGridState,
+  updateTagCountsState,
+  loadTagCounts,
+  onNoteTagClick,
+  onNoteTagDoubleClick,
+  updateNoteTagSortOrder,
+  updateTagSortOrder,
+  resetTagGridState
+} = useNoteTagGrid();
+
 const canModify = computed(() => {
   // README.md is always read-only
   if (props.filename && props.filename.toLowerCase() === 'readme.md') {
@@ -201,65 +187,16 @@ const canModify = computed(() => {
   }
   return globalStore.isAuthenticated && globalStore.config.authType !== 'read_only' && globalStore.editMode;
 });
-let contentChangedTimeout = null;
-let autoSaveTimeout = null;
-let titleGenerationTimeout = null;
-const loadingIndicator = ref();
-const router = useRouter();
-const toastEditor = ref();
-
-// Composables
-const { noteSortOptions, tagSortOptions, sortItems } = useSorting();
-const { createNestedGridItems } = useGridData();
-const { handleTagClick, handleTagDoubleClick } = useTagInteractions();
-const { fetchNotesByTag } = useDataFetching();
 
 // State management - grouped related states
 const noteState = ref({
   note: {},
-  newTitle: "",
   isNewNote: !props.filename
-});
-
-const uiState = ref({
-  isDeleteModalVisible: false,
-  isFileSizeModalVisible: false,
-  unsavedChanges: false,
-  isInfoExpanded: false
-});
-
-const autoSaveState = ref({
-  isAutoSaving: false,
-  isAutoSavingInProgress: false
-});
-
-// Tag grid state
-const tagGridState = ref({
-  selectedNoteTag: null,
-  displayedTagNotes: [],
-  noteTagSortBy: 'lastModified',
-  noteTagSortOrder: 'desc',
-  tagSortBy: 'name',
-  tagSortOrder: 'asc'
-});
-
-// Tag counts state
-const tagCountsState = ref({
-  allTagsWithCounts: []
 });
 
 // Computed properties for easier access
 const note = computed(() => noteState.value.note);
-const newTitle = computed(() => noteState.value.newTitle);
 const isNewNote = computed(() => noteState.value.isNewNote);
-
-// Tag grid computed properties
-const selectedNoteTag = computed(() => tagGridState.value.selectedNoteTag);
-const displayedTagNotes = computed(() => tagGridState.value.displayedTagNotes);
-const noteTagSortBy = computed(() => tagGridState.value.noteTagSortBy);
-const noteTagSortOrder = computed(() => tagGridState.value.noteTagSortOrder);
-const tagSortBy = computed(() => tagGridState.value.tagSortBy);
-const tagSortOrder = computed(() => tagGridState.value.tagSortOrder);
 
 // Computed property for tag display
 const displayTags = computed({
@@ -273,99 +210,17 @@ const displayTags = computed({
 
 // Computed property for note tags (current note's tags)
 const noteTags = computed(() => {
-  // Use newTags for editing mode, note.value.tags for view mode
-  const tags = canModify.value ? newTags.value : (note.value.tags || []);
-  const allTagsWithCounts = tagCountsState.value.allTagsWithCounts;
-  
-  const tagData = tags.map(tag => {
-    // Find the actual count for this tag
-    const tagData = allTagsWithCounts.find(t => t.tag === tag);
-    return {
-      tag: tag,
-      count: tagData ? tagData.count : 1
-    };
-  });
-  
-  // Sort the tags
-  return sortItems(tagData, tagSortBy.value, tagSortOrder.value, 'tags');
-});
-
-// Computed property for sorted tag notes
-const sortedTagNotes = computed(() => {
-  return sortItems(displayedTagNotes.value, noteTagSortBy.value, noteTagSortOrder.value, 'notes');
+  return computedNoteTags.value(newTags.value, canModify.value, note.value);
 });
 
 // Computed property for tag grid items
-const tagGridItems = computed(() => {
-  const items = createNestedGridItems(noteTags.value, sortedTagNotes.value, selectedNoteTag.value, []);
-  return items;
+const computedTagGridItems = computed(() => {
+  return tagGridItems.value(noteTags.value, selectedNoteTag.value);
 });
-
-// newTags is a ref for v-model compatibility
-const newTags = ref([]);
-
-// File size modal message
-const fileSizeModalMessage = ref("");
 
 // State update functions
 function updateNoteState(updates) {
   Object.assign(noteState.value, updates);
-}
-
-function updateUIState(updates) {
-  Object.assign(uiState.value, updates);
-}
-
-function updateAutoSaveState(updates) {
-  Object.assign(autoSaveState.value, updates);
-}
-
-function updateTagGridState(updates) {
-  Object.assign(tagGridState.value, updates);
-}
-
-function updateTagCountsState(updates) {
-  Object.assign(tagCountsState.value, updates);
-}
-
-// Load tag counts
-async function loadTagCounts() {
-  try {
-    const tagsWithCounts = await getTagsWithCounts();
-    updateTagCountsState({ allTagsWithCounts: tagsWithCounts });
-  } catch (error) {
-    console.error('Failed to load tag counts:', error);
-  }
-}
-
-// Tag grid event handlers
-async function onNoteTagClick(tagName) {
-  try {
-    const previousSelectedTag = selectedNoteTag.value;
-    
-    handleTagClick(tagName, selectedNoteTag.value, (tag) => updateTagGridState({ selectedNoteTag: tag }), () => updateTagGridState({ displayedTagNotes: [] }));
-    
-    // Only fetch notes if a new tag was selected (not the same tag)
-    if (selectedNoteTag.value === tagName && previousSelectedTag !== tagName) {
-      // Get notes for the selected tag
-      const notes = await fetchNotesByTag(getNotesByTag, tagName, noteTagSortBy.value, noteTagSortOrder.value, 10);
-      updateTagGridState({ displayedTagNotes: notes });
-    }
-  } catch (error) {
-    console.error('Failed to get notes for tag:', error);
-  }
-}
-
-function onNoteTagDoubleClick(tagName) {
-  handleTagDoubleClick(tagName, '/tag/');
-}
-
-function updateNoteTagSortOrder(newOrder) {
-  updateTagGridState({ noteTagSortOrder: newOrder });
-}
-
-function updateTagSortOrder(newOrder) {
-  updateTagGridState({ tagSortOrder: newOrder });
 }
 
 // Create empty note to get filename immediately
@@ -374,21 +229,8 @@ function createEmptyNote() {
   const emptyContent = note.value.content || "";
   const defaultTags = newTags.value;
   
-  createNote(emptyTitle, emptyContent, defaultTags)
+  createEmptyNoteFromComposable(emptyTitle, emptyContent, defaultTags, updateNoteState, autoSaveUIState)
     .then((data) => {
-      // Update note with server data
-      updateNoteState({
-        note: {
-          ...note.value,
-          title: data.title,
-          tags: data.tags,
-          content: data.content,
-          filename: data.filename
-        },
-        newTitle: data.title,
-        isNewNote: false  // Mark as existing note after creation
-      });
-      
       // Update newTags with server data (silently to avoid watch trigger)
       const serverTags = data.tags || [];
       if (newTags.value.length !== serverTags.length || 
@@ -396,41 +238,22 @@ function createEmptyNote() {
         newTags.value = serverTags;
       }
       
-      // Update browser tab title
-      document.title = `${data.title} - SBNote`;
-      
-      // Update URL with filename (without extension)
-      const filename = data.filename.replace(noteConstants.MARKDOWN_EXTENSION, '');
-      router.replace({ name: "note", params: { filename } });
-      
-      // Update local state
-      updateUIState({ unsavedChanges: false });
       setBeforeUnloadConfirmation(false);
     })
     .catch((error) => {
       console.error('Failed to create empty note:', error);
-      apiErrorHandler(error);
     });
 }
 
-function handleEditorChange() {
+function handleEditorChange(event) {
   if (canModify.value) {
-    startContentChangedTimeout();
-
-    const content = toastEditor.value.getMarkdown();
-    if (generateTitleFromContent(content) !== note.value.title) {
-      updateUIState({ unsavedChanges: true });
+    const { content, generatedTitle } = event;
+    
+    if (generatedTitle && generatedTitle !== newTitle.value) {
+      newTitle.value = generatedTitle;
     }
-
-    // Auto-generate title from first line
-    clearTimeout(titleGenerationTimeout);
-    titleGenerationTimeout = setTimeout(() => {
-      const content = toastEditor.value.getMarkdown();
-      const generatedTitle = generateTitleFromContent(content);
-      if (generatedTitle && generatedTitle !== newTitle.value) {
-        updateNoteState({ newTitle: generatedTitle });
-      }
-    }, noteConstants.TITLE_GENERATION_DELAY);
+    
+    handleAutoSaveEditorChange(generateTitleFromContent, newTitle, note.value);
   }
 }
 
@@ -444,51 +267,14 @@ async function init() {
   await loadTagCounts();
   
   if (props.filename) {
-    // Add .md extension for API call
-    const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
-    getNote(filenameWithExtension)
+    loadNote(props.filename, updateNoteState, autoSaveUIState, resetTagGridState, loadingIndicator)
       .then((data) => {
-        const isExistingNote = note.value.filename;
-        updateNoteState({
-          note: data,
-          newTitle: data.title
-        });
         // Initialize newTags separately
         newTags.value = data.tags || [];
-        if (data.title && data.title.trim()) {
-          document.title = `${data.title} - SBNote`;
-          // Set current note title globally for NavBar component
-          globalStore.currentNoteTitle = data.title;
-        }
-        if (!isExistingNote) {
-          note.value.content = data.content;
-        }
-        loadingIndicator.value.setLoaded();
         updateFileMenuState();
-        
-        // Reset tag grid state when note changes
-        updateTagGridState({
-          selectedNoteTag: null,
-          displayedTagNotes: []
-        });
       })
       .catch((error) => {
         console.error('Failed to load note:', error);
-        if (error.response?.status === 404) {
-          if (!globalStore.isAuthenticated) {
-            // If not authenticated and getting 404, redirect to login
-            router.push({
-              name: "login",
-              query: { [params.redirect]: route.fullPath },
-            });
-          } else {
-            // If authenticated and getting 404, note doesn't exist
-            loadingIndicator.value.setFailed("Note not found", FileX);
-          }
-        } else {
-          loadingIndicator.value.setFailed();
-          apiErrorHandler(error);
-        }
       });
   } else {
     // Check if tag parameter is provided for new note
@@ -497,7 +283,6 @@ async function init() {
     const initialTags = tagFromQuery ? [tagFromQuery] : [];
     
     updateNoteState({
-      newTitle: "",
       note: new Note({
         content: contentFromQuery || ""
       })
@@ -515,68 +300,14 @@ async function init() {
     updateFileMenuState();
     
     // Reset tag grid state for new note
-    updateTagGridState({
-      selectedNoteTag: null,
-      displayedTagNotes: []
-    });
+    resetTagGridState();
     
     // Immediately create empty note to get filename
     createEmptyNote();
   }
 }
 
-function getInitialEditorValue() {
-  // If this is a new note and we have content from query params, use it
-  if (isNewNote.value && note.value.content) {
-    return note.value.content;
-  }
-  return note.value.content;
-}
 
-function generateTitleFromContent(content) {
-  if (!content) return "";
-  
-  // Split content into lines and get the first non-empty line
-  const lines = content.split('\n');
-  let firstLine = "";
-  
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    if (trimmedLine) {
-      firstLine = trimmedLine;
-      break;
-    }
-  }
-  
-  if (!firstLine) return "";
-  
-  // Remove markdown formatting
-  let title = firstLine
-    // Remove headers (# ## ### etc.)
-    .replace(noteConstants.MARKDOWN_PATTERNS.HEADERS, '')
-    // Remove bold/italic markers
-    .replace(noteConstants.MARKDOWN_PATTERNS.BOLD, '$1')
-    .replace(noteConstants.MARKDOWN_PATTERNS.ITALIC, '$1')
-    .replace(noteConstants.MARKDOWN_PATTERNS.BOLD_UNDERSCORE, '$1')
-    .replace(noteConstants.MARKDOWN_PATTERNS.ITALIC_UNDERSCORE, '$1')
-    // Remove code markers
-    .replace(noteConstants.MARKDOWN_PATTERNS.CODE, '$1')
-    // Remove links [text](url) -> text
-    .replace(noteConstants.MARKDOWN_PATTERNS.LINKS, '$1')
-    // Remove images ![alt](url) -> alt
-    .replace(noteConstants.MARKDOWN_PATTERNS.IMAGES, '$1')
-    // Remove HTML tags
-    .replace(noteConstants.MARKDOWN_PATTERNS.HTML_TAGS, '')
-    // Trim whitespace
-    .trim();
-  
-  // Limit title length to reasonable size
-  if (title.length > noteConstants.MAX_TITLE_LENGTH) {
-    title = title.substring(0, noteConstants.TITLE_TRUNCATE_LENGTH) + '...';
-  }
-  
-  return title;
-}
 
 
 
@@ -584,7 +315,7 @@ function generateTitleFromContent(content) {
 
 // Note Deletion (for NavBar event)
 function deleteHandler() {
-  updateUIState({ isDeleteModalVisible: true });
+  fileOperationsUIState.value.isDeleteModalVisible = true;
 }
 
 // Copy Link (for NavBar event)
@@ -647,15 +378,7 @@ function changeVisibilityHandler(event) {
 }
 
 function deleteConfirmedHandler() {
-  // Add .md extension for API call
-  const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
-  deleteNote(filenameWithExtension)
-    .then(() => {
-      router.push({ name: "home" });
-    })
-    .catch((error) => {
-      apiErrorHandler(error);
-    });
+  deleteNoteHandler(props.filename, autoSaveUIState);
 }
 
 function changeNoteVisibility(visibility) {
@@ -663,47 +386,17 @@ function changeNoteVisibility(visibility) {
     return;
   }
   
-  // Add .md extension for API call
-  const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
-  
-  // Update note with new visibility
-  updateNote(filenameWithExtension, newTitle.value, note.value.content, newTags.value, visibility)
-    .then(async (data) => {
-      // Update note state
-      updateNoteState({
-        note: data
-      });
-      
-      // Update file menu state to reflect new visibility
-      updateFileMenuState();
-      
-      // Show success toast
-      globalStore.toast?.addToast(
-        `Note visibility changed to ${visibility}`,
-        'Visibility Updated',
-        'success'
-      );
-      
+  changeNoteVisibilityFromComposable(visibility, props.filename, newTitle.value, note.value, newTags.value, updateNoteState, updateFileMenuState)
+    .then(async () => {
       // Reload tag counts to reflect changes
       await loadTagCounts();
     })
     .catch((error) => {
       console.error('Failed to change note visibility:', error);
-      apiErrorHandler(error);
     });
 }
 
 
-
-
-
-function handleSaveFailure(error) {
-  if (error.response?.status === 413) {
-    showFileSizeModal("note");
-  } else {
-    apiErrorHandler(error);
-  }
-}
 
 
 
@@ -715,99 +408,6 @@ function closeNote() {
   }
 }
 
-// Image Upload
-function addImageBlobHook(file, callback) {
-  postAttachment(file)
-    .then((data) => {
-      if (data) {
-        // Use original filename as alt text for better accessibility
-        const altText = data.originalFilename || data.filename;
-        callback(data.url, altText);
-      }
-    })
-    .catch((error) => {
-      console.warn('Image upload failed, using local URL:', error);
-      // Fallback to local URL if upload fails
-      const url = URL.createObjectURL(file);
-      callback(url, file.name);
-    });
-}
-
-function postAttachment(file) {
-  if (!file.name || file.name.trim() === "") {
-    globalStore.toast?.addToast(
-      "Invalid filename",
-      "Invalid Attachment",
-      "error"
-    );
-    return Promise.reject(new Error("Invalid filename"));
-  }
-
-  return createAttachment(file)
-    .then((data) => {
-      return data;
-    })
-    .catch((error) => {
-      if (error.response?.status === 409) {
-        // File already exists, will be handled by server
-        return Promise.reject(error);
-      } else if (error.response?.status === 413) {
-        showFileSizeModal("attachment");
-        return Promise.reject(error);
-      } else {
-        apiErrorHandler(error);
-        return Promise.reject(error);
-      }
-    });
-}
-
-function startContentChangedTimeout() {
-  clearContentChangedTimeout();
-  contentChangedTimeout = setTimeout(contentChangedHandler, noteConstants.CONTENT_CHANGE_DELAY);
-}
-
-function clearContentChangedTimeout() {
-  if (contentChangedTimeout != null) {
-    clearTimeout(contentChangedTimeout);
-  }
-}
-
-function contentChangedHandler() {
-  if (autoSaveState.value.isAutoSavingInProgress) {
-    return;
-  }
-  
-  if (isContentChanged()) {
-    updateUIState({ unsavedChanges: true });
-    setBeforeUnloadConfirmation(true);
-    const delay = isNewNote.value ? noteConstants.NEW_NOTE_AUTO_SAVE_DELAY : noteConstants.AUTO_SAVE_DELAY;
-    startAutoSaveTimeout(delay);
-  } else {
-    updateUIState({ unsavedChanges: false });
-    setBeforeUnloadConfirmation(false);
-    clearAutoSaveTimeout();
-  }
-}
-
-function startAutoSaveTimeout(delay = noteConstants.AUTO_SAVE_DELAY) {
-  clearAutoSaveTimeout();
-  autoSaveTimeout = setTimeout(autoSaveHandler, delay);
-}
-
-function clearAutoSaveTimeout() {
-  if (autoSaveTimeout != null) {
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = null;
-  }
-}
-
-function clearTitleGenerationTimeout() {
-  if (titleGenerationTimeout) {
-    clearTimeout(titleGenerationTimeout);
-    titleGenerationTimeout = null;
-  }
-}
-
 function onTagConfirmed() {
   // Only proceed if we can modify the note
   if (!canModify.value) {
@@ -815,10 +415,7 @@ function onTagConfirmed() {
   }
   
   // Clear any pending auto-save timeout
-  if (autoSaveTimeout) {
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = null;
-  }
+  clearAutoSaveTimeout();
   
   // Force save immediately for tag changes
   if (!autoSaveState.value.isAutoSaving) {
@@ -831,162 +428,18 @@ function performSave(close = false, isAuto = false) {
   saveDefaultEditorMode();
   ensureTitle();
   
-  updateAutoSaveState({ 
-    isAutoSaving: true, 
-    isAutoSavingInProgress: true 
-  });
+  autoSaveState.value.isAutoSaving = true;
+  autoSaveState.value.isAutoSavingInProgress = true;
   
   const newContent = toastEditor.value.getMarkdown();
   if (isNewNote.value) {
-    saveNewNote(newTitle.value, newContent, newTags.value, close, isAuto);
+    saveNewNote(newTitle.value, newContent, newTags.value, close, isAuto, updateNoteState, autoSaveUIState, resetAutoSaveState, closeNote);
   } else {
-    saveExistingNote(props.filename, newTitle.value, newContent, newTags.value, close, isAuto);
-  }
-}
-
-function autoSaveHandler() {
-  if (!isContentChanged()) {
-    resetAutoSaveState();
-    return;
-  }
-  performSave(false, true);
-}
-
-function ensureTitle() {
-  if (!newTitle.value || newTitle.value.trim() === "") {
-    const content = toastEditor.value.getMarkdown();
-    newTitle.value = generateTitleFromContent(content);
-    if (!newTitle.value || newTitle.value.trim() === "") {
-      newTitle.value = noteConstants.DEFAULT_TITLE;
-    }
+    saveExistingNote(props.filename, newTitle.value, newContent, newTags.value, close, isAuto, updateNoteState, autoSaveUIState, resetAutoSaveState, closeNote);
   }
 }
 
 
-
-
-
-function resetAutoSaveState() {
-  updateAutoSaveState({ 
-    isAutoSaving: false, 
-    isAutoSavingInProgress: false 
-  });
-}
-
-function saveNewNote(title, content, tags, close = false, isAuto = false) {
-  createNote(title, content, tags)
-    .then(async (data) => {
-      // For auto-save, don't update note object to preserve cursor position
-      if (!isAuto) {
-        updateNoteState({
-          note: data,
-          isNewNote: false  // Mark as existing note after creation
-        });
-      } else {
-        // Only update isNewNote flag for auto-save
-        updateNoteState({
-          isNewNote: false
-        });
-      }
-      // Update newTags with server data (silently to avoid watch trigger)
-      const serverTags = data.tags || [];
-      if (newTags.value.length !== serverTags.length || 
-          newTags.value.some((tag, index) => tag !== serverTags[index])) {
-        newTags.value = serverTags;
-      }
-      if (data.title && data.title.trim()) {
-        document.title = `${data.title} - SBNote`;
-        globalStore.currentNoteTitle = data.title;
-      }
-      // Update URL with filename (without extension)
-      const filename = data.filename.replace(noteConstants.MARKDOWN_EXTENSION, '');
-      router.replace({ name: "note", params: { filename } });
-      updateUIState({ unsavedChanges: false });
-      setBeforeUnloadConfirmation(false);
-      
-      // Reload tag counts to reflect changes
-      await loadTagCounts();
-      
-      if (isAuto) resetAutoSaveState();
-      if (close) closeNote();
-    })
-    .catch((error) => {
-      console.error('Failed to save new note:', error);
-      if (isAuto) resetAutoSaveState();
-      handleSaveFailure(error);
-    });
-}
-
-function saveExistingNote(filename, title, content, tags, close = false, isAuto = false) {
-  // Add .md extension for API call
-  const filenameWithExtension = filename + noteConstants.MARKDOWN_EXTENSION;
-  updateNote(filenameWithExtension, title, content, tags)
-    .then(async (data) => {
-      // For auto-save, don't update note object to preserve cursor position
-      if (!isAuto) {
-        updateNoteState({
-          note: data
-        });
-      }
-      // Update newTags with server data (silently to avoid watch trigger)
-      const serverTags = data.tags || [];
-      if (newTags.value.length !== serverTags.length || 
-          newTags.value.some((tag, index) => tag !== serverTags[index])) {
-        newTags.value = serverTags;
-      }
-      if (data.title && data.title.trim()) {
-        document.title = `${data.title} - SBNote`;
-        globalStore.currentNoteTitle = data.title;
-      }
-      updateUIState({ unsavedChanges: false });
-      setBeforeUnloadConfirmation(false);
-      
-      // Reload tag counts to reflect changes
-      await loadTagCounts();
-      
-      if (isAuto) resetAutoSaveState();
-      if (close) closeNote();
-    })
-    .catch((error) => {
-      console.error('Failed to save existing note:', error);
-      if (isAuto) resetAutoSaveState();
-      handleSaveFailure(error);
-    });
-}
-
-function showFileSizeModal(entityName) {
-  fileSizeModalMessage.value = `The ${entityName} you're trying to upload is too large. Please choose a smaller file.`;
-  updateUIState({ isFileSizeModalVisible: true });
-}
-
-function closeFileSizeModal() {
-  updateUIState({ isFileSizeModalVisible: false });
-}
-
-// Toggle info section and save to localStorage
-function toggleInfoSection() {
-  const newExpandedState = !uiState.value.isInfoExpanded;
-  updateUIState({ isInfoExpanded: newExpandedState });
-  localStorage.setItem('noteInfoExpanded', newExpandedState.toString());
-}
-
-// Load info section state from localStorage
-function loadInfoSectionState() {
-  const savedState = localStorage.getItem('noteInfoExpanded');
-  if (savedState !== null) {
-    updateUIState({ isInfoExpanded: savedState === 'true' });
-  }
-}
-
-function setBeforeUnloadConfirmation(enable = true) {
-  if (enable) {
-    window.onbeforeunload = () => {
-      return true;
-    };
-  } else {
-    window.onbeforeunload = null;
-  }
-}
 
 // Update file menu state in App.vue
 function updateFileMenuState() {
@@ -995,7 +448,7 @@ function updateFileMenuState() {
       canModify: canModify.value,
       isNewNote: isNewNote.value,
       autoSaveState: autoSaveState.value,
-      unsavedChanges: uiState.value.unsavedChanges,
+      unsavedChanges: autoSaveUIState.value.unsavedChanges,
       currentVisibility: note.value.visibility || 'private'
     });
   }
@@ -1008,71 +461,34 @@ function updateFileMenuState() {
   globalStore.currentNoteCategory = note.value.category || 'note';
 }
 
-function saveDefaultEditorMode() {
-  if (toastEditor.value) {
-    const isWysiwygMode = toastEditor.value.isWysiwygMode();
-    localStorage.setItem(
-      "defaultEditorMode",
-      isWysiwygMode ? "wysiwyg" : "markdown",
-    );
-  }
-}
-
-function loadDefaultEditorMode() {
-  const defaultWysiwygMode = localStorage.getItem("defaultEditorMode");
-  return defaultWysiwygMode || "markdown";
-}
-
-function isContentChanged() {
-  if (autoSaveState.value.isAutoSavingInProgress) {
-    return false;
-  }
-  
-  // Optimize tag comparison by checking length first
-  const currentTags = note.value.tags || [];
-  const tagsChanged = newTags.value.length !== currentTags.length || 
-    newTags.value.some((tag, index) => tag !== currentTags[index]);
-  
-  return (
-    newTitle.value != note.value.title ||
-    (toastEditor.value && toastEditor.value.getMarkdown() != note.value.content) ||
-    tagsChanged
-  );
-}
-
-// Unified watch for content changes
-function handleContentChange(isTagsOnlyChange = false) {
-  if (autoSaveState.value.isAutoSavingInProgress) {
-    return;
-  }
-  
-  if (isContentChanged()) {
-    updateUIState({ unsavedChanges: true });
-    setBeforeUnloadConfirmation(true);
-    
-    const delay = isTagsOnlyChange ? noteConstants.TAGS_ONLY_CHANGE_DELAY : noteConstants.AUTO_SAVE_DELAY;
-    
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout);
-    }
-    autoSaveTimeout = setTimeout(() => {
-      if (uiState.value.unsavedChanges && !autoSaveState.value.isAutoSaving) {
-        autoSaveHandler();
-      }
-    }, delay);
-  } else {
-    updateUIState({ unsavedChanges: false });
-    setBeforeUnloadConfirmation(false);
-    clearAutoSaveTimeout();
-  }
-}
-
 watch([newTitle], () => {
   if (newTitle.value && newTitle.value.trim()) {
     document.title = `${newTitle.value} - SBNote`;
     globalStore.currentNoteTitle = newTitle.value;
   }
-  handleContentChange();
+  // Handle content change manually
+  if (autoSaveState.value.isAutoSavingInProgress) {
+    return;
+  }
+  
+  if (isContentChanged(newTitle.value, note.value, newTags.value, toastEditor.value)) {
+    autoSaveUIState.value.unsavedChanges = true;
+    setBeforeUnloadConfirmation(true);
+    const delay = isNewNote.value ? noteConstants.NEW_NOTE_AUTO_SAVE_DELAY : noteConstants.AUTO_SAVE_DELAY;
+    setTimeout(() => {
+      if (autoSaveUIState.value.unsavedChanges && !autoSaveState.value.isAutoSaving) {
+        if (!isContentChanged(newTitle.value, note.value, newTags.value, toastEditor.value)) {
+          resetAutoSaveState();
+          return;
+        }
+        performSave(false, true);
+      }
+    }, delay);
+  } else {
+    autoSaveUIState.value.unsavedChanges = false;
+    setBeforeUnloadConfirmation(false);
+    clearAutoSaveTimeout();
+  }
 }, { deep: true, immediate: true });
 
 watch([newTags], async () => {
@@ -1082,14 +498,31 @@ watch([newTags], async () => {
     (toastEditor.value && toastEditor.value.getMarkdown() === note.value.content) &&
     newTags.value.length !== (note.value.tags || []).length
   );
-  handleContentChange(isTagsOnlyChange);
+  
+  // Handle content change manually
+  if (autoSaveState.value.isAutoSavingInProgress) {
+    return;
+  }
+  
+  if (isContentChanged(newTitle.value, note.value, newTags.value, toastEditor.value)) {
+    autoSaveUIState.value.unsavedChanges = true;
+    setBeforeUnloadConfirmation(true);
+    
+    const delay = isTagsOnlyChange ? noteConstants.TAGS_ONLY_CHANGE_DELAY : noteConstants.AUTO_SAVE_DELAY;
+    setTimeout(() => {
+      if (autoSaveUIState.value.unsavedChanges && !autoSaveState.value.isAutoSaving) {
+        performSave(false, true);
+      }
+    }, delay);
+  } else {
+    autoSaveUIState.value.unsavedChanges = false;
+    setBeforeUnloadConfirmation(false);
+    clearAutoSaveTimeout();
+  }
   
   // Reset tag grid state when tags change
   if (selectedNoteTag.value) {
-    updateTagGridState({
-      selectedNoteTag: null,
-      displayedTagNotes: []
-    });
+    resetTagGridState();
   }
   
   // Update tag counts when tags change (for immediate UI feedback)
@@ -1100,13 +533,13 @@ watch([newTags], async () => {
 
 watch(() => props.filename, async () => {
   if (toastEditor.value && toastEditor.value.getMarkdown() !== note.value.content) {
-    updateUIState({ unsavedChanges: true });
+    autoSaveUIState.value.unsavedChanges = true;
   }
   await init();
 });
 
 // Watch for changes that affect file menu state
-watch([canModify, isNewNote, autoSaveState, () => uiState.value.unsavedChanges], () => {
+watch([canModify, isNewNote, autoSaveState, () => autoSaveUIState.value.unsavedChanges], () => {
   updateFileMenuState();
 }, { deep: true });
 
@@ -1120,9 +553,6 @@ watch(canModify, (newCanModify) => {
 
 onMounted(async () => {
   await init();
-  
-  // Load info section state from localStorage
-  loadInfoSectionState();
   
   // Listen for file menu events from NavBar
   window.addEventListener('note-close', closeHandler);
@@ -1142,5 +572,8 @@ onUnmounted(() => {
   window.removeEventListener('note-delete', deleteHandler);
   window.removeEventListener('note-toggle-preview-style', togglePreviewStyleHandler);
   window.removeEventListener('note-change-visibility', changeVisibilityHandler);
+  
+  // Clean up auto save
+  cleanupAutoSave();
 });
 </script>

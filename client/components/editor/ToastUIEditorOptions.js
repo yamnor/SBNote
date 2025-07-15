@@ -1,7 +1,7 @@
 import codeSyntaxHighlight from "@toast-ui/editor-plugin-code-syntax-highlight/dist/toastui-editor-plugin-code-syntax-highlight-all.js";
 import chart from "@toast-ui/editor-plugin-chart/dist/toastui-editor-plugin-chart.js";
 import katex from "katex";
-import router from "../router.js";
+import router from "../../router.js";
 
 
 

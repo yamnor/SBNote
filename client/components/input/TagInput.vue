@@ -64,7 +64,7 @@
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getTags } from '../lib/api.js'
+import { getTags } from '../../lib/api.js'
 
 const props = defineProps({
   modelValue: {

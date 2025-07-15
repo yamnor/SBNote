@@ -411,9 +411,9 @@ import DropdownMenuItem from "../ui/DropdownMenuItem.vue";
 import EmbedModal from "../modal/EmbedModal.vue";
 import PasteModal from "../modal/PasteModal.vue";
 import HistoryModal from "../modal/HistoryModal.vue";
-import { authTypes } from "../lib/constants.js";
-import { useGlobalStore } from "../lib/globalStore.js";
-import { clearStoredToken } from "../lib/tokenStorage.js";
+import { authTypes } from "../../lib/constants.js";
+import { useGlobalStore } from "../../lib/globalStore.js";
+import { clearStoredToken } from "../../lib/tokenStorage.js";
 
 const props = defineProps({
   incrementalSearchResults: {

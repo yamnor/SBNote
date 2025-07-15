@@ -92,7 +92,7 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import { getNoteHistory, getNoteVersion, restoreNoteVersion } from '../lib/api.js';
+import { getNoteHistory, getNoteVersion, restoreNoteVersion } from '../../lib/api.js';
 import HistoryPreviewModal from './HistoryPreviewModal.vue';
 import ConfirmModal from './ConfirmModal.vue';
 

@@ -62,7 +62,7 @@
 
 <script setup>
 import { computed, ref } from "vue";
-import { useGlobalStore } from "../lib/globalStore.js";
+import { useGlobalStore } from "../../lib/globalStore.js";
 import PreviewNoteModal from "../modal/PreviewNoteModal.vue";
 import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, ExternalLink } from "lucide-vue-next";
 

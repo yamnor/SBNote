@@ -83,7 +83,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { X, Loader2 } from 'lucide-vue-next';
-import { createNote } from '../lib/api.js';
+import { createNote } from '../../lib/api.js';
 
 const props = defineProps({
   isVisible: {

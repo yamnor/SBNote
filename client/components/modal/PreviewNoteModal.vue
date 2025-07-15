@@ -128,10 +128,10 @@ import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessu
 import { onMounted, ref, watch, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { X, Maximize2, Presentation, ExternalLink, Link2, Atom } from "lucide-vue-next";
-import { useGlobalStore } from "../lib/globalStore.js";
-import TagInput from "./TagInput.vue";
-import ToastUIEditor from "./ToastUIEditor.vue";
-import { updateNote } from "../lib/api.js";
+import { useGlobalStore } from "../../lib/globalStore.js";
+import TagInput from "../input/TagInput.vue";
+import ToastUIEditor from "../editor/ToastUIEditor.vue";
+import { updateNote } from "../../lib/api.js";
 
 const props = defineProps({
   note: {

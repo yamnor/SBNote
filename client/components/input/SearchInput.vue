@@ -96,9 +96,9 @@ import { Search, SquareArrowOutUpRight, Plus } from "lucide-vue-next";
 import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
-import { apiErrorHandler, getTags } from "../lib/api.js";
-import * as constants from "../lib/constants.js";
-import { getToastOptions } from "../lib/helpers.js";
+import { apiErrorHandler, getTags } from "../../lib/api.js";
+import * as constants from "../../lib/constants.js";
+import { getToastOptions } from "../../lib/helpers.js";
 
 const props = defineProps({
   initialSearchTerm: { type: String, default: "" },

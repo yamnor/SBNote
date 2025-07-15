@@ -130,8 +130,8 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { X, Loader2 } from 'lucide-vue-next';
-import { importPaste } from '../lib/api.js';
-import TagInput from './TagInput.vue';
+import { importPaste } from '../../lib/api.js';
+import TagInput from '../input/TagInput.vue';
 
 const props = defineProps({
   isVisible: {
