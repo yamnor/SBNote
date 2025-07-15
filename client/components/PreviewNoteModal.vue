@@ -169,6 +169,12 @@ let autoSaveTimeout = null;
 let contentChangedTimeout = null;
 let titleGenerationTimeout = null;
 
+// ✅ 修正: autoSaveStateをrefとして定義
+const autoSaveState = ref({
+  isAutoSaving: false,
+  isAutoSavingInProgress: false
+});
+
 // ✅ 修正: 定数を正しく使用
 const AUTO_SAVE_DELAY = noteConstants.AUTO_SAVE_DELAY; // 1000ms
 const CONTENT_CHANGE_DELAY = noteConstants.CONTENT_CHANGE_DELAY; // 1000ms
@@ -254,6 +260,12 @@ function initializeEditing() {
   editingContent.value = props.note.content || '';
   editingTags.value = [...(props.note.tags || [])];
   generatedTitle.value = '';
+  
+  // ✅ 修正: autoSaveStateを初期化
+  updateAutoSaveState({
+    isAutoSaving: false,
+    isAutoSavingInProgress: false
+  });
 }
 
 // Title generation function (Note.vueと同様)
@@ -295,7 +307,8 @@ function generateTitleFromContent(content) {
 }
 
 function handleEditorChange() {
-  if (autoSaveState.value.isAutoSavingInProgress) {
+  // ✅ 修正: ToastUIEditorの初期化チェックを追加
+  if (!toastEditor.value || autoSaveState.value.isAutoSavingInProgress) {
     return;
   }
   
@@ -313,10 +326,12 @@ function handleEditorChange() {
   // Auto-generate title from first line (Note.vueと同様)
   clearTimeout(titleGenerationTimeout);
   titleGenerationTimeout = setTimeout(() => {
-    const content = toastEditor.value.getMarkdown();
-    const newGeneratedTitle = generateTitleFromContent(content);
-    if (newGeneratedTitle && newGeneratedTitle !== generatedTitle.value) {
-      generatedTitle.value = newGeneratedTitle;
+    if (toastEditor.value) {
+      const content = toastEditor.value.getMarkdown();
+      const newGeneratedTitle = generateTitleFromContent(content);
+      if (newGeneratedTitle && newGeneratedTitle !== generatedTitle.value) {
+        generatedTitle.value = newGeneratedTitle;
+      }
     }
   }, TITLE_GENERATION_DELAY);
 }
@@ -344,7 +359,7 @@ function clearContentChangedTimeout() {
 
 // ✅ 修正: contentChangedHandlerをNote.vueと同様に改善
 function contentChangedHandler() {
-  if (autoSaveState.value.isAutoSavingInProgress) {
+  if (!toastEditor.value || autoSaveState.value.isAutoSavingInProgress) {
     return; // 重要な: 保存中は処理をスキップ
   }
   
@@ -355,11 +370,13 @@ function contentChangedHandler() {
   // Auto-generate title from first line
   clearTimeout(titleGenerationTimeout);
   titleGenerationTimeout = setTimeout(() => {
-    const content = toastEditor.value ? toastEditor.value.getMarkdown() : editingContent.value;
-    const generatedTitle = generateTitleFromContent(content);
-    if (generatedTitle && generatedTitle !== props.note.title) {
-      // タイトルが変更された場合のみ更新
-      props.note.title = generatedTitle;
+    if (toastEditor.value) {
+      const content = toastEditor.value.getMarkdown();
+      const generatedTitle = generateTitleFromContent(content);
+      if (generatedTitle && generatedTitle !== props.note.title) {
+        // タイトルが変更された場合のみ更新
+        props.note.title = generatedTitle;
+      }
     }
   }, TITLE_GENERATION_DELAY);
 }
@@ -428,7 +445,7 @@ function resetAutoSaveState() {
 }
 
 async function performSave() {
-  if (autoSaveState.value.isAutoSaving) return;
+  if (!toastEditor.value || autoSaveState.value.isAutoSaving) return;
   
   updateAutoSaveState({ 
     isAutoSaving: true, 
@@ -436,7 +453,7 @@ async function performSave() {
   });
   
   try {
-    const currentContent = toastEditor.value ? toastEditor.value.getMarkdown() : editingContent.value;
+    const currentContent = toastEditor.value.getMarkdown();
     const filenameWithExtension = props.note.filename;
     
     const updatedNote = await updateNote(
