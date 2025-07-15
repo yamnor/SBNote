@@ -106,18 +106,12 @@ async function loadMolecule() {
     // Determine file format from extension
     const fileExtension = props.attachmentFilename.split('.').pop().toLowerCase();
     
-    // Load file data based on format
-    if (fileExtension === 'xyz') {
-      viewer.addModel(props.fileContent, 'xyz');
-    } else if (fileExtension === 'pdb') {
-      viewer.addModel(props.fileContent, 'pdb');
-    } else if (fileExtension === 'mol') {
-      viewer.addModel(props.fileContent, 'mol');
-    } else if (fileExtension === 'sdf') {
-      viewer.addModel(props.fileContent, 'sdf');
+    // Check if this is a pickle file and use ccget API
+    if (fileExtension === 'pkl') {
+      await loadMoleculeFromPickle();
     } else {
-      // Default to XYZ format
-      viewer.addModel(props.fileContent, 'xyz');
+      // Use existing logic for other file formats
+      await loadMoleculeFromFile();
     }
     
     // Set view style
@@ -140,6 +134,60 @@ async function loadMolecule() {
     isLoading.value = false;
     emit('error', error.value);
     emit('loading', false);
+  }
+}
+
+async function loadMoleculeFromPickle() {
+  // Extract basename from attachment filename
+  const basename = props.attachmentFilename.split('/')[0];
+  
+  try {
+    // Get molecular data from ccget API
+    const response = await fetch(`/api/ccget/${basename}?attributes=xyz,natom,atomnos,scfenergies`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch molecular data: ${response.statusText}`);
+    }
+    
+    const molecularData = await response.json();
+    
+    if (!molecularData.xyz) {
+      throw new Error('XYZ data not available in pickle file');
+    }
+    
+    // Load XYZ content into 3Dmol
+    viewer.addModel(molecularData.xyz, 'xyz');
+    
+    // Store additional molecular data
+    if (molecularData.natom) {
+      viewer.molecularInfo = {
+        atomCount: molecularData.natom,
+        atomicNumbers: molecularData.atomnos,
+        energies: molecularData.scfenergies
+      };
+    }
+    
+  } catch (err) {
+    console.error('Failed to load molecule from pickle:', err);
+    throw err;
+  }
+}
+
+async function loadMoleculeFromFile() {
+  // Determine file format from extension
+  const fileExtension = props.attachmentFilename.split('.').pop().toLowerCase();
+  
+  // Load file data based on format
+  if (fileExtension === 'xyz') {
+    viewer.addModel(props.fileContent, 'xyz');
+  } else if (fileExtension === 'pdb') {
+    viewer.addModel(props.fileContent, 'pdb');
+  } else if (fileExtension === 'mol') {
+    viewer.addModel(props.fileContent, 'mol');
+  } else if (fileExtension === 'sdf') {
+    viewer.addModel(props.fileContent, 'sdf');
+  } else {
+    // Default to XYZ format
+    viewer.addModel(props.fileContent, 'xyz');
   }
 }
 

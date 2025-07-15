@@ -232,7 +232,7 @@ function getFilenameForMode(mode) {
   switch (mode) {
     case '3dmol':
     case 'miew':
-      return `${basename}/output.xyz`;
+      return `${basename}/output.pkl`;
     case 'output':
     default:
       return `${basename}/output.txt`;

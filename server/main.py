@@ -1074,6 +1074,78 @@ def get_attachment_by_basename_pkl_with_slash(basename: str):
             status_code=500, detail="Internal server error"
         )
 
+@router.get("/api/ccget/{basename}")
+def ccget_data(basename: str, attributes: str = Query(..., description="Comma-separated list of cclib attributes")):
+    """
+    Get cclib data attributes from pickle file.
+    Mimics the cclib ccget command line tool.
+    """
+    try:
+        import pickle
+        import os
+        import numpy as np
+        
+        # Construct pickle file path
+        pkl_path = os.path.join(attachment_storage.storage_path, basename, "output.pkl")
+        
+        # Check if pickle file exists
+        if not os.path.exists(pkl_path):
+            raise HTTPException(
+                status_code=404, detail=f"Pickle file not found for basename: {basename}"
+            )
+        
+        # Load pickle data
+        with open(pkl_path, 'rb') as f:
+            data = pickle.load(f)
+        
+        # Parse attributes
+        attr_list = [attr.strip() for attr in attributes.split(',')]
+        
+        # Helper function to convert cclib data to JSON-serializable format
+        def convert_to_json_serializable(obj):
+            """Convert cclib data objects to JSON-serializable format"""
+            if obj is None:
+                return None
+            elif isinstance(obj, (str, int, float, bool)):
+                return obj
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, list):
+                return [convert_to_json_serializable(item) for item in obj]
+            elif isinstance(obj, dict):
+                return {key: convert_to_json_serializable(value) for key, value in obj.items()}
+            elif hasattr(obj, '__dict__'):
+                # For objects with __dict__, try to convert their attributes
+                return {key: convert_to_json_serializable(value) for key, value in obj.__dict__.items()}
+            else:
+                # For other objects, convert to string
+                return str(obj)
+        
+        # Get data for each attribute
+        result = {}
+        for attr in attr_list:
+            if attr == 'xyz':
+                # Special handling for xyz format
+                if hasattr(data, 'writexyz'):
+                    result[attr] = data.writexyz()
+                else:
+                    result[attr] = None
+            elif hasattr(data, attr):
+                value = getattr(data, attr)
+                result[attr] = convert_to_json_serializable(value)
+            else:
+                result[attr] = None
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in ccget_data for basename {basename}: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get cclib data: {str(e)}"
+        )
+
 @router.get(
     "/a/{basename}/",
     include_in_schema=False,

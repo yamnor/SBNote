@@ -155,43 +155,12 @@ async function loadMolecule() {
     // Determine file format from extension
     const fileExtension = props.attachmentFilename.split('.').pop().toLowerCase();
     
-    // Load file data based on format
-    let format = 'pdb'; // Default format
-    if (fileExtension === 'xyz') {
-      format = 'xyz';
-    } else if (fileExtension === 'mol' || fileExtension === 'sdf') {
-      format = 'sdf';
-    } else if (fileExtension === 'pdb') {
-      format = 'pdb';
-    }
-    
-    // Load the molecule
-    if (typeof viewer.load === 'function') {
-      // Create a blob URL for the file content
-      let mimeType = 'text/plain';
-      if (fileExtension === 'xyz') {
-        mimeType = 'chemical/x-xyz';
-      } else if (fileExtension === 'pdb') {
-        mimeType = 'chemical/x-pdb';
-      } else if (fileExtension === 'mol' || fileExtension === 'sdf') {
-        mimeType = 'chemical/x-mdl-molfile';
-      }
-      
-      // Ensure proper line endings for Miew
-      let processedContent = props.fileContent;
-      if (!processedContent.endsWith('\n')) {
-        processedContent += '\n';
-      }
-      
-      const blob = new Blob([processedContent], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      
-      try {
-        await viewer.load(url);
-      } finally {
-        // Clean up the blob URL
-        URL.revokeObjectURL(url);
-      }
+    // Check if this is a pickle file and use ccget API
+    if (fileExtension === 'pkl') {
+      await loadMoleculeFromPickle();
+    } else {
+      // Use existing logic for other file formats
+      await loadMoleculeFromFile();
     }
     
     // Set default representation (ball and stick)
@@ -228,6 +197,95 @@ async function loadMolecule() {
     isLoading.value = false;
     emit('error', error.value);
     emit('loading', false);
+  }
+}
+
+async function loadMoleculeFromPickle() {
+  // Extract basename from attachment filename
+  const basename = props.attachmentFilename.split('/')[0];
+  
+  try {
+    // Get molecular data from ccget API
+    const response = await fetch(`/api/ccget/${basename}?attributes=xyz,natom,atomnos,scfenergies`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch molecular data: ${response.statusText}`);
+    }
+    
+    const molecularData = await response.json();
+    
+    if (!molecularData.xyz) {
+      throw new Error('XYZ data not available in pickle file');
+    }
+    
+    // Load XYZ content into Miew
+    if (typeof viewer.load === 'function') {
+      // Create a blob URL for the XYZ content
+      const blob = new Blob([molecularData.xyz], { type: 'chemical/x-xyz' });
+      const url = URL.createObjectURL(blob);
+      
+      try {
+        await viewer.load(url);
+      } finally {
+        // Clean up the blob URL
+        URL.revokeObjectURL(url);
+      }
+    }
+    
+    // Store additional molecular data for terminal commands
+    if (molecularData.natom) {
+      viewer.molecularInfo = {
+        atomCount: molecularData.natom,
+        atomicNumbers: molecularData.atomnos,
+        energies: molecularData.scfenergies
+      };
+    }
+    
+  } catch (err) {
+    console.error('Failed to load molecule from pickle:', err);
+    throw err;
+  }
+}
+
+async function loadMoleculeFromFile() {
+  // Load file data based on format
+  let format = 'pdb'; // Default format
+  const fileExtension = props.attachmentFilename.split('.').pop().toLowerCase();
+  
+  if (fileExtension === 'xyz') {
+    format = 'xyz';
+  } else if (fileExtension === 'mol' || fileExtension === 'sdf') {
+    format = 'sdf';
+  } else if (fileExtension === 'pdb') {
+    format = 'pdb';
+  }
+  
+  // Load the molecule
+  if (typeof viewer.load === 'function') {
+    // Create a blob URL for the file content
+    let mimeType = 'text/plain';
+    if (fileExtension === 'xyz') {
+      mimeType = 'chemical/x-xyz';
+    } else if (fileExtension === 'pdb') {
+      mimeType = 'chemical/x-pdb';
+    } else if (fileExtension === 'mol' || fileExtension === 'sdf') {
+      mimeType = 'chemical/x-mdl-molfile';
+    }
+    
+    // Ensure proper line endings for Miew
+    let processedContent = props.fileContent;
+    if (!processedContent.endsWith('\n')) {
+      processedContent += '\n';
+    }
+    
+    const blob = new Blob([processedContent], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    
+    try {
+      await viewer.load(url);
+    } finally {
+      // Clean up the blob URL
+      URL.revokeObjectURL(url);
+    }
   }
 }
 
