@@ -24,7 +24,7 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full transform overflow-hidden rounded-lg bg-color-bg-neutral shadow-2xl transition-all note-preview-modal" style="max-width: var(--layout-width-note);">
+            <DialogPanel class="w-full transform overflow-visible rounded-lg bg-color-bg-neutral shadow-2xl transition-all note-preview-modal" style="max-width: var(--layout-width-note);">
               <!-- Header -->
               <div class="flex items-center justify-between p-2 pb-0">
                 <!-- Left side - Slide view button and Embed button -->
@@ -119,7 +119,7 @@
               </div>
               
               <!-- Tags section at bottom -->
-              <div class="mt-4 mb-4">
+              <div class="mt-4 mb-4 overflow-visible">
                 <TagInput 
                   v-model="editingTags"
                   :readonly="false"
