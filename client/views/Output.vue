@@ -23,7 +23,7 @@
           :class="viewMode === 'output' ? '!bg-color-button-primary-bg !text-color-button-primary-fg' : ''"
           :title="viewMode === 'output' ? 'Current view' : 'Output View'"
         >
-          <Grip class="w-6 h-6" />
+          <Scroll class="w-6 h-6" />
         </button>
         
         <!-- 3Dmol button -->
@@ -112,7 +112,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { ArrowLeft, Eye, Grip, FileX, Loader2, RefreshCw, Terminal } from 'lucide-vue-next';
+import { ArrowLeft, Eye, Scroll, FileX, Loader2, RefreshCw, Terminal } from 'lucide-vue-next';
 import { useNoteAttachment } from '../composables/useNoteAttachment.js';
 import ThreeDmolViewer from '../components/3DmolViewer.vue';
 import MiewViewer from '../components/MiewViewer.vue';

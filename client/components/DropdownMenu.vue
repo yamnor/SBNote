@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, provide } from 'vue';
 
 const props = defineProps({
   triggerIcon: {
@@ -68,6 +68,9 @@ function closeMenu() {
   isOpen.value = false;
   emit('close');
 }
+
+// Provide closeMenu function to child components
+provide('closeDropdownMenu', closeMenu);
 
 // Close menu when clicking outside
 function handleClickOutside(event) {

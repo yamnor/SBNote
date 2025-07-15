@@ -85,6 +85,10 @@ export default defineConfig({
   server: {
     // Note: The SBNOTE_PATH_PREFIX environment variable is not supported by the dev server
     port: 3000,
+    watch: {
+      usePolling: true,
+      interval: 1000,
+    },
     proxy: {
       "/api/": {
         target: devApiUrl,
@@ -118,10 +122,6 @@ export default defineConfig({
         target: devApiUrl,
         changeOrigin: true,
       },
-    },
-    watch: {
-      usePolling: true,
-      interval: 1000,
     },
   },
 });

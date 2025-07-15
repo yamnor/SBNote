@@ -10,6 +10,8 @@
 </template>
 
 <script setup>
+import { inject } from 'vue';
+
 const props = defineProps({
   icon: {
     type: [String, Object, Function],
@@ -23,7 +25,14 @@ const props = defineProps({
 
 const emit = defineEmits(['click']);
 
+// Inject closeDropdownMenu function from parent DropdownMenu
+const closeDropdownMenu = inject('closeDropdownMenu', null);
+
 function handleClick(event) {
   emit('click', event);
+  // Close the dropdown menu if the function is available
+  if (closeDropdownMenu) {
+    closeDropdownMenu();
+  }
 }
 </script> 
