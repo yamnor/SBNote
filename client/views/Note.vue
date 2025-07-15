@@ -1,7 +1,7 @@
 <template>
   <!-- Confirm Deletion Modal -->
   <ConfirmModal
-    v-model="uiState.isDeleteModalVisible"
+    v-model="state.uiState.isDeleteModalVisible"
     title="Confirm Deletion"
     :message="`Are you sure you want to delete the note '${note.title}'?`"
     confirmButtonText="Delete"
@@ -11,7 +11,7 @@
 
   <!-- File Size Limit Modal -->
   <ConfirmModal
-    v-model="uiState.isFileSizeModalVisible"
+    v-model="state.uiState.isFileSizeModalVisible"
     title="File Too Large"
     :message="fileSizeModalMessage"
     confirmButtonText="OK"
@@ -52,14 +52,14 @@
         <!-- Note Information Display -->
         <div class="note-content-width">
           <!-- Header with toggle -->
-          <div class="flex items-center justify-between p-1 border-b border-color-bg-base cursor-pointer hover:bg-color-bg-base transition-colors" @click="toggleInfoSection">
+          <div class="flex items-center justify-between p-1 bg-color-bg-base border-b border-color-bg-base cursor-pointer hover:bg-color-bg-base transition-colors" @click="toggleInfoSection">
             <Info class="w-4 h-4 text-color-text-secondary" />
-            <ChevronDown v-if="uiState.isInfoExpanded" class="w-4 h-4 text-color-text-secondary" />
+            <ChevronDown v-if="state.uiState.isInfoExpanded" class="w-4 h-4 text-color-text-secondary" />
             <ChevronRight v-else class="w-4 h-4 text-color-text-secondary" />
           </div>
           
           <!-- Collapsible content -->
-          <div v-show="uiState.isInfoExpanded" class="text-xs text-color-text-secondary flex flex-col gap-1 p-1">
+          <div v-show="state.uiState.isInfoExpanded" class="text-xs text-color-text-secondary flex flex-col gap-1 p-1 bg-color-bg-base">
             <div class="flex flex-row justify-between">
               <div class="flex flex-col">
                 <span v-if="note.category">Category: {{ note.category }}</span>
@@ -215,51 +215,50 @@ const { handleTagClick, handleTagDoubleClick } = useTagInteractions();
 const { fetchNotesByTag } = useDataFetching();
 
 // State management - grouped related states
-const noteState = ref({
-  note: {},
-  newTitle: "",
-  isNewNote: !props.filename
-});
-
-const uiState = ref({
-  isDeleteModalVisible: false,
-  isFileSizeModalVisible: false,
-  unsavedChanges: false,
-  isInfoExpanded: false
-});
-
-const autoSaveState = ref({
-  isAutoSaving: false,
-  isAutoSavingInProgress: false
-});
-
-// Tag grid state
-const tagGridState = ref({
-  selectedNoteTag: null,
-  displayedTagNotes: [],
-  noteTagSortBy: 'lastModified',
-  noteTagSortOrder: 'desc',
-  tagSortBy: 'name',
-  tagSortOrder: 'asc'
-});
-
-// Tag counts state
-const tagCountsState = ref({
-  allTagsWithCounts: []
+const state = ref({
+  noteState: {
+    note: {},
+    newTitle: "",
+    isNewNote: !props.filename
+  },
+  uiState: {
+    isDeleteModalVisible: false,
+    isFileSizeModalVisible: false,
+    unsavedChanges: false,
+    isInfoExpanded: false
+  },
+  autoSaveState: {
+    isAutoSaving: false,
+    isAutoSavingInProgress: false
+  },
+  tagGridState: {
+    selectedNoteTag: null,
+    displayedTagNotes: [],
+    noteTagSortBy: 'lastModified',
+    noteTagSortOrder: 'desc',
+    tagSortBy: 'name',
+    tagSortOrder: 'asc'
+  },
+  tagCountsState: {
+    allTagsWithCounts: []
+  }
 });
 
 // Computed properties for easier access
-const note = computed(() => noteState.value.note);
-const newTitle = computed(() => noteState.value.newTitle);
-const isNewNote = computed(() => noteState.value.isNewNote);
+const note = computed(() => state.value.noteState.note);
+const newTitle = computed(() => state.value.noteState.newTitle);
+const isNewNote = computed(() => state.value.noteState.isNewNote);
 
 // Tag grid computed properties
-const selectedNoteTag = computed(() => tagGridState.value.selectedNoteTag);
-const displayedTagNotes = computed(() => tagGridState.value.displayedTagNotes);
-const noteTagSortBy = computed(() => tagGridState.value.noteTagSortBy);
-const noteTagSortOrder = computed(() => tagGridState.value.noteTagSortOrder);
-const tagSortBy = computed(() => tagGridState.value.tagSortBy);
-const tagSortOrder = computed(() => tagGridState.value.tagSortOrder);
+const selectedNoteTag = computed(() => state.value.tagGridState.selectedNoteTag);
+const displayedTagNotes = computed(() => state.value.tagGridState.displayedTagNotes);
+const noteTagSortBy = computed(() => state.value.tagGridState.noteTagSortBy);
+const noteTagSortOrder = computed(() => state.value.tagGridState.noteTagSortOrder);
+const tagSortBy = computed(() => state.value.tagGridState.tagSortBy);
+const tagSortOrder = computed(() => state.value.tagGridState.tagSortOrder);
+
+// ✅ 修正: autoSaveStateのcomputed propertyを追加
+const autoSaveState = computed(() => state.value.autoSaveState);
 
 // Computed property for tag display
 const displayTags = computed({
@@ -275,7 +274,7 @@ const displayTags = computed({
 const noteTags = computed(() => {
   // Use newTags for editing mode, note.value.tags for view mode
   const tags = canModify.value ? newTags.value : (note.value.tags || []);
-  const allTagsWithCounts = tagCountsState.value.allTagsWithCounts;
+  const allTagsWithCounts = state.value.tagCountsState.allTagsWithCounts;
   
   const tagData = tags.map(tag => {
     // Find the actual count for this tag
@@ -301,31 +300,40 @@ const tagGridItems = computed(() => {
   return items;
 });
 
+// ✅ 修正: noteContainerStyleを定義
+const noteContainerStyle = computed(() => ({}));
+
 // newTags is a ref for v-model compatibility
 const newTags = ref([]);
 
 // File size modal message
 const fileSizeModalMessage = ref("");
 
-// State update functions
+// ✅ 修正: 更新関数を1個に統合
+function updateState(path, updates) {
+  const target = path.split('.').reduce((obj, key) => obj[key], state.value);
+  Object.assign(target, updates);
+}
+
+// State update functions (後方互換性のため残す)
 function updateNoteState(updates) {
-  Object.assign(noteState.value, updates);
+  updateState('noteState', updates);
 }
 
 function updateUIState(updates) {
-  Object.assign(uiState.value, updates);
+  updateState('uiState', updates);
 }
 
 function updateAutoSaveState(updates) {
-  Object.assign(autoSaveState.value, updates);
+  updateState('autoSaveState', updates);
 }
 
 function updateTagGridState(updates) {
-  Object.assign(tagGridState.value, updates);
+  updateState('tagGridState', updates);
 }
 
 function updateTagCountsState(updates) {
-  Object.assign(tagCountsState.value, updates);
+  updateState('tagCountsState', updates);
 }
 
 // Load tag counts
@@ -414,7 +422,7 @@ function createEmptyNote() {
 }
 
 function handleEditorChange() {
-  if (canModify.value) {
+  if (canModify.value && toastEditor.value) {
     startContentChangedTimeout();
 
     const content = toastEditor.value.getMarkdown();
@@ -425,10 +433,12 @@ function handleEditorChange() {
     // Auto-generate title from first line
     clearTimeout(titleGenerationTimeout);
     titleGenerationTimeout = setTimeout(() => {
-      const content = toastEditor.value.getMarkdown();
-      const generatedTitle = generateTitleFromContent(content);
-      if (generatedTitle && generatedTitle !== newTitle.value) {
-        updateNoteState({ newTitle: generatedTitle });
+      if (toastEditor.value) {
+        const content = toastEditor.value.getMarkdown();
+        const generatedTitle = generateTitleFromContent(content);
+        if (generatedTitle && generatedTitle !== newTitle.value) {
+          updateNoteState({ newTitle: generatedTitle });
+        }
       }
     }, noteConstants.TITLE_GENERATION_DELAY);
   }
@@ -778,12 +788,12 @@ function contentChangedHandler() {
   }
   
   if (isContentChanged()) {
-    updateUIState({ unsavedChanges: true });
+    updateState('uiState', { unsavedChanges: true });
     setBeforeUnloadConfirmation(true);
     const delay = isNewNote.value ? noteConstants.NEW_NOTE_AUTO_SAVE_DELAY : noteConstants.AUTO_SAVE_DELAY;
     startAutoSaveTimeout(delay);
   } else {
-    updateUIState({ unsavedChanges: false });
+    updateState('uiState', { unsavedChanges: false });
     setBeforeUnloadConfirmation(false);
     clearAutoSaveTimeout();
   }
@@ -826,22 +836,85 @@ function onTagConfirmed() {
   }
 }
 
+// ✅ 修正: 保存処理を統合
+async function saveNote(title, content, tags, close = false, isAuto = false) {
+  try {
+    let data;
+    
+    if (isNewNote.value) {
+      data = await createNote(title, content, tags);
+    } else {
+      const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
+      data = await updateNote(filenameWithExtension, title, content, tags);
+    }
+    
+    // 共通の成功処理
+    handleSaveSuccess(data, close, isAuto);
+    
+    return data;
+  } catch (error) {
+    console.error('Failed to save note:', error);
+    if (isAuto) resetAutoSaveState();
+    handleSaveFailure(error);
+    throw error;
+  }
+}
+
+// ✅ 修正: 保存成功処理を共通化
+async function handleSaveSuccess(data, close = false, isAuto = false) {
+  // For auto-save, don't update note object to preserve cursor position
+  if (!isAuto) {
+    updateState('noteState', {
+      note: data,
+      isNewNote: false
+    });
+  } else {
+    // Only update isNewNote flag for auto-save
+    updateState('noteState', {
+      isNewNote: false
+    });
+  }
+  
+  // Update newTags with server data (silently to avoid watch trigger)
+  const serverTags = data.tags || [];
+  if (newTags.value.length !== serverTags.length || 
+      newTags.value.some((tag, index) => tag !== serverTags[index])) {
+    newTags.value = serverTags;
+  }
+  
+  if (data.title && data.title.trim()) {
+    document.title = `${data.title} - SBNote`;
+    globalStore.currentNoteTitle = data.title;
+  }
+  
+  // Update URL with filename (without extension) for new notes
+  if (isNewNote.value && !isAuto) {
+    const filename = data.filename.replace(noteConstants.MARKDOWN_EXTENSION, '');
+    router.replace({ name: "note", params: { filename } });
+  }
+  
+  updateState('uiState', { unsavedChanges: false });
+  setBeforeUnloadConfirmation(false);
+  
+  // Reload tag counts to reflect changes
+  await loadTagCounts();
+  
+  if (isAuto) resetAutoSaveState();
+  if (close) closeNote();
+}
+
 // Unified save function
 function performSave(close = false, isAuto = false) {
   saveDefaultEditorMode();
   ensureTitle();
   
-  updateAutoSaveState({ 
+  updateState('autoSaveState', { 
     isAutoSaving: true, 
     isAutoSavingInProgress: true 
   });
   
-  const newContent = toastEditor.value.getMarkdown();
-  if (isNewNote.value) {
-    saveNewNote(newTitle.value, newContent, newTags.value, close, isAuto);
-  } else {
-    saveExistingNote(props.filename, newTitle.value, newContent, newTags.value, close, isAuto);
-  }
+  const newContent = toastEditor.value ? toastEditor.value.getMarkdown() : '';
+  saveNote(newTitle.value, newContent, newTags.value, close, isAuto);
 }
 
 function autoSaveHandler() {
@@ -854,7 +927,7 @@ function autoSaveHandler() {
 
 function ensureTitle() {
   if (!newTitle.value || newTitle.value.trim() === "") {
-    const content = toastEditor.value.getMarkdown();
+    const content = toastEditor.value ? toastEditor.value.getMarkdown() : '';
     newTitle.value = generateTitleFromContent(content);
     if (!newTitle.value || newTitle.value.trim() === "") {
       newTitle.value = noteConstants.DEFAULT_TITLE;
@@ -867,92 +940,15 @@ function ensureTitle() {
 
 
 function resetAutoSaveState() {
-  updateAutoSaveState({ 
+  updateState('autoSaveState', { 
     isAutoSaving: false, 
     isAutoSavingInProgress: false 
   });
 }
 
-function saveNewNote(title, content, tags, close = false, isAuto = false) {
-  createNote(title, content, tags)
-    .then(async (data) => {
-      // For auto-save, don't update note object to preserve cursor position
-      if (!isAuto) {
-        updateNoteState({
-          note: data,
-          isNewNote: false  // Mark as existing note after creation
-        });
-      } else {
-        // Only update isNewNote flag for auto-save
-        updateNoteState({
-          isNewNote: false
-        });
-      }
-      // Update newTags with server data (silently to avoid watch trigger)
-      const serverTags = data.tags || [];
-      if (newTags.value.length !== serverTags.length || 
-          newTags.value.some((tag, index) => tag !== serverTags[index])) {
-        newTags.value = serverTags;
-      }
-      if (data.title && data.title.trim()) {
-        document.title = `${data.title} - SBNote`;
-        globalStore.currentNoteTitle = data.title;
-      }
-      // Update URL with filename (without extension)
-      const filename = data.filename.replace(noteConstants.MARKDOWN_EXTENSION, '');
-      router.replace({ name: "note", params: { filename } });
-      updateUIState({ unsavedChanges: false });
-      setBeforeUnloadConfirmation(false);
-      
-      // Reload tag counts to reflect changes
-      await loadTagCounts();
-      
-      if (isAuto) resetAutoSaveState();
-      if (close) closeNote();
-    })
-    .catch((error) => {
-      console.error('Failed to save new note:', error);
-      if (isAuto) resetAutoSaveState();
-      handleSaveFailure(error);
-    });
-}
-
-function saveExistingNote(filename, title, content, tags, close = false, isAuto = false) {
-  // Add .md extension for API call
-  const filenameWithExtension = filename + noteConstants.MARKDOWN_EXTENSION;
-  updateNote(filenameWithExtension, title, content, tags)
-    .then(async (data) => {
-      // For auto-save, don't update note object to preserve cursor position
-      if (!isAuto) {
-        updateNoteState({
-          note: data
-        });
-      }
-      // Update newTags with server data (silently to avoid watch trigger)
-      const serverTags = data.tags || [];
-      if (newTags.value.length !== serverTags.length || 
-          newTags.value.some((tag, index) => tag !== serverTags[index])) {
-        newTags.value = serverTags;
-      }
-      if (data.title && data.title.trim()) {
-        document.title = `${data.title} - SBNote`;
-        globalStore.currentNoteTitle = data.title;
-      }
-      updateUIState({ unsavedChanges: false });
-      setBeforeUnloadConfirmation(false);
-      
-      // Reload tag counts to reflect changes
-      await loadTagCounts();
-      
-      if (isAuto) resetAutoSaveState();
-      if (close) closeNote();
-    })
-    .catch((error) => {
-      console.error('Failed to save existing note:', error);
-      if (isAuto) resetAutoSaveState();
-      handleSaveFailure(error);
-    });
-}
+// ✅ 削除: 重複する保存関数を削除
+// function saveNewNote(title, content, tags, close = false, isAuto = false) { ... }
+// function saveExistingNote(filename, title, content, tags, close = false, isAuto = false) { ... }
 
 function showFileSizeModal(entityName) {
   fileSizeModalMessage.value = `The ${entityName} you're trying to upload is too large. Please choose a smaller file.`;
@@ -965,7 +961,7 @@ function closeFileSizeModal() {
 
 // Toggle info section and save to localStorage
 function toggleInfoSection() {
-  const newExpandedState = !uiState.value.isInfoExpanded;
+  const newExpandedState = !state.value.uiState.isInfoExpanded;
   updateUIState({ isInfoExpanded: newExpandedState });
   localStorage.setItem('noteInfoExpanded', newExpandedState.toString());
 }
@@ -995,7 +991,7 @@ function updateFileMenuState() {
       canModify: canModify.value,
       isNewNote: isNewNote.value,
       autoSaveState: autoSaveState.value,
-      unsavedChanges: uiState.value.unsavedChanges,
+      unsavedChanges: state.value.uiState.unsavedChanges,
       currentVisibility: note.value.visibility || 'private'
     });
   }
@@ -1047,7 +1043,7 @@ function handleContentChange(isTagsOnlyChange = false) {
   }
   
   if (isContentChanged()) {
-    updateUIState({ unsavedChanges: true });
+    updateState('uiState', { unsavedChanges: true });
     setBeforeUnloadConfirmation(true);
     
     const delay = isTagsOnlyChange ? noteConstants.TAGS_ONLY_CHANGE_DELAY : noteConstants.AUTO_SAVE_DELAY;
@@ -1056,12 +1052,12 @@ function handleContentChange(isTagsOnlyChange = false) {
       clearTimeout(autoSaveTimeout);
     }
     autoSaveTimeout = setTimeout(() => {
-      if (uiState.value.unsavedChanges && !autoSaveState.value.isAutoSaving) {
+      if (state.value.uiState.unsavedChanges && !autoSaveState.value.isAutoSaving) {
         autoSaveHandler();
       }
     }, delay);
   } else {
-    updateUIState({ unsavedChanges: false });
+    updateState('uiState', { unsavedChanges: false });
     setBeforeUnloadConfirmation(false);
     clearAutoSaveTimeout();
   }
@@ -1106,7 +1102,7 @@ watch(() => props.filename, async () => {
 });
 
 // Watch for changes that affect file menu state
-watch([canModify, isNewNote, autoSaveState, () => uiState.value.unsavedChanges], () => {
+watch([canModify, isNewNote, autoSaveState, () => state.value.uiState.unsavedChanges], () => {
   updateFileMenuState();
 }, { deep: true });
 

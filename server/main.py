@@ -56,7 +56,9 @@ app = FastAPI(
     # Increase file upload size limit to 100MB
     max_request_size=100 * 1024 * 1024,
 )
-replace_base_href("client/dist/index.html", global_config.path_prefix)
+# Only replace base href in production build
+if os.path.exists("client/dist/index.html"):
+    replace_base_href("client/dist/index.html", global_config.path_prefix)
 
 
 
@@ -1289,9 +1291,15 @@ def root(path: str = ""):
             return FileResponse(file_path)
     
     # Serve index.html for all other routes (SPA routing)
-    with open("client/dist/index.html", "r", encoding="utf-8") as f:
-        html = f.read()
-    return HTMLResponse(content=html)
+    # Only serve from dist in production, in development Vite handles this
+    if os.path.exists("client/dist/index.html"):
+        with open("client/dist/index.html", "r", encoding="utf-8") as f:
+            html = f.read()
+        return HTMLResponse(content=html)
+    else:
+        # In development mode, redirect to Vite dev server
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="http://localhost:3000/")
 
 
 # endregion

@@ -92,6 +92,11 @@ export default defineConfig({
     hmr: {
       overlay: true,
     },
+    // Ensure proper file watching for HMR
+    fs: {
+      strict: false,
+      allow: ['..']
+    },
     proxy: {
       "/api/": {
         target: devApiUrl,
