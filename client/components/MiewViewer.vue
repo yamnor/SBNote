@@ -37,11 +37,11 @@
         v-if="showTerminal"
         :class="[
           'absolute bottom-0 left-0 right-0 z-20 border-t border-color-border-primary',
-          isTerminalMinimized ? 'h-12 min-h-[40px] backdrop-blur-md' : 'h-64 bg-color-bg-base/0 backdrop-blur-md'
+          isTerminalMinimized ? 'h-12 min-h-[40px] backdrop-blur-md' : 'h-1/2 bg-color-bg-base/0 backdrop-blur-md'
         ]"
       >
         <!-- Minimize/Restore Button -->
-        <button
+        <button 
           @click.stop="toggleTerminal"
           class="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg border border-color-border-primary transition-colors focus:outline-none"
           :title="isTerminalMinimized ? 'Restore Terminal' : 'Minimize Terminal'"
@@ -65,6 +65,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
 
+// Props
 const props = defineProps({
   attachmentFilename: {
     type: String,
@@ -92,10 +93,423 @@ let viewer = null;
 let terminal = null;
 let fitAddon = null;
 const isTerminalMinimized = ref(false);
-
-// Terminal command history
+const currentLine = ref('');
 const commandHistory = ref([]);
 const historyIndex = ref(-1);
+const molecularData = ref(null); // Store molecular data from ccget
+
+// Command parsing function
+function parseCommand(input) {
+  const trimmed = input.trim();
+  
+  // ccgetコマンドの識別（大文字小文字無視）
+  if (trimmed.toLowerCase().startsWith('ccget ')) {
+    const attributes = trimmed.substring(6).trim();
+    // ccget helpの場合は特別処理
+    if (attributes.toLowerCase() === 'help') {
+      return { type: 'ccget_help' };
+    }
+    return {
+      type: 'ccget',
+      attributes: attributes.split(/\s+/), // スペース区切り
+      original: trimmed
+    };
+  }
+  
+  // miewコマンドの識別
+  if (trimmed.toLowerCase().startsWith('miew ')) {
+    return {
+      type: 'miew',
+      command: trimmed.substring(5).trim(),
+      original: trimmed
+    };
+  }
+  
+  // ヘルプコマンド（直接入力）
+  if (trimmed.toLowerCase() === 'ccget help') {
+    return { type: 'ccget_help' };
+  }
+  
+  if (trimmed.toLowerCase() === 'miew help') {
+    return { type: 'miew_help' };
+  }
+  
+  // clearコマンド
+  if (trimmed.toLowerCase() === 'clear') {
+    return { type: 'clear' };
+  }
+  
+  // 認識されないコマンドはエラーとして扱う
+  return {
+    type: 'unknown',
+    command: trimmed,
+    original: trimmed
+  };
+}
+
+// Display array data with formatting
+function displayArray(arr, indent = '  ') {
+  if (arr.length === 0) {
+    terminal.writeln(`${indent}[]`);
+    return;
+  }
+  
+  if (arr.length <= 10) {
+    arr.forEach((item, index) => {
+      if (typeof item === 'number') {
+        terminal.writeln(`${indent}[${index}]: ${item.toFixed(6)}`);
+      } else {
+        terminal.writeln(`${indent}[${index}]: ${item}`);
+      }
+    });
+  } else {
+    // Show first 5 and last 5 elements
+    for (let i = 0; i < 5; i++) {
+      const item = arr[i];
+      if (typeof item === 'number') {
+        terminal.writeln(`${indent}[${i}]: ${item.toFixed(6)}`);
+      } else {
+        terminal.writeln(`${indent}[${i}]: ${item}`);
+      }
+    }
+    terminal.writeln(`${indent}...`);
+    for (let i = arr.length - 5; i < arr.length; i++) {
+      const item = arr[i];
+      if (typeof item === 'number') {
+        terminal.writeln(`${indent}[${i}]: ${item.toFixed(6)}`);
+      } else {
+        terminal.writeln(`${indent}[${i}]: ${item}`);
+      }
+    }
+  }
+}
+
+// Display object data with formatting
+function displayObject(obj, indent = '  ') {
+  const keys = Object.keys(obj);
+  if (keys.length === 0) {
+    terminal.writeln(`${indent}{}`);
+    return;
+  }
+  
+  keys.slice(0, 10).forEach(key => {
+    const value = obj[key];
+    if (typeof value === 'number') {
+      terminal.writeln(`${indent}${key}: ${value.toFixed(6)}`);
+    } else if (Array.isArray(value)) {
+      terminal.writeln(`${indent}${key}: Array[${value.length}]`);
+      if (value.length > 0 && value.length <= 5) {
+        displayArray(value, indent + '  ');
+      }
+    } else {
+      terminal.writeln(`${indent}${key}: ${value}`);
+    }
+  });
+  
+  if (keys.length > 10) {
+    terminal.writeln(`${indent}... and ${keys.length - 10} more properties`);
+  }
+}
+
+// Display ccget results with formatting
+function displayCcgetResults(data, requestedAttrs) {
+  requestedAttrs.forEach(attr => {
+    const value = data[attr.toLowerCase()];
+    
+    if (value === null || value === undefined) {
+      terminal.writeln(`\x1b[1;33m${attr}: \x1b[0m\x1b[3mNot available\x1b[0m`);
+      return;
+    }
+    
+    terminal.writeln(`\x1b[1;32m${attr}:\x1b[0m`);
+    
+    // データサイズに応じた表示制限
+    if (Array.isArray(value)) {
+      if (value.length > 100) {
+        terminal.writeln(`  Array[${value.length}] - showing first 100 elements:`);
+        displayArray(value.slice(0, 100));
+        terminal.writeln(`  ... and ${value.length - 100} more elements`);
+      } else {
+        displayArray(value);
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      displayObject(value);
+    } else {
+      terminal.writeln(`  ${value}`);
+    }
+    terminal.writeln('');
+  });
+}
+
+// Execute ccget command
+async function executeCcgetCommand(attributes) {
+  try {
+    
+    // 属性名を大文字小文字無視で正規化
+    const normalizedAttrs = attributes.map(attr => attr.toLowerCase());
+    
+    // Extract basename from attachment filename
+    const basename = props.attachmentFilename.split('/')[0];
+    
+    // API呼び出し
+    const response = await fetch(`/api/ccget/${basename}?attributes=${normalizedAttrs.join(',')}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      if (response.status === 404) {
+        terminal.writeln('\x1b[1;31mError: Molecular data file not found\x1b[0m');
+      } else if (response.status === 500) {
+        terminal.writeln('\x1b[1;31mError: Server error processing molecular data\x1b[0m');
+      } else {
+        terminal.writeln(`\x1b[1;31mError: ${errorData.detail}\x1b[0m`);
+      }
+      // エラー時もプロンプトを表示
+      terminal.write('\x1b[1;32m>\x1b[0m ');
+      return;
+    }
+    
+    const data = await response.json();
+    
+    // Store molecular data for potential use
+    molecularData.value = data;
+    
+    // 整形表示
+    displayCcgetResults(data, attributes);
+    
+    // 処理完了後にプロンプトを表示
+    terminal.write('\x1b[1;32m>\x1b[0m ');
+    
+  } catch (error) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      terminal.writeln('\x1b[1;31mError: Network connection failed\x1b[0m');
+    } else {
+      terminal.writeln(`\x1b[1;31mError: ${error.message}\x1b[0m`);
+    }
+    // エラー時もプロンプトを表示
+    terminal.write('\x1b[1;32m>\x1b[0m ');
+  }
+}
+
+// Show ccget help
+function showCcgetHelp() {
+  terminal.writeln('Usage: ccget <attribute1> [<attribute2> ...]');
+  terminal.writeln('');
+  terminal.writeln('Available attributes:');
+  terminal.writeln('  xyz          - Molecular coordinates in XYZ format');
+  terminal.writeln('  natom        - Number of atoms');
+  terminal.writeln('  atomnos      - Atomic numbers');
+  terminal.writeln('  atomcoords   - Atomic coordinates');
+  terminal.writeln('  atommasses   - Atomic masses');
+  terminal.writeln('  charge       - Total charge');
+  terminal.writeln('  mult         - Multiplicity');
+  terminal.writeln('  energy       - Total energy');
+  terminal.writeln('  scfenergies  - SCF energies');
+  terminal.writeln('  vibfreqs     - Vibrational frequencies');
+  terminal.writeln('  ... and more');
+  terminal.writeln('');
+  terminal.writeln('Examples:');
+  terminal.writeln('  ccget xyz');
+  terminal.writeln('  ccget natom atomnos');
+  terminal.writeln('  ccget energy scfenergies');
+  // ヘルプ表示後にプロンプトを表示
+  terminal.write('\x1b[1;32m>\x1b[0m ');
+}
+
+// Show miew help
+function showMiewHelp() {
+  terminal.writeln('Usage: miew <command>');
+  terminal.writeln('');
+  terminal.writeln('Available commands:');
+  terminal.writeln('  load <file>     - Load molecular file');
+  terminal.writeln('  show            - Show current molecule');
+  terminal.writeln('  hide            - Hide current molecule');
+  terminal.writeln('  color <scheme>  - Set color scheme');
+  terminal.writeln('  style <style>   - Set representation style');
+  terminal.writeln('  reset           - Reset view');
+  terminal.writeln('  help            - Show this help');
+  terminal.writeln('');
+  terminal.writeln('Examples:');
+  terminal.writeln('  miew show');
+  terminal.writeln('  miew color cpk');
+  terminal.writeln('  miew style ball');
+  // ヘルプ表示後にプロンプトを表示
+  terminal.write('\x1b[1;32m>\x1b[0m ');
+}
+
+// Show unknown command error
+function showUnknownCommandError(command) {
+  terminal.writeln(`\x1b[1;31mError: Unknown command '${command}'\x1b[0m`);
+  terminal.writeln('\x1b[1;33mAvailable commands:\x1b[0m');
+  terminal.writeln('  ccget <attributes>  - Get molecular data attributes');
+  terminal.writeln('  miew <command>      - Execute Miew viewer command');
+  terminal.writeln('  clear               - Clear terminal screen');
+  terminal.writeln('  ccget help          - Show ccget help');
+  terminal.writeln('  miew help           - Show miew help');
+  terminal.writeln('');
+  terminal.writeln('Examples:');
+  terminal.writeln('  ccget natom scfenergies');
+  terminal.writeln('  miew show');
+  terminal.writeln('  miew color cpk');
+  // エラー表示後にプロンプトを表示
+  terminal.write('\x1b[1;32m>\x1b[0m ');
+}
+
+// Execute clear command
+function executeClearCommand() {
+  // ターミナルの画面をクリア
+  terminal.clear();
+    
+  // プロンプトを表示
+  terminal.write('\x1b[1;32m>\x1b[0m ');
+}
+
+// Format Miew help output
+function formatMiewHelpOutput(output) {
+  // 出力を改行で分割
+  const lines = output.split('\n');
+  
+  lines.forEach(line => {
+    // 行の前後の空白を削除
+    const trimmedLine = line.trim();
+    
+    if (trimmedLine) {
+      // 長い行を適切に折り返し
+      if (trimmedLine.length > 80) {
+        // 80文字で折り返し
+        const words = trimmedLine.split(' ');
+        let currentLine = '';
+        
+        words.forEach(word => {
+          if ((currentLine + word).length > 80) {
+            if (currentLine) {
+              terminal.writeln(currentLine.trim());
+              currentLine = word + ' ';
+            } else {
+              // 単語が80文字を超える場合は強制改行
+              terminal.writeln(word);
+            }
+          } else {
+            currentLine += word + ' ';
+          }
+        });
+        
+        if (currentLine.trim()) {
+          terminal.writeln(currentLine.trim());
+        }
+      } else {
+        terminal.writeln(trimmedLine);
+      }
+    }
+  });
+  
+  // ヘルプ表示後に改行を追加してプロンプトとの間隔を確保
+  terminal.writeln('');
+}
+
+// Execute miew command
+function executeMiewCommand(command) {
+  if (!command.trim()) {
+    // 空のコマンドの場合は何もしない（プロンプトは既に表示されている）
+    return;
+  }
+  
+  if (viewer && typeof viewer.script === 'function') {
+    try {
+      viewer.script(command, (str) => {
+        // helpコマンドの場合は整形して表示
+        if (command.toLowerCase() === 'help') {
+          formatMiewHelpOutput(str);
+        } else {
+          terminal.writeln(str);
+        }
+      }, (str) => {
+        terminal.writeln(`\x1b[1;31mError: ${str}\x1b[0m`);
+      });
+      
+      // helpコマンドの場合は特別な処理
+      if (command.toLowerCase() === 'help') {
+        // helpコマンドの場合は非同期でプロンプトを表示
+        setTimeout(() => {
+          terminal.write('\x1b[1;32m>\x1b[0m ');
+        }, 100);
+      } else {
+        // その他のコマンドは即座にプロンプトを表示
+        terminal.write('\x1b[1;32m>\x1b[0m ');
+      }
+    } catch (err) {
+      terminal.writeln(`\x1b[1;31mError: ${err.message}\x1b[0m`);
+      // エラー時もプロンプトを表示
+      terminal.write('\x1b[1;32m>\x1b[0m ');
+    }
+  } else {
+    terminal.writeln('\x1b[1;31mError: Miew viewer not available\x1b[0m');
+    // エラー時もプロンプトを表示
+    terminal.write('\x1b[1;32m>\x1b[0m ');
+  }
+}
+
+// Handle command execution
+async function handleCommand(command) {
+  if (!command.trim()) {
+    // 空のコマンドの場合は何もしない（プロンプトは既に表示されている）
+    return;
+  }
+  
+  // 履歴に保存
+  commandHistory.value.push(command);
+  historyIndex.value = -1;
+  
+  const parsed = parseCommand(command);
+  
+  switch (parsed.type) {
+    case 'ccget':
+      await executeCcgetCommand(parsed.attributes);
+      break;
+    case 'miew':
+      executeMiewCommand(parsed.command);
+      break;
+    case 'ccget_help':
+      showCcgetHelp();
+      break;
+    case 'miew_help':
+      showMiewHelp();
+      break;
+    case 'clear':
+      executeClearCommand();
+      break;
+    case 'unknown':
+      showUnknownCommandError(parsed.command);
+      break;
+  }
+}
+
+// Terminal command history
+function navigateHistory(direction) {
+  if (commandHistory.value.length === 0) return;
+  
+  if (direction === 'up') {
+    if (historyIndex.value < commandHistory.value.length - 1) {
+      historyIndex.value++;
+    }
+  } else if (direction === 'down') {
+    if (historyIndex.value > 0) {
+      historyIndex.value--;
+    } else if (historyIndex.value === 0) {
+      historyIndex.value = -1;
+    }
+  }
+  
+  // Clear current line and show history item
+  terminal.write('\r\x1b[K'); // Clear line
+  if (historyIndex.value >= 0) {
+    const historyCommand = commandHistory.value[commandHistory.value.length - 1 - historyIndex.value];
+    terminal.write(historyCommand);
+    currentLine.value = historyCommand;
+  } else {
+    currentLine.value = '';
+  }
+  terminal.write('\x1b[1;32m>\x1b[0m ');
+}
 
 // Methods
 async function loadMolecule() {
@@ -211,16 +625,16 @@ async function loadMoleculeFromPickle() {
       throw new Error(`Failed to fetch molecular data: ${response.statusText}`);
     }
     
-    const molecularData = await response.json();
+    const data = await response.json();
     
-    if (!molecularData.xyz) {
+    if (!data.xyz) {
       throw new Error('XYZ data not available in pickle file');
     }
     
     // Load XYZ content into Miew
     if (typeof viewer.load === 'function') {
       // Create a blob URL for the XYZ content
-      const blob = new Blob([molecularData.xyz], { type: 'chemical/x-xyz' });
+      const blob = new Blob([data.xyz], { type: 'chemical/x-xyz' });
       const url = URL.createObjectURL(blob);
       
       try {
@@ -232,13 +646,16 @@ async function loadMoleculeFromPickle() {
     }
     
     // Store additional molecular data for terminal commands
-    if (molecularData.natom) {
+    if (data.natom) {
       viewer.molecularInfo = {
-        atomCount: molecularData.natom,
-        atomicNumbers: molecularData.atomnos,
-        energies: molecularData.scfenergies
+        atomCount: data.natom,
+        atomicNumbers: data.atomnos,
+        energies: data.scfenergies
       };
     }
+    
+    // Store molecular data for ccget commands
+    molecularData.value = data;
     
   } catch (err) {
     console.error('Failed to load molecule from pickle:', err);
@@ -330,23 +747,23 @@ function initializeTerminal() {
     fitAddon.fit();
     
     // Write welcome message
-    terminal.writeln('\x1b[1;32mMiew - 3D Molecular Viewer\x1b[0m');
-    terminal.writeln('\x1b[3;36mCopyright © 2015-2024 EPAM Systems, Inc.\x1b[0m');
-    terminal.writeln('');
-    terminal.write('\x1b[1;32mmiew>\x1b[0m ');
+    terminal.write('\x1b[1;32m>\x1b[0m ');
     
     // Handle input
-    let currentLine = '';
     terminal.onData((data) => {
       const code = data.charCodeAt(0);
       
       if (code === 13) { // Enter
-        handleCommand(currentLine);
-        currentLine = '';
-        terminal.write('\r\n\x1b[1;32mmiew>\x1b[0m ');
+        if (currentLine.value.trim()) {
+          // コマンドが入力されている場合のみ改行
+          terminal.write('\r\n');
+        }
+        handleCommand(currentLine.value);
+        currentLine.value = '';
+        // プロンプトは非同期処理完了後に表示される（空のコマンドの場合は除く）
       } else if (code === 127) { // Backspace
-        if (currentLine.length > 0) {
-          currentLine = currentLine.slice(0, -1);
+        if (currentLine.value.length > 0) {
+          currentLine.value = currentLine.value.slice(0, -1);
           terminal.write('\b \b');
         }
       } else if (code === 27) { // Escape sequence
@@ -360,7 +777,7 @@ function initializeTerminal() {
           }
         }
       } else if (code >= 32) { // Printable characters
-        currentLine += data;
+        currentLine.value += data;
         terminal.write(data);
       }
     });
@@ -384,54 +801,6 @@ function initializeTerminal() {
   } catch (err) {
     console.error('Failed to initialize terminal:', err);
   }
-}
-
-function handleCommand(command) {
-  if (!command.trim()) return;
-  
-  // Add to history
-  commandHistory.value.push(command);
-  historyIndex.value = -1;
-  
-  // Execute command through Miew
-  if (viewer && typeof viewer.script === 'function') {
-    try {
-      viewer.script(command, (str) => {
-        terminal.writeln(str);
-      }, (str) => {
-        terminal.writeln(`\x1b[1;31mError: ${str}\x1b[0m`);
-      });
-    } catch (err) {
-      terminal.writeln(`\x1b[1;31mError: ${err.message}\x1b[0m`);
-    }
-  } else {
-    terminal.writeln('\x1b[1;31mError: Miew viewer not available\x1b[0m');
-  }
-}
-
-function navigateHistory(direction) {
-  if (commandHistory.value.length === 0) return;
-  
-  if (direction === 'up') {
-    if (historyIndex.value < commandHistory.value.length - 1) {
-      historyIndex.value++;
-    }
-  } else if (direction === 'down') {
-    if (historyIndex.value > 0) {
-      historyIndex.value--;
-    } else if (historyIndex.value === 0) {
-      historyIndex.value = -1;
-    }
-  }
-  
-  // Clear current line and show history item
-  terminal.write('\r\x1b[K'); // Clear line
-  if (historyIndex.value >= 0) {
-    const historyCommand = commandHistory.value[commandHistory.value.length - 1 - historyIndex.value];
-    terminal.write(historyCommand);
-    // Update currentLine (this would need to be handled in the main input handler)
-  }
-  terminal.write('\x1b[1;32mmiew>\x1b[0m ');
 }
 
 function destroyTerminal() {
@@ -499,5 +868,4 @@ onUnmounted(() => {
   overflow-y: hidden;
   background-color: transparent !important;
 }
-
 </style> 
