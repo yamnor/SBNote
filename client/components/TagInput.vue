@@ -1,6 +1,6 @@
 <template>
-  <div class="tag-input-container">
-    <div class="tags-display">
+  <div class="flex flex-wrap gap-2 p-2 bg-color-bg-base min-h-10 items-start">
+    <div class="flex flex-wrap gap-1">
       <div
         v-for="(tag, index) in tags"
         :key="index"
@@ -28,7 +28,7 @@
         No tags
       </div>
     </div>
-    <div v-if="!readonly" class="input-container">
+    <div v-if="!readonly" class="relative flex-1 min-w-30">
       <input
         ref="input"
         v-model="inputValue"
@@ -44,6 +44,7 @@
       <!-- Autocomplete dropdown -->
       <div
         v-if="showSuggestions && filteredSuggestions.length > 0"
+        ref="suggestionsDropdown"
         class="suggestions-dropdown"
       >
         <div
@@ -51,8 +52,9 @@
           :key="suggestion"
           @click="selectSuggestion(suggestion)"
           @mouseenter="selectedIndex = index"
-          class="suggestion-item"
-          :class="{ 'selected': index === selectedIndex }"
+          class="suggestion-item px-3 py-2 cursor-pointer text-sm text-color-text-primary transition-colors duration-150 first:rounded-t-md last:rounded-b-md hover:bg-color-bg-neutral-lighter"
+          :class="{ 'bg-color-bg-neutral-lighter': index === selectedIndex }"
+          :ref="el => { if (el && index === selectedIndex) selectedItemRef = el }"
         >
           {{ suggestion }}
         </div>
@@ -62,7 +64,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { getTags } from '../lib/api.js'
 
@@ -90,11 +92,26 @@ const allTags = ref([])
 const showSuggestions = ref(false)
 const selectedIndex = ref(-1)
 const searchTimeout = ref(null)
+const suggestionsDropdown = ref(null)
+const selectedItemRef = ref(null)
 
 // Watch for changes from parent component
 watch(() => props.modelValue, (newValue) => {
   tags.value = [...newValue]
 }, { deep: true })
+
+// Watch for selectedIndex changes to scroll to selected item
+watch(selectedIndex, (newIndex) => {
+  if (newIndex >= 0 && selectedItemRef.value) {
+    // Use nextTick to ensure DOM is updated
+    nextTick(() => {
+      selectedItemRef.value?.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+      })
+    })
+  }
+})
 
 // Filtered suggestions based on input
 const filteredSuggestions = computed(() => {
@@ -242,21 +259,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.tag-input-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background-color: var(--color-bg-base);
-  min-height: 2.5rem;
-  align-items: flex-start;
-}
 
-.tags-display {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
 
 .tag-chip {
   display: inline-flex;
@@ -311,11 +314,7 @@ onMounted(() => {
   opacity: 1;
 }
 
-.input-container {
-  position: relative;
-  flex: 1;
-  min-width: 120px;
-}
+
 
 .tag-input {
   width: 100%;
@@ -335,7 +334,7 @@ onMounted(() => {
   top: 100%;
   left: 0;
   right: 0;
-  background-color: var(--color-bg-neutral);
+  background-color: var(--color-bg-base);
   border: 1px solid var(--color-border-primary);
   border-radius: 0.375rem;
   box-shadow: var(--color-shadow-md);
@@ -345,28 +344,7 @@ onMounted(() => {
   margin-bottom: 10px;
 }
 
-.suggestion-item {
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  color: var(--color-text-primary);
-  transition: background-color 0.15s ease;
-}
 
-.suggestion-item:hover,
-.suggestion-item.selected {
-  background-color: var(--color-bg-elevated);
-}
-
-.suggestion-item:first-child {
-  border-top-left-radius: 0.375rem;
-  border-top-right-radius: 0.375rem;
-}
-
-.suggestion-item:last-child {
-  border-bottom-left-radius: 0.375rem;
-  border-bottom-right-radius: 0.375rem;
-}
 
 /* Responsive design for mobile devices */
 @media (max-width: 768px) {
