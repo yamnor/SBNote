@@ -89,6 +89,9 @@ export default defineConfig({
       usePolling: true,
       interval: 1000,
     },
+    hmr: {
+      overlay: true,
+    },
     proxy: {
       "/api/": {
         target: devApiUrl,
