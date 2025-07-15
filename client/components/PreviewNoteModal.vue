@@ -528,11 +528,18 @@ function handleKeydownCapture(event) {
     const isInputElement = target.tagName === 'INPUT' || 
                           target.tagName === 'TEXTAREA' || 
                           target.contentEditable === 'true' ||
-                          target.closest('.tag-input-container') ||
                           target.closest('.toastui-editor') ||
                           target.closest('.note-preview-modal');
     
-    // Always stop propagation when modal is visible to prevent search input capture
+    // Check if the target is within tag input container
+    const isTagInput = target.closest('.tag-input-container');
+    
+    // For tag input elements, don't stop propagation to allow Enter key handling
+    if (isTagInput) {
+      return; // Allow event to continue to TagInput component
+    }
+    
+    // Stop propagation for other elements when modal is visible to prevent search input capture
     event.stopPropagation();
     
     // Only allow input events to continue for actual input elements
