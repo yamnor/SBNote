@@ -37,6 +37,14 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# =============================================================================
+# Application Specific Exceptions
+# =============================================================================
+
+# Include client/lib/ folder (contains application libraries)
+!client/lib/
+!client/lib/**
+
 # PyInstaller
 *.manifest
 *.spec
