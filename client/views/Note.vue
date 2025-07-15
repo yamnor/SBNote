@@ -52,10 +52,11 @@
         <!-- Note Information Display -->
         <div class="note-content-width">
           <!-- Header with toggle -->
-          <div class="flex items-center justify-between p-1 bg-color-bg-base border-b border-color-bg-base cursor-pointer hover:bg-color-bg-base transition-colors" @click="toggleInfoSection">
-            <Info class="w-4 h-4 text-color-text-secondary" />
+          <div class="flex items-center gap-1 p-1 bg-color-bg-base border-b border-color-bg-base cursor-pointer hover:bg-color-bg-base transition-colors" @click="toggleInfoSection">
             <ChevronDown v-if="state.uiState.isInfoExpanded" class="w-4 h-4 text-color-text-secondary" />
             <ChevronRight v-else class="w-4 h-4 text-color-text-secondary" />
+            <Info class="w-4 h-4 text-color-text-secondary" />
+            <span class="text-sm text-color-text-secondary">Info</span>
           </div>
           
           <!-- Collapsible content -->
