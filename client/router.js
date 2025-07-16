@@ -65,7 +65,7 @@ const router = createRouter({
       }),
     },
     {
-      path: "/:filename",
+      path: "/note/:filename",
       name: "note",
       component: () => import("./views/Note.vue"),
       props: (route) => ({ 

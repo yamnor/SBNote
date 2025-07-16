@@ -255,7 +255,7 @@ function onViewerLoaded() {
 
 function copyLink() {
   const filename = props.note.filename.replace(/\.md$/, '');
-  const url = `${window.location.origin}/${filename}`;
+  const url = `${window.location.origin}/note/${filename}`;
   
   navigator.clipboard.writeText(url).then(() => {
     // Show success toast notification
