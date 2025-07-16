@@ -5,7 +5,7 @@
     @dblclick="handleDoubleClick"
     class="p-2 cursor-pointer group h-36 w-full flex flex-col relative rounded-lg border"
     :class="[getBackgroundClass(), { 'pin-animation': showPinAnimation, 'long-press-active': isLongPressing }]"
-    style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; z-index: 10;"
+    style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; z-index: 5;"
   >
     <!-- Corner triangle for pinned tags in top-right -->
     <div 

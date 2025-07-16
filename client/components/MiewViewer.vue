@@ -43,10 +43,10 @@
         v-if="showTerminal"
         ref="terminalPanel"
         :class="[
-          'absolute bottom-0 left-0 right-0 z-20 border-t border-color-border-primary terminal-panel',
+          'absolute bottom-0 left-0 right-0 z-toolbar border-t border-color-border-primary terminal-panel',
           isTerminalMinimized ? 'h-12 min-h-[40px] backdrop-blur-md' : 'backdrop-blur-md'
         ]"
-        :style="!isTerminalMinimized ? { height: `${terminalHeight}px` } : {}"
+        :style="!isTerminalMinimized ? { height: `${terminalHeight}px`, zIndex: 30 } : { zIndex: 30 }"
       >
         <!-- Resize handle -->
         <div 
@@ -60,7 +60,7 @@
           @click.stop="toggleTerminal"
           class="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg border border-color-border-primary transition-colors focus:outline-none"
           :title="isTerminalMinimized ? 'Restore Terminal' : 'Minimize Terminal'"
-          style="z-index:21;"
+          style="z-index:30;"
         >
           <ChevronUp v-if="isTerminalMinimized" class="w-5 h-5 text-color-button-secondary-fg hover:text-color-button-secondary-hover-fg" />
           <ChevronDown v-else class="w-6 h-6 text-color-button-secondary-fg hover:text-color-button-secondary-hover-fg" />

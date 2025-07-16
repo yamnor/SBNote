@@ -7,7 +7,8 @@
     leave-active-class="transition ease-in duration-100"
     leave-from-class="opacity-100"
     leave-to-class="opacity-0"
-    class="fixed top-4 right-4 z-50 space-y-2"
+    class="fixed top-4 right-4 z-toast space-y-2"
+    style="z-index: 55;"
   >
     <div
       v-for="toast in toasts"

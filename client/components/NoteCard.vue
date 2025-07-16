@@ -14,7 +14,7 @@
         'click-active': isClicking,
         'opacity-50': isSearchResult
       }"
-      style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;"
+      style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; z-index: 1;"
       :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"
     >
       <!-- Recent edit indicator in top-left corner -->
@@ -245,7 +245,7 @@ function formatDate(timestamp) {
   transition: all 0.5s ease-in-out !important;
   transform: translateX(-100px) !important;
   opacity: 0 !important;
-  z-index: 1 !important;
+  z-index: 1;
 }
 
 /* General leaving animation class */
@@ -253,7 +253,7 @@ function formatDate(timestamp) {
   transition: all 0.5s ease-in-out !important;
   transform: translateX(-100px) !important;
   opacity: 0 !important;
-  z-index: 1 !important;
+  z-index: 1;
 }
 
 

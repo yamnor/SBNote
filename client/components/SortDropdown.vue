@@ -14,7 +14,8 @@
     <!-- Dropdown menu -->
     <div
       v-if="isOpen"
-      class="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10"
+      class="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-dropdown"
+      style="z-index: 25;"
     >
       <div class="py-1">
         <!-- Label -->

@@ -24,7 +24,8 @@
     <!-- Tag Menu -->
     <div
       v-if="tagMenuVisible"
-      class="absolute z-50 left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-color-border-primary bg-color-bg-base p-1"
+      class="absolute z-dropdown left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-color-border-primary bg-color-bg-base p-1"
+      style="z-index: 25;"
     >
       <p
         v-for="(tag, index) in tagMatches"
@@ -42,7 +43,8 @@
     <!-- Search Results Menu -->
     <div
       v-if="searchResultsMenuVisible && searchResults.length > 0"
-      class="absolute z-50 left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-color-border-primary bg-color-bg-base p-1"
+      class="absolute z-dropdown left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-color-border-primary bg-color-bg-base p-1"
+      style="z-index: 25;"
     >
       <div
         v-for="(result, index) in searchResults"
@@ -67,7 +69,8 @@
     <!-- New Note Menu (when no search results or empty search term) -->
     <div
       v-if="searchResultsMenuVisible && searchResults.length === 0"
-      class="absolute z-50 left-0 mt-2 w-full rounded-md border border-color-border-primary bg-color-bg-base p-1"
+      class="absolute z-dropdown left-0 mt-2 w-full rounded-md border border-color-border-primary bg-color-bg-base p-1"
+      style="z-index: 25;"
     >
       <div
         ref="newNoteMenuItem"

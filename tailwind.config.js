@@ -107,6 +107,22 @@ export default {
         "layout-note": "var(--layout-width-note)",
         "layout-grid": "var(--layout-width-grid)",
       },
+      zIndex: {
+        // 基本階層
+        "base": "1",        // 基本コンテンツ
+        "card": "5",        // カード/アイテム
+        "dropdown": "25",   // ドロップダウン/ポップオーバー
+        "toolbar": "30",    // ツールバー/パネル
+        "navigation": "40", // ナビゲーション
+        "modal": "50",      // モーダル/オーバーレイ
+        "toast": "55",      // トースト通知
+        "overlay": "60",    // 最前面要素
+        
+        // 数値クラス（後方互換性）
+        "25": "25",
+        "55": "55",
+        "60": "60",
+      },
     },
   },
   plugins: [],

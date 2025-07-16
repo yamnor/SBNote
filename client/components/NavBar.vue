@@ -1,5 +1,5 @@
 <template>
-  <nav class="mb-4 flex justify-between items-center gap-4 relative z-40">
+  <nav class="mb-4 flex justify-between items-center gap-4 relative z-navigation" style="z-index: 40;">
     <!-- Home Button -->
     <RouterLink :to="{ name: 'home' }" class="flex-shrink-0">
       <button class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg text-color-button-secondary-fg transition-colors">

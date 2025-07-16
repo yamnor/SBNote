@@ -15,11 +15,12 @@
     <!-- Dropdown Menu -->
     <div
       v-if="isOpen"
-      class="absolute mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+      class="absolute mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-dropdown"
       :class="[
         menuClass,
         menuPosition === 'left' ? 'left-0' : 'right-0'
       ]"
+      style="z-index: 25;"
     >
       <div class="py-1">
         <slot />

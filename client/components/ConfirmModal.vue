@@ -1,6 +1,6 @@
 <template>
   <TransitionRoot appear :show="isVisible" as="template">
-    <Dialog as="div" @close="emitClose('cancel')" class="relative z-50">
+    <Dialog as="div" @close="emitClose('cancel')" class="relative z-modal">
       <TransitionChild
         as="template"
         enter="duration-300 ease-out"

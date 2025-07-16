@@ -338,7 +338,7 @@ onMounted(() => {
   border: 1px solid var(--color-border-primary);
   border-radius: 0.375rem;
   box-shadow: var(--color-shadow-md);
-  z-index: 9999;
+  z-index: 25;
   max-height: 200px;
   overflow-y: auto;
   margin-bottom: 10px;

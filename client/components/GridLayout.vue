@@ -158,7 +158,7 @@ function onTagLongPress(tagName) {
   transition: all 0.5s ease-in-out !important;
   transform: translateX(-100px) !important;
   opacity: 0 !important;
-  z-index: 1 !important;
+  z-index: 1;
 }
 
 

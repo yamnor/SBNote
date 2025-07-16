@@ -1,7 +1,7 @@
 <template>
-  <div class="fixed inset-0 z-50 bg-color-bg-neutral">
+  <div class="fixed inset-0 z-modal bg-color-bg-neutral">
     <!-- Header -->
-    <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-center">
+    <div class="absolute top-0 left-0 right-0 z-navigation flex items-center justify-center">
       <div class="flex items-center justify-between gap-4 py-4 h-14 bg-color-bg-neutral backdrop-blur-sm w-full max-w-[var(--layout-width-note)]">
         <button
           @click="goBack" 
