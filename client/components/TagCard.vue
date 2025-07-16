@@ -14,8 +14,19 @@
     >
     </div>
     
-    <!-- Recent note modification indicator in top-left corner -->
-    <div v-if="hasRecentlyModifiedNote" class="absolute top-1 left-1">
+    <!-- Priority indicator in top-left corner (when not pinned) -->
+    <div v-if="!isPinned" class="absolute top-1 left-1">
+      <div class="flex">
+        <span v-for="i in 5" :key="i" 
+              class="text-xs"
+              :class="i <= tagData.priority ? 'text-yellow-500' : 'text-gray-300'">
+          ★
+        </span>
+      </div>
+    </div>
+    
+    <!-- Recent note modification indicator in top-right corner -->
+    <div v-if="hasRecentlyModifiedNote" class="absolute top-1 right-1">
       <div class="w-2 h-2 rounded-full" style="background-color: var(--color-accent);"></div>
     </div>
     

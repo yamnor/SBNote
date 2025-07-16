@@ -359,3 +359,67 @@ export async function restoreNoteVersion(filename, commitHash) {
     return Promise.reject(error);
   }
 }
+
+// Tag configuration API functions
+export async function getTagsConfig() {
+  try {
+    const response = await api.get("api/tags/config");
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+export async function getTagConfig(tagName) {
+  try {
+    const response = await api.get(`api/tags/${encodeURIComponent(tagName)}/config`);
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+export async function updateTagConfig(tagName, config) {
+  try {
+    const response = await api.patch(`api/tags/${encodeURIComponent(tagName)}/config`, config);
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+export async function deleteTagConfig(tagName) {
+  try {
+    const response = await api.delete(`api/tags/${encodeURIComponent(tagName)}/config`);
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+export async function createTagsBackup() {
+  try {
+    const response = await api.post("api/tags/config/backup");
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+export async function listTagsBackups() {
+  try {
+    const response = await api.get("api/tags/config/backups");
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+export async function restoreTagsBackup(backupFilename) {
+  try {
+    const response = await api.post(`api/tags/config/restore/${encodeURIComponent(backupFilename)}`);
+    return response.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}

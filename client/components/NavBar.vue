@@ -72,7 +72,7 @@
       <div v-if="showFileMenu && canModify" class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
         Edit Style:
       </div>
-      
+
       <!-- Single View (Edit mode only) -->
       <DropdownMenuItem 
         v-if="showFileMenu && canModify"
@@ -130,6 +130,18 @@
         @click="onEmbedView"
       >
         Embed View
+      </DropdownMenuItem>
+      
+      <!-- Divider -->
+      <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      
+      <!-- Tag Configuration (only for authenticated users) -->
+      <DropdownMenuItem
+        v-if="globalStore.isAuthenticated"
+        :icon="Settings"
+        @click="showTagConfig"
+      >
+        Tag Configuration
       </DropdownMenuItem>
       
       <!-- Divider -->
@@ -214,54 +226,15 @@
       </DropdownMenuItem>
     </DropdownMenu>
     
-    <!-- Tag Edit Button with Dropdown -->
-    <DropdownMenu 
+    <!-- Tag Edit Button -->
+    <button
       v-if="showTagEditButton"
-      :trigger-icon="Tag" 
-      :close-on-click-outside="true"
-      @close="onTagEditMenuClose"
+      @click="showTagConfig"
+      class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg text-color-button-secondary-fg transition-colors"
+      :title="selectedTag ? `Configure tag '${selectedTag}'` : 'Configure tags'"
     >
-      <!-- No tag selected -->
-      <DropdownMenuItem 
-        v-if="!selectedTag"
-        :icon="Tag"
-        :disabled="true"
-        class="text-gray-400 cursor-not-allowed"
-      >
-        No tag selected
-      </DropdownMenuItem>
-      
-      <!-- _untagged tag selected - cannot edit -->
-      <DropdownMenuItem 
-        v-else-if="selectedTag === '_untagged'"
-        :icon="Tag"
-        :disabled="true"
-        class="text-gray-400 cursor-not-allowed"
-      >
-        Cannot edit
-      </DropdownMenuItem>
-      
-      <!-- Tag edit options when tag is selected -->
-      <template v-else>
-        <DropdownMenuItem 
-          :icon="Edit"
-          @click="onRenameTag"
-        >
-          Rename "{{ selectedTag }}"
-        </DropdownMenuItem>
-        
-        <!-- Divider -->
-        <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
-        
-        <DropdownMenuItem 
-          :icon="Trash2"
-          @click="onDeleteTag"
-          class="text-[var(--color-accent)] hover:text-[var(--color-accent)]/80"
-        >
-          Delete "{{ selectedTag }}"
-        </DropdownMenuItem>
-      </template>
-    </DropdownMenu>
+      <Tag class="w-6 h-6" />
+    </button>
     
     <!-- File Menu (Note view only) -->
     <DropdownMenu 
@@ -301,15 +274,16 @@
         History
       </DropdownMenuItem>
       
+ 
 
       
+ 
 
-      
       <!-- Visibility Section -->
       <div v-show="canModify" class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
         Visibility:
       </div>
-      
+
       <!-- Private -->
       <DropdownMenuItem 
         v-show="canModify"
@@ -372,6 +346,14 @@
       :filename="route.params.filename"
       :note-title="globalStore.currentNoteTitle || 'Unknown'"
     />
+    
+    <!-- Tag Configuration Modal -->
+    <TagConfigModal
+      v-model:isVisible="showTagConfigModal"
+      :selected-tag-data="selectedTagForConfig"
+      @close="closeTagConfig"
+      @saved="onTagConfigSaved"
+    />
   </nav>
 </template>
 
@@ -402,7 +384,8 @@ import {
   Grip,
   ExternalLink,
   FileText,
-  History
+  History,
+  Settings
 } from "lucide-vue-next";
 
 import SearchInput from "./SearchInput.vue";
@@ -411,9 +394,11 @@ import DropdownMenuItem from "./DropdownMenuItem.vue";
 import EmbedModal from "./EmbedModal.vue";
 import PasteModal from "./PasteModal.vue";
 import HistoryModal from "./HistoryModal.vue";
+import TagConfigModal from "./TagConfigModal.vue";
 import { authTypes } from "../lib/constants.js";
 import { useGlobalStore } from "../lib/globalStore.js";
 import { clearStoredToken } from "../lib/tokenStorage.js";
+import { getTagsWithCounts, createTagsBackup, listTagsBackups, restoreTagsBackup } from "../lib/api.js";
 
 const props = defineProps({
   incrementalSearchResults: {
@@ -466,6 +451,8 @@ const searchInput = ref();
 const isEmbedModalVisible = ref(false);
 const isPasteModalVisible = ref(false);
 const isHistoryModalVisible = ref(false);
+const showTagConfigModal = ref(false);
+const selectedTagForConfig = ref(null);
 
 const emit = defineEmits([
   "incrementalSearch", 
@@ -478,8 +465,7 @@ const emit = defineEmits([
   "togglePreviewStyle",
   "changeVisibility",
   // Tag edit events
-  "renameTag",
-  "deleteTag",
+
   // Import events
   "showImportModal"
 ]);
@@ -519,6 +505,7 @@ const showEmbedView = computed(() => {
   // Check if we're on a note page and the note has 'embed' category
   return route.name === 'note' && route.params.filename && globalStore.currentNoteCategory === 'embed';
 });
+
 
 
 
@@ -577,17 +564,9 @@ function onNewNoteMenuClose() {
   // New note menu close handler if needed
 }
 
-function onTagEditMenuClose() {
-  // Tag edit menu close handler if needed
-}
 
-function onRenameTag() {
-  emit("renameTag", props.selectedTag);
-}
 
-function onDeleteTag() {
-  emit("deleteTag", props.selectedTag);
-}
+
 
 function createNewNote() {
   router.push({ name: 'new' });
@@ -691,6 +670,41 @@ function showHistory() {
 
 function closeHistoryModal() {
   isHistoryModalVisible.value = false;
+}
+
+// Tag configuration functions
+async function showTagConfig() {
+  try {
+    // If we have a selected tag, use it for configuration
+    if (props.selectedTag && props.selectedTag !== '_untagged') {
+      const tagsData = await getTagsWithCounts();
+      const selectedTagData = tagsData.find(tag => tag.tag === props.selectedTag);
+      if (selectedTagData) {
+        selectedTagForConfig.value = selectedTagData;
+        showTagConfigModal.value = true;
+        return;
+      }
+    }
+    
+    // If no selected tag or selected tag not found, show modal with tag selection
+    showTagConfigModal.value = true;
+  } catch (error) {
+    console.error('Failed to load tags for configuration:', error);
+  }
+}
+
+function closeTagConfig() {
+  showTagConfigModal.value = false;
+  selectedTagForConfig.value = null;
+}
+
+async function onTagConfigSaved() {
+  // Refresh the page or reload tag data to reflect changes
+  // For now, we'll just show a success message
+  globalStore.toast?.addToast('Tag configuration saved successfully', '', 'success');
+  
+  // If we're on a tag page, we might want to refresh the tag data
+  // This could be implemented by emitting an event to the parent component
 }
 
 // Method to focus the search input

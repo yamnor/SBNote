@@ -17,8 +17,8 @@
       style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; z-index: 1;"
       :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"
     >
-      <!-- Recent edit indicator in top-left corner -->
-      <div v-if="isRecentlyEdited" class="absolute top-1 left-1">
+      <!-- Recent edit indicator in top-right corner -->
+      <div v-if="isRecentlyEdited" class="absolute top-1 right-1">
         <div class="w-2 h-2 rounded-full" style="background-color: var(--color-accent);"></div>
       </div>
       

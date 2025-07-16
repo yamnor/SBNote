@@ -33,6 +33,11 @@ class GlobalConfig:
 
         return FileSystemAttachments()
 
+    def load_tag_storage(self):
+        from tags.file_system import FileSystemTags
+
+        return FileSystemTags()
+
     def _load_auth_type(self):
         key = "SBNOTE_AUTH_TYPE"
         auth_type = get_env(
@@ -99,7 +104,7 @@ class GlobalConfig:
         return value * 1024 * 1024
 
 
-class AuthType(str, Enum):
+class AuthType(Enum):
     NONE = "none"
     READ_ONLY = "read_only"
     PASSWORD = "password"
@@ -107,7 +112,9 @@ class AuthType(str, Enum):
 
 
 class GlobalConfigResponseModel(CustomBaseModel):
-    auth_type: AuthType
+    auth_type: str
     quick_access_hide: bool
     quick_access_sort: str
     quick_access_limit: int
+    path_prefix: str
+    max_file_size: int

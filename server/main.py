@@ -15,6 +15,8 @@ from helpers import replace_base_href
 from logger import logger
 from notes.base import BaseNotes
 from notes.models import Note, NoteCreate, NoteUpdate, SearchResult, NoteImport, NoteImageImport, NoteXyzImport, NotePlaintextImport, NotePasteImport
+from tags.base import BaseTags
+from tags.models import TagConfig, TagsConfig, TagConfigUpdate, TagBackupInfo
 
 
 def is_authenticated(request: Request) -> bool:
@@ -48,6 +50,7 @@ global_config = GlobalConfig()
 auth: BaseAuth = global_config.load_auth()
 note_storage: BaseNotes = global_config.load_note_storage()
 attachment_storage: BaseAttachments = global_config.load_attachment_storage()
+tag_storage: BaseTags = global_config.load_tag_storage()
 auth_deps = [Depends(auth.authenticate)] if auth else []
 router = APIRouter()
 app = FastAPI(
@@ -635,7 +638,7 @@ def get_tags(request: Request):
 
 @router.get("/api/tags/with-counts")
 def get_tags_with_counts(request: Request):
-    """Get a list of all tags with their note counts and recent note info."""
+    """Get a list of all tags with their note counts, recent note info, and configuration."""
     try:
         # Use public index if not authenticated, main index if authenticated
         use_public_index = not is_authenticated(request)
@@ -675,14 +678,23 @@ def get_tags_with_counts(request: Request):
         
         # Get all tags and add counts, but only include tags with count > 0
         all_tags = note_storage.get_tags(use_public_index=use_public_index)
+        
+        # Get tag configurations
+        tags_config = tag_storage.get_all_tags_config()
+        
         result = []
         
         for tag in all_tags:
             count = tag_counts.get(tag, 0)
             if count > 0:  # Only include tags that have at least one note
+                # Get tag configuration or use default
+                tag_config = tags_config.tags.get(tag, TagConfig())
+                
                 result.append({
                     "tag": tag,
                     "count": count,
+                    "priority": tag_config.priority,
+                    "description": tag_config.description,
                     "notes": tag_notes.get(tag, []),
                     "recentModified": tag_recent_modified.get(tag)
                 })
@@ -692,6 +704,8 @@ def get_tags_with_counts(request: Request):
             result.append({
                 "tag": "_untagged",
                 "count": untagged_count,
+                "priority": 1,  # Low priority for untagged
+                "description": "Notes without tags",
                 "notes": untagged_notes,
                 "recentModified": untagged_recent_modified
             })
@@ -782,6 +796,109 @@ if global_config.auth_type != AuthType.READ_ONLY:
             raise HTTPException(status_code=500, detail=f"Failed to delete tag {tag_name}")
 
 
+# region Tags Configuration
+@router.get("/api/tags/config", response_model=TagsConfig)
+def get_tags_config(request: Request):
+    """Get all tags configuration."""
+    try:
+        return tag_storage.get_all_tags_config()
+    except Exception as e:
+        logger.error(f"Error getting tags configuration: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get tags configuration")
+
+
+@router.get("/api/tags/{tag_name}/config", response_model=TagConfig)
+def get_tag_config(tag_name: str, request: Request):
+    """Get configuration for a specific tag."""
+    try:
+        config = tag_storage.get_tag_config(tag_name)
+        if config is None:
+            # Return default configuration for tags that don't have explicit config
+            return TagConfig()
+        return config
+    except Exception as e:
+        logger.error(f"Error getting tag configuration for '{tag_name}': {e}")
+        raise HTTPException(status_code=500, detail="Failed to get tag configuration")
+
+
+@router.patch("/api/tags/{tag_name}/config", dependencies=auth_deps, response_model=TagConfig)
+def update_tag_config(tag_name: str, data: TagConfigUpdate, request: Request):
+    """Update configuration for a specific tag."""
+    try:
+        # Get current configuration or create new one
+        current_config = tag_storage.get_tag_config(tag_name)
+        if current_config is None:
+            current_config = TagConfig()
+        
+        # Update only provided fields
+        if data.priority is not None:
+            current_config.priority = data.priority
+        if data.description is not None:
+            current_config.description = data.description
+        
+        # Save updated configuration
+        return tag_storage.update_tag_config(tag_name, current_config)
+    except Exception as e:
+        logger.error(f"Error updating tag configuration for '{tag_name}': {e}")
+        raise HTTPException(status_code=500, detail="Failed to update tag configuration")
+
+
+@router.delete("/api/tags/{tag_name}/config", dependencies=auth_deps)
+def delete_tag_config(tag_name: str, request: Request):
+    """Delete configuration for a specific tag."""
+    try:
+        success = tag_storage.delete_tag_config(tag_name)
+        if success:
+            return {"message": f"Tag configuration for '{tag_name}' deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Tag configuration not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting tag configuration for '{tag_name}': {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete tag configuration")
+
+
+@router.post("/api/tags/config/backup", dependencies=auth_deps)
+def create_tags_backup(request: Request):
+    """Create backup of tags configuration."""
+    try:
+        backup_filename = tag_storage.create_backup()
+        return {"message": "Backup created successfully", "filename": backup_filename}
+    except Exception as e:
+        logger.error(f"Error creating tags backup: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create backup")
+
+
+@router.get("/api/tags/config/backups", response_model=List[TagBackupInfo])
+def list_tags_backups(request: Request):
+    """List available backup files."""
+    try:
+        return tag_storage.list_backups()
+    except Exception as e:
+        logger.error(f"Error listing tags backups: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list backups")
+
+
+@router.post("/api/tags/config/restore/{backup_filename}", dependencies=auth_deps)
+def restore_tags_backup(backup_filename: str, request: Request):
+    """Restore configuration from backup."""
+    try:
+        success = tag_storage.restore_backup(backup_filename)
+        if success:
+            return {"message": "Configuration restored successfully"}
+        else:
+            raise HTTPException(status_code=400, detail="Restore failed")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error restoring tags backup '{backup_filename}': {e}")
+        raise HTTPException(status_code=500, detail="Failed to restore backup")
+
+
+# endregion
+
+
 @router.post("/api/rebuild-index", dependencies=auth_deps)
 def rebuild_index():
     """Rebuild both search indexes (main and public) completely."""
@@ -851,10 +968,12 @@ async def restore_note_version(filename: str, request: Request, data: dict):
 def get_config():
     """Retrieve server-side config required for the UI."""
     return GlobalConfigResponseModel(
-        auth_type=global_config.auth_type,
+        auth_type=global_config.auth_type.value,
         quick_access_hide=global_config.quick_access_hide,
         quick_access_sort=global_config.quick_access_sort,
         quick_access_limit=global_config.quick_access_limit,
+        path_prefix=global_config.path_prefix,
+        max_file_size=global_config.max_file_size,
     )
 
 
