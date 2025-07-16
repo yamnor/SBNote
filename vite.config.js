@@ -110,14 +110,7 @@ export default defineConfig({
         target: devApiUrl,
         changeOrigin: true,
       },
-      "/xyz/": {
-        target: devApiUrl,
-        changeOrigin: true,
-      },
-      "/pkl/": {
-        target: devApiUrl,
-        changeOrigin: true,
-      },
+
       "/docs": {
         target: devApiUrl,
         changeOrigin: true,

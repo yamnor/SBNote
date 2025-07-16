@@ -105,7 +105,30 @@ if global_config.auth_type not in [AuthType.NONE, AuthType.READ_ONLY]:
 
 
 # region Notes
-# Get Note
+# Get Note by basename
+@router.get(
+    "/api/notes/basename/{basename}",
+    response_model=Note,
+)
+def get_note_by_basename(basename: str, request: Request):
+    """Get a specific note by basename."""
+    try:
+        note = note_storage.get_by_basename(basename)
+        
+        # Check visibility access control
+        if note.visibility == 'private' and not is_authenticated(request):
+            # Return 401 for private notes when not authenticated
+            raise HTTPException(401, "Authentication required for private notes")
+
+        return note
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail=api_messages.invalid_note_title
+        )
+    except FileNotFoundError:
+        raise HTTPException(404, api_messages.note_not_found)
+
+# Get Note by filename
 @router.get(
     "/api/notes/{filename}",
     response_model=Note,
@@ -117,8 +140,8 @@ def get_note(filename: str, request: Request):
         
         # Check visibility access control
         if note.visibility == 'private' and not is_authenticated(request):
-            # Return 404 for private notes when not authenticated
-            raise HTTPException(404, api_messages.note_not_found)
+            # Return 401 for private notes when not authenticated
+            raise HTTPException(401, "Authentication required for private notes")
         
         return note
     except ValueError:
@@ -1048,156 +1071,7 @@ def get_attachment_by_directory(basename: str, filename: str):
             status_code=404, detail=api_messages.attachment_not_found
         )
 
-# Attachment redirect endpoints
-@router.get(
-    "/xyz/{basename}",
-    include_in_schema=False,
-)
-def get_attachment_by_basename_xyz(basename: str):
-    """Get an attachment by note basename for xyz files. Redirects to output.xyz or coordinate.xyz."""
-    try:
-        # Get the note by basename
-        note = note_storage.get_by_basename(basename)
-        
-        # Check if output category exists first
-        category = "output"
-        try:
-            attachment_storage.get_by_basename_and_category(basename, category, "xyz")
-        except FileNotFoundError:
-            # If output category doesn't exist, check coordinate category
-            category = "coordinate"
-            try:
-                attachment_storage.get_by_basename_and_category(basename, category, "xyz")
-            except FileNotFoundError:
-                raise HTTPException(
-                    status_code=404, detail="Attachment not found"
-                )
-        
-        # Redirect to the found file
-        from fastapi.responses import RedirectResponse
-        return RedirectResponse(url=f"/files/{basename}/{category}.xyz")
-        
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=404, detail="Note not found"
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in get_attachment_by_basename_xyz: {e}")
-        raise HTTPException(
-            status_code=500, detail="Internal server error"
-        )
 
-@router.get(
-    "/xyz/{basename}/",
-    include_in_schema=False,
-)
-def get_attachment_by_basename_xyz_with_slash(basename: str):
-    """Get an attachment by note basename for xyz files with trailing slash. Redirects to output.xyz or coordinate.xyz."""
-    try:
-        # Get the note by basename
-        note = note_storage.get_by_basename(basename)
-        
-        # Check if output category exists first
-        category = "output"
-        try:
-            attachment_storage.get_by_basename_and_category(basename, category, "xyz")
-        except FileNotFoundError:
-            # If output category doesn't exist, check coordinate category
-            category = "coordinate"
-            try:
-                attachment_storage.get_by_basename_and_category(basename, category, "xyz")
-            except FileNotFoundError:
-                raise HTTPException(
-                    status_code=404, detail="Attachment not found"
-                )
-        
-        # Redirect to the found file
-        from fastapi.responses import RedirectResponse
-        return RedirectResponse(url=f"/files/{basename}/{category}.xyz")
-        
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=404, detail="Note not found"
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in get_attachment_by_basename_xyz_with_slash: {e}")
-        raise HTTPException(
-            status_code=500, detail="Internal server error"
-        )
-
-@router.get(
-    "/pkl/{basename}",
-    include_in_schema=False,
-)
-def get_attachment_by_basename_pkl(basename: str):
-    """Get an attachment by note basename for pkl files. Redirects to output.pkl."""
-    try:
-        # Get the note by basename
-        note = note_storage.get_by_basename(basename)
-        
-        # For pkl files, always use output category
-        category = "output"
-        try:
-            attachment_storage.get_by_basename_and_category(basename, category, "pkl")
-        except FileNotFoundError:
-            raise HTTPException(
-                status_code=404, detail="Attachment not found"
-            )
-        
-        # Redirect to the found file
-        from fastapi.responses import RedirectResponse
-        return RedirectResponse(url=f"/files/{basename}/{category}.pkl")
-        
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=404, detail="Note not found"
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in get_attachment_by_basename_pkl: {e}")
-        raise HTTPException(
-            status_code=500, detail="Internal server error"
-        )
-
-@router.get(
-    "/pkl/{basename}/",
-    include_in_schema=False,
-)
-def get_attachment_by_basename_pkl_with_slash(basename: str):
-    """Get an attachment by note basename for pkl files with trailing slash. Redirects to output.pkl."""
-    try:
-        # Get the note by basename
-        note = note_storage.get_by_basename(basename)
-        
-        # For pkl files, always use output category
-        category = "output"
-        try:
-            attachment_storage.get_by_basename_and_category(basename, category, "pkl")
-        except FileNotFoundError:
-            raise HTTPException(
-                status_code=404, detail="Attachment not found"
-            )
-        
-        # Redirect to the found file
-        from fastapi.responses import RedirectResponse
-        return RedirectResponse(url=f"/files/{basename}/{category}.pkl")
-        
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=404, detail="Note not found"
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in get_attachment_by_basename_pkl_with_slash: {e}")
-        raise HTTPException(
-            status_code=500, detail="Internal server error"
-        )
 
 @router.get("/api/ccget/{basename}")
 def ccget_data(basename: str, attributes: str = Query(..., description="Comma-separated list of cclib attributes")):
@@ -1399,6 +1273,9 @@ def healthcheck() -> str:
 
 
 # endregion
+
+
+
 
 
 # region UI

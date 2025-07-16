@@ -72,6 +72,82 @@ const router = createRouter({
         filename: route.params.filename.replace(/\.md$/, '') 
       }),
     },
+    {
+      path: "/:basename",
+      name: "basename-redirect",
+      beforeEnter: async (to, from, next) => {
+        try {
+          // Skip if basename contains dots or starts with known prefixes
+          if (to.params.basename.includes('.') || 
+              to.params.basename.startsWith('api') ||
+              to.params.basename.startsWith('files') ||
+              to.params.basename.startsWith('a') ||
+              to.params.basename.startsWith('xyz') ||
+              to.params.basename.startsWith('pkl') ||
+              to.params.basename.startsWith('note') ||
+              to.params.basename.startsWith('output') ||
+              to.params.basename.startsWith('coordinate') ||
+              to.params.basename.startsWith('search') ||
+              to.params.basename.startsWith('tag') ||
+              to.params.basename.startsWith('new') ||
+              to.params.basename.startsWith('login')) {
+            next({ name: 'home' });
+            return;
+          }
+          
+          // Get note data by basename using the API library
+          try {
+            const response = await fetch(`/api/notes/basename/${to.params.basename}`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+              }
+            });
+            
+            if (!response.ok) {
+              if (response.status === 401) {
+                // Authentication required, redirect to login page
+                next({ name: 'login', query: { redirect: `/${to.params.basename}` } });
+                return;
+              } else {
+                // If the note doesn't exist, redirect to home
+                next({ name: 'home' });
+                return;
+              }
+            }
+            
+            const note = await response.json();
+            const category = note.category || 'note';
+            
+            // Redirect based on category
+            let redirectPath;
+            if (category === 'note' || category === 'image') {
+              redirectPath = `/note/${to.params.basename}`;
+            } else if (category === 'output') {
+              redirectPath = `/output/${to.params.basename}`;
+            } else if (category === 'coordinate') {
+              redirectPath = `/coordinate/${to.params.basename}`;
+            } else {
+              redirectPath = `/note/${to.params.basename}`;
+            }
+            
+            next({ path: redirectPath, replace: true });
+          } catch (error) {
+            if (error.response?.status === 401) {
+              // Authentication required, redirect to login page
+              next({ name: 'login', query: { redirect: `/${to.params.basename}` } });
+              return;
+            } else {
+              // If the note doesn't exist, redirect to home
+              next({ name: 'home' });
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to get note data:', error);
+          next({ name: 'home' });
+        }
+      }
+    },
   ],
 });
 
