@@ -91,7 +91,7 @@
                     @click="openInEditor"
                     title="Open in full editor"
                   >
-                    <Maximize2 class="w-4 h-4" />
+                    <StickyNote class="w-4 h-4" />
                   </button>
                   
                   <!-- Close button -->
@@ -138,7 +138,7 @@
 import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import { onMounted, ref, watch, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { X, Maximize2, Presentation, ExternalLink, Link2, Bolt, Scroll } from "lucide-vue-next";
+import { X, Maximize2, Presentation, ExternalLink, Link2, Bolt, Scroll, StickyNote } from "lucide-vue-next";
 import { useGlobalStore } from "../lib/globalStore.js";
 import TagInput from "./TagInput.vue";
 import ToastUIEditor from "./ToastUIEditor.vue";
