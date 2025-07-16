@@ -168,6 +168,59 @@
         --color-label-limited: var(--color-blue-500);
         --color-label-public: var(--color-red-500);
 
+        /* Material Design ベースの色定義（既存の色変数にマッピング） */
+        --c-primary: var(--color-blue-500);
+        --c-on-primary: var(--color-bg-base);
+        --c-primary-container: var(--color-blue-300);
+        --c-on-primary-container: var(--color-text-primary);
+        --c-primary-fixed: var(--color-blue-500);
+        --c-on-primary-fixed: var(--color-bg-base);
+        --c-primary-fixed-dim: var(--color-blue-600);
+        --c-on-primary-fixed-variant: var(--color-bg-base);
+
+        --c-secondary: var(--color-secondary);
+        --c-on-secondary: var(--color-bg-base);
+        --c-secondary-container: var(--color-purple-200);
+        --c-on-secondary-container: var(--color-text-primary);
+        --c-secondary-fixed: var(--color-secondary);
+        --c-on-secondary-fixed: var(--color-bg-base);
+        --c-secondary-fixed-dim: #6b5fd9;
+        --c-on-secondary-fixed-variant: var(--color-bg-base);
+
+        --c-tertiary: var(--color-success);
+        --c-on-tertiary: var(--color-bg-base);
+        --c-tertiary-container: var(--color-bg-success);
+        --c-on-tertiary-container: var(--color-text-primary);
+
+        --c-error: var(--color-error);
+        --c-on-error: var(--color-bg-base);
+        --c-error-container: var(--color-bg-error);
+        --c-on-error-container: var(--color-text-primary);
+
+        --c-surface: var(--color-bg-base);
+        --c-on-surface: var(--color-text-primary);
+        --c-surface-variant: var(--color-bg-neutral);
+        --c-on-surface-variant: var(--color-text-secondary);
+        --c-surface-dim: var(--color-bg-neutral-light);
+        --c-surface-bright: var(--color-bg-base);
+        --c-surface-container-lowest: var(--color-bg-neutral-lighter);
+        --c-surface-container-low: var(--color-bg-neutral-light);
+        --c-surface-container: var(--color-bg-neutral);
+        --c-surface-container-high: var(--color-bg-neutral);
+        --c-surface-container-highest: var(--color-bg-elevated);
+
+        --c-background: var(--color-bg-base);
+        --c-on-background: var(--color-text-primary);
+
+        --c-outline: var(--color-border-primary);
+        --c-outline-variant: var(--color-border-light);
+
+        --c-shadow: var(--color-shadow-sm);
+        --c-scrim: var(--color-bg-backdrop);
+        --c-inverse-surface: var(--color-text-primary);
+        --c-inverse-on-surface: var(--color-bg-base);
+        --c-inverse-primary: var(--color-blue-300);
+
         /* Layout */
         --layout-width-note: 768px;
         --layout-width-grid: 1024px;
