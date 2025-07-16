@@ -104,13 +104,13 @@ function setupKeyboardShortcuts() {
       return;
     }
     
-    // Check if any modal is open (including NotePreviewModal)
+    // Check if any modal is open (including QuickNoteModal)
     const activeElement = document.activeElement;
     const isInModal = activeElement && (
       activeElement.closest('[role="dialog"]') ||
       activeElement.closest('.modal') ||
       activeElement.closest('[data-modal]') ||
-      activeElement.closest('.note-preview-modal') ||
+      activeElement.closest('.quick-note-modal') ||
       // Check for specific modal selectors
       activeElement.closest('.fixed.inset-0') ||
       activeElement.closest('.relative.z-50')

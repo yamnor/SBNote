@@ -24,7 +24,7 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full transform overflow-visible rounded-lg bg-color-bg-neutral shadow-2xl transition-all note-preview-modal" style="max-width: var(--layout-width-note);">
+            <DialogPanel class="w-full transform overflow-visible rounded-lg bg-color-bg-neutral shadow-2xl transition-all quick-note-modal" style="max-width: var(--layout-width-note);">
               <!-- Header -->
               <div class="flex items-center justify-between p-2 pb-0">
                 <!-- Left side - Slide view button and Embed button -->
@@ -529,7 +529,7 @@ function handleKeydownCapture(event) {
                           target.tagName === 'TEXTAREA' || 
                           target.contentEditable === 'true' ||
                           target.closest('.toastui-editor') ||
-                          target.closest('.note-preview-modal');
+                          target.closest('.quick-note-modal');
     
     // Check if the target is within tag input container
     const isTagInput = target.closest('.tag-input-container');

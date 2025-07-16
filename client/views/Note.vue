@@ -104,6 +104,9 @@
             />
           </div>
         </div>
+
+        <!-- Bottom margin for page spacing -->
+        <div class="h-20"></div>
       </div>
     </Loading>
   </div>

@@ -52,7 +52,7 @@
     </div>
 
     <!-- Note Preview Modal -->
-    <PreviewNoteModal
+    <QuickNoteModal
       v-model="showPreviewModal"
       :note="note"
       @close="showPreviewModal = false"
@@ -64,7 +64,7 @@
 <script setup>
 import { computed, ref } from "vue";
 import { useGlobalStore } from "../lib/globalStore.js";
-import PreviewNoteModal from "./PreviewNoteModal.vue";
+import QuickNoteModal from "./QuickNoteModal.vue";
 import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, ExternalLink, Scroll } from "lucide-vue-next";
 
 const props = defineProps({
@@ -85,7 +85,7 @@ function handleClick() {
   showPreviewModal.value = true;
 }
 
-// Handle note updates from PreviewNoteModal
+// Handle note updates from QuickNoteModal
 function handleNoteUpdated(updatedNote) {
   // Update the note object with the updated data
   Object.assign(props.note, updatedNote);
