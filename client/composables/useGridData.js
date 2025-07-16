@@ -16,7 +16,7 @@ export function useGridData() {
         key: `tag-${tagData.tag}`,
         isSelected: selectedTag === tagData.tag,
         hasAnySelection: selectedTag !== null,
-        isPinned: pinnedTags.includes(tagData.tag)
+        isPinned: tagData.is_pinned || pinnedTags.includes(tagData.tag)
       });
     }
     
@@ -44,7 +44,7 @@ export function useGridData() {
         key: `tag-${tagData.tag}`,
         isSelected: selectedTag === tagData.tag,
         hasAnySelection: selectedTag !== null,
-        isPinned: pinnedTags.includes(tagData.tag)
+        isPinned: tagData.is_pinned || pinnedTags.includes(tagData.tag)
       });
       
       // If this tag is selected, add its notes right after
@@ -94,13 +94,13 @@ export function useGridData() {
   const sortTagsWithPinned = (tags, sortBy, sortOrder, pinnedTags) => {
     const sorted = sortItems(tags, sortBy, sortOrder, 'tags');
     
-    // Move pinned tags to the top
+    // Move pinned tags to the top (using server-side is_pinned flag)
     const pinned = [];
     const unpinned = [];
     const untagged = [];
     
     for (const tag of sorted) {
-      if (pinnedTags.includes(tag.tag)) {
+      if (tag.is_pinned || pinnedTags.includes(tag.tag)) {
         pinned.push(tag);
       } else if (tag.tag === '_untagged') {
         untagged.push(tag);

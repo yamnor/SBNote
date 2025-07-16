@@ -92,6 +92,28 @@
           ></textarea>
         </div>
 
+        <!-- Pin Toggle -->
+        <div v-if="selectedTag && selectedTag !== '_untagged'">
+          <label class="flex items-center space-x-2">
+            <input
+              v-model="isPinned"
+              type="checkbox"
+              class="rounded border-gray-300 dark:border-gray-600 text-color-primary focus:ring-color-primary"
+            />
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
+              </svg>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Pin this tag
+              </span>
+            </div>
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+            Pinned tags appear at the top of the tag list
+          </p>
+        </div>
+
         <!-- Error Message -->
         <div v-if="errorMessage" class="text-red-600 dark:text-red-400 text-sm">
           {{ errorMessage }}
@@ -190,6 +212,7 @@ const selectedTag = ref('');
 const newTagName = ref('');
 const priority = ref(3);
 const description = ref('');
+const isPinned = ref(false);
 const availableTags = ref([]);
 const errorMessage = ref('');
 const successMessage = ref('');
@@ -220,6 +243,7 @@ function onTagChange() {
     // Reset form
     priority.value = 3;
     description.value = '';
+    isPinned.value = false;
     newTagName.value = '';
   }
   errorMessage.value = '';
@@ -230,10 +254,18 @@ function onTagChange() {
 // Load tag configuration
 async function loadTagConfig(tagName) {
   try {
-    // For now, we'll use default values
-    // In the future, this could load from the API
-    priority.value = 3;
-    description.value = '';
+    // Find the tag data from available tags
+    const tagData = availableTags.value.find(tag => tag.tag === tagName);
+    if (tagData) {
+      priority.value = tagData.priority || 3;
+      description.value = tagData.description || '';
+      isPinned.value = tagData.is_pinned || false;
+    } else {
+      // Use default values if tag data not found
+      priority.value = 3;
+      description.value = '';
+      isPinned.value = false;
+    }
     newTagName.value = tagName;
   } catch (error) {
     console.error('Failed to load tag config:', error);
@@ -301,7 +333,8 @@ async function saveConfig() {
     // Update tag configuration
     await updateTagConfig(hasTagNameChanged ? newTagName.value.trim() : selectedTag.value, {
       priority: priority.value,
-      description: description.value
+      description: description.value,
+      is_pinned: isPinned.value
     });
 
     successMessage.value = hasTagNameChanged ? 
@@ -364,6 +397,7 @@ function closeModal() {
   newTagName.value = '';
   priority.value = 3;
   description.value = '';
+  isPinned.value = false;
   errorMessage.value = '';
   successMessage.value = '';
   tagNameError.value = '';
@@ -379,6 +413,7 @@ watch(() => props.isVisible, (newValue) => {
       newTagName.value = props.selectedTagData.tag;
       priority.value = props.selectedTagData.priority || 3;
       description.value = props.selectedTagData.description || '';
+      isPinned.value = props.selectedTagData.is_pinned || false;
     }
   }
 });

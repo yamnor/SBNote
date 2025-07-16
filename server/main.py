@@ -695,6 +695,7 @@ def get_tags_with_counts(request: Request):
                     "count": count,
                     "priority": tag_config.priority,
                     "description": tag_config.description,
+                    "is_pinned": tag_config.is_pinned,
                     "notes": tag_notes.get(tag, []),
                     "recentModified": tag_recent_modified.get(tag)
                 })
@@ -706,6 +707,7 @@ def get_tags_with_counts(request: Request):
                 "count": untagged_count,
                 "priority": 1,  # Low priority for untagged
                 "description": "Notes without tags",
+                "is_pinned": False,  # _untagged cannot be pinned
                 "notes": untagged_notes,
                 "recentModified": untagged_recent_modified
             })
@@ -835,6 +837,8 @@ def update_tag_config(tag_name: str, data: TagConfigUpdate, request: Request):
             current_config.priority = data.priority
         if data.description is not None:
             current_config.description = data.description
+        if data.is_pinned is not None:
+            current_config.is_pinned = data.is_pinned
         
         # Save updated configuration
         return tag_storage.update_tag_config(tag_name, current_config)

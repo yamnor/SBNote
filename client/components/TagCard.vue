@@ -7,19 +7,14 @@
     :class="[getBackgroundClass(), { 'pin-animation': showPinAnimation, 'long-press-active': isLongPressing }]"
     style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; z-index: 5;"
   >
-    <!-- Corner triangle for pinned tags in top-right -->
-    <div 
-      v-if="isPinned"
-      class="absolute top-0 right-0 w-0 h-0 border-l-[20px] border-l-transparent border-t-[20px] border-t-color-primary"
-    >
-    </div>
+
     
-    <!-- Priority indicator in top-left corner (when not pinned) -->
-    <div v-if="!isPinned" class="absolute top-1 left-1">
+    <!-- Priority indicator in top-left corner -->
+    <div class="absolute top-1 left-1">
       <div class="flex">
         <span v-for="i in 5" :key="i" 
               class="text-xs"
-              :class="i <= tagData.priority ? 'text-yellow-500' : 'text-gray-300'">
+              :class="i <= tagData.priority ? 'text-yellow-500' : (isSelected ? 'text-color-text-inverse' : 'text-gray-300')">
           ★
         </span>
       </div>
@@ -28,6 +23,12 @@
     <!-- Recent note modification indicator in top-right corner -->
     <div v-if="hasRecentlyModifiedNote" class="absolute top-1 right-1">
       <div class="w-2 h-2 rounded-full" style="background-color: var(--color-accent);"></div>
+    </div>
+    
+    <!-- Pin icon in bottom-left corner for pinned tags -->
+    <div v-if="isPinned" class="absolute bottom-1 left-1">
+      <Pin class="w-5 h-5"
+      :class="isSelected ? 'text-color-text-inverse' : 'text-color-primary'"/>
     </div>
     
     <!-- Note count badge in bottom-right corner -->
@@ -55,6 +56,7 @@
 <script setup>
 import { onMounted, ref, onUnmounted, computed, watch } from "vue";
 import { createDoubleClickHandler, addTouchEventListeners, addLongPressDetection } from "../lib/helpers.js";
+import { Pin } from "lucide-vue-next";
 
 const props = defineProps({
   tagData: {
