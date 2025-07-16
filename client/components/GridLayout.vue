@@ -15,7 +15,6 @@
         :is-pinned="item.isPinned"
         @click="onTagClick"
         @dblclick="onTagDoubleClick"
-        @longpress="onTagLongPress"
       />
       
       <!-- Note Card with CSS animation delay -->
@@ -44,7 +43,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['tag-click', 'tag-dblclick', 'tag-longpress']);
+const emit = defineEmits(['tag-click', 'tag-dblclick']);
 
 const gridContainer = ref(null);
 const containerWidth = ref(0);
@@ -142,9 +141,7 @@ function onTagDoubleClick(tagName) {
   emit('tag-dblclick', tagName);
 }
 
-function onTagLongPress(tagName) {
-  emit('tag-longpress', tagName);
-}
+
 </script>
 
 <style scoped>

@@ -5,7 +5,6 @@
     :show-sort-controls="true"
     @tag-click="onTagClick"
     @tag-dblclick="onTagDoubleClick"
-    @tag-longpress="onTagLongPress"
   >
     <template #sort-controls>
       <SortDropdown
@@ -81,7 +80,7 @@ const gridComponent = ref();
 const { createPersistentRef, saveValue } = useLocalStorage();
 const { noteSortOptions, sortItems } = useSorting();
 const { createNestedGridItems, sortTagsWithPinned } = useGridData();
-const { handleTagClick, handleTagDoubleClick, handleTagLongPress } = useTagInteractions();
+const { handleTagClick, handleTagDoubleClick } = useTagInteractions();
 const { fetchTagsWithCounts, fetchNotesByTag, startPeriodicRefresh } = useDataFetching();
 
 // Persistent state
@@ -294,10 +293,7 @@ function onTagDoubleClick(tagName) {
   handleTagDoubleClick(tagName, '/tag/');
 }
 
-// Handle tag long press for pinning/unpinning
-function onTagLongPress(tagName) {
-  handleTagLongPress(tagName, pinnedTags.value, (tags) => pinnedTags.value = tags, saveValue, 'sbnote_home_pinned_tags');
-}
+
 
 // Tag edit handlers
 function handleRenameTag(tagName) {

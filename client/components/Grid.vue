@@ -18,7 +18,6 @@
           v-bind="$attrs"
           @tag-click="$emit('tag-click', $event)"
           @tag-dblclick="$emit('tag-dblclick', $event)"
-          @tag-longpress="$emit('tag-longpress', $event)"
         />
       </Loading>
       
@@ -35,7 +34,6 @@
           v-bind="$attrs"
           @tag-click="$emit('tag-click', $event)"
           @tag-dblclick="$emit('tag-dblclick', $event)"
-          @tag-longpress="$emit('tag-longpress', $event)"
         />
       </div>
     </div>
@@ -62,7 +60,7 @@ const props = defineProps({
   }
 });
 
-defineEmits(['tag-click', 'tag-dblclick', 'tag-longpress']);
+defineEmits(['tag-click', 'tag-dblclick']);
 
 const loadingIndicator = ref();
 

@@ -49,29 +49,9 @@ export function useTagInteractions() {
     localStorage.setItem('home_selected_tag', tagName);
   };
 
-  // Handle tag long press for pinning/unpinning
-  const handleTagLongPress = (tagName, pinnedTags, setPinnedTags, saveToLocalStorage, localStorageKey) => {
-    const currentPinnedTags = [...pinnedTags];
-    
-    if (currentPinnedTags.includes(tagName)) {
-      // Unpin the tag
-      const index = currentPinnedTags.indexOf(tagName);
-      currentPinnedTags.splice(index, 1);
-    } else {
-      // Pin the tag
-      currentPinnedTags.push(tagName);
-    }
-    
-    setPinnedTags(currentPinnedTags);
-    if (saveToLocalStorage && localStorageKey) {
-      saveToLocalStorage(localStorageKey, currentPinnedTags);
-    }
-  };
-
   return {
     handleTagClick,
     handleTagDoubleClick,
-    handleTagDoubleClickForHome,
-    handleTagLongPress
+    handleTagDoubleClickForHome
   };
 } 
