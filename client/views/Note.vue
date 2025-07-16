@@ -603,13 +603,12 @@ function deleteHandler() {
 
 // Copy Link (for NavBar event)
 function copyLinkHandler() {
-  // Get current note URL
-  const currentRoute = router.currentRoute.value;
-  const noteUrl = router.resolve(currentRoute).href;
-  const fullUrl = window.location.origin + noteUrl;
+  // Get basename from filename
+  const basename = props.filename.replace(/\.md$/, '');
+  const url = `${window.location.origin}/${basename}`;
   
   // Copy to clipboard
-  navigator.clipboard.writeText(fullUrl).then(() => {
+  navigator.clipboard.writeText(url).then(() => {
     // Show success toast notification
     globalStore.toast?.addToast(
       'Note URL copied to clipboard',

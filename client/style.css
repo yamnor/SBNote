@@ -75,7 +75,7 @@
         --color-blue-300: #e0efff;
         --color-blue-350: #cfe5ff;
         --color-blue-400: #bfdcff;
-        --color-blue-500: #3ea8ff;
+        --color-blue-500: #3ea8ff; /* primary */
         --color-blue-600: #0f83fd;
         --color-blue-700: #0868ce;
         --color-gray-100: #f5f9fc;
@@ -86,11 +86,17 @@
         --color-gray-600: #acbcc7;
         --color-gray-700: #8f9faa;
         --color-gray-800: #65717b;
-        --color-purple-200: #f3f2ff;
-        --color-purple-300: #dbdfff;
-        --color-red-100: #fff0f0;
-        --color-red-300: #ffc5c5;
-        --color-red-500: #ff6868;
+        --color-yellow-200: #ffe191;
+        --color-yellow-400: #ffcb50;
+        --color-yellow-600: #ffb643;
+        --color-yellow-800: #ff953e; /* complementary */
+        --color-purple-50: #f2e6ff;
+        --color-purple-200: #c497fe;
+        --color-purple-400: #953eff; /* triadic */
+        --color-pink-50: #fee2f1;
+        --color-pink-100: #fcb5db;
+        --color-pink-300: #ff3ea8; /* triadic */
+        --color-pink-500: #ff0077;
         
         /* Semantic colors */
         --color-primary: var(--color-blue-500);
@@ -99,9 +105,9 @@
         --color-secondary: #807aff;
         --color-success: #10b981;
         --color-warning: #f59e0b;
-        --color-error: var(--color-red-500);
+        --color-error: var(--color-pink-500);
         --color-info: var(--color-blue-500);
-        --color-accent: var(--color-red-500);
+        --color-accent: var(--color-pink-500);
         
         /* Background colors */
         --color-bg-base: #ffffff;
@@ -114,7 +120,7 @@
         --color-bg-primary: var(--color-blue-300);
         --color-bg-primary-light: var(--color-blue-200);
         --color-bg-secondary: var(--color-purple-200);
-        --color-bg-error: var(--color-red-100);
+        --color-bg-error: var(--color-pink-100);
         --color-bg-warning: #fff6e4;
         --color-bg-success: #ecfdf5;
         --color-bg-popover: var(--color-bg-base);
@@ -159,14 +165,14 @@
         --color-button-quaternary-disabled-fg: var(--color-text-disabled);
         --color-button-danger-bg: var(--color-bg-base);
         --color-button-danger-fg: var(--color-error);
-        --color-button-danger-border: var(--color-red-300);
+        --color-button-danger-border: var(--color-pink-300);
         --color-button-danger-hover-bg: var(--color-bg-error);
         --color-button-danger-focus-border: var(--color-error);
         
         /* Label color system */
         --color-label-private: var(--color-gray-600);
         --color-label-limited: var(--color-blue-500);
-        --color-label-public: var(--color-red-500);
+        --color-label-public: var(--color-pink-500);
 
         /* Layout */
         --layout-width-note: 768px;
