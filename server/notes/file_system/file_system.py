@@ -475,7 +475,7 @@ class FileSystemNotes(BaseNotes):
             tags=data.tags or [],
             created=created_time,
             category="image",
-            visibility="private",
+            visibility="limited",
             attachment_extension=attachment_extension
         )
         
@@ -527,7 +527,7 @@ class FileSystemNotes(BaseNotes):
             tags=data.tags or [],
             created=created_time,
             category="coordinate",
-            visibility="private",
+            visibility="limited",
             attachment_extension=attachment_extension
         )
         
@@ -630,7 +630,7 @@ class FileSystemNotes(BaseNotes):
             tags=data.tags or [],
             created=created_time,
             category="output",
-            visibility="private",
+            visibility="limited",
             attachment_extension=attachment_extension
         )
         
