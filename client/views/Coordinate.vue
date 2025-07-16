@@ -4,9 +4,9 @@
     <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-center">
       <div class="flex items-center justify-between gap-4 py-4 h-14 bg-color-bg-neutral backdrop-blur-sm w-full max-w-[var(--layout-width-note)]">
       <button
-        @click="goToNote" 
+        @click="goBack" 
         class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg text-color-button-secondary-fg transition-colors cursor-pointer flex-shrink-0"
-        title="Go to note"
+        title="Go back"
       >
         <ArrowLeft class="w-6 h-6" />
       </button>
@@ -150,10 +150,24 @@ const language = computed(() => {
 });
 
 // Methods
-function goToNote() {
-  // Navigate to the note view using basename without extension
-  const basename = props.filename.replace(/\.md$/, '');
-  router.push({ name: 'note', params: { filename: basename } });
+function goBack() {
+  // Check if there's a previous page in browser history
+  if (window.history.length > 1) {
+    // Check if the previous page is within the same app
+    const currentOrigin = window.location.origin;
+    const referrer = document.referrer;
+    
+    // If referrer is from the same origin, go back
+    if (referrer && referrer.startsWith(currentOrigin)) {
+      router.back();
+    } else {
+      // If referrer is from outside the app or empty, go to home
+      router.push({ name: "home" });
+    }
+  } else {
+    // If no history, go to home
+    router.push({ name: "home" });
+  }
 }
 
 function setViewMode(mode) {
