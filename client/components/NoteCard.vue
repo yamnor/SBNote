@@ -87,7 +87,7 @@ import { useGlobalStore } from "../lib/globalStore.js";
 import QuickNoteModal from "./QuickNoteModal.vue";
 import PreviewImageModal from "./PreviewImageModal.vue";
 import PreviewCoordinateModal from "./PreviewCoordinateModal.vue";
-import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, ExternalLink, Scroll } from "lucide-vue-next";
+import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, Scroll } from "lucide-vue-next";
 
 const props = defineProps({
   note: {
@@ -172,8 +172,7 @@ const categoryIcon = computed(() => {
       return Bolt;
     case 'output':
       return Scroll;
-    case 'embed':
-      return ExternalLink;
+
     case 'note':
     default:
       return StickyNote;

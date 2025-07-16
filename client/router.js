@@ -40,14 +40,7 @@ const router = createRouter({
         filename: route.params.filename.replace(/\.md$/, '') 
       }),
     },
-    {
-      path: "/embed/:filename",
-      name: "embed",
-      component: () => import("./views/Embed.vue"),
-      props: (route) => ({ 
-        filename: route.params.filename.replace(/\.md$/, '') 
-      }),
-    },
+
     {
       path: "/new",
       name: "new",
@@ -90,8 +83,7 @@ router.afterEach((to) => {
     note: "Note",
     slide: "Slide", 
     coordinate: "Coordinate",
-    output: "Output",
-    embed: "Embed"
+    output: "Output"
   };
   
   if (to.name === "note") {

@@ -94,7 +94,7 @@
       </DropdownMenuItem>
 
       <!-- Divider -->
-      <div v-if="showSlideView || showMolView || showRawView || showEmbedView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+      <div v-if="showSlideView || showMolView || showRawView" class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
 
       <!-- Slide View (only for notes with 'slide' tag) -->
       <DropdownMenuItem 
@@ -123,14 +123,7 @@
         Output View
       </DropdownMenuItem>
       
-      <!-- Embed View (only for notes with 'embed' category) -->
-      <DropdownMenuItem 
-        v-if="showEmbedView"
-        :icon="ExternalLink"
-        @click="onEmbedView"
-      >
-        Embed View
-      </DropdownMenuItem>
+
       
       <!-- Divider -->
       <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
@@ -206,13 +199,7 @@
       <!-- Divider -->
       <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
-      <!-- Embed Page -->
-      <DropdownMenuItem 
-        :icon="ExternalLink"
-        @click="showEmbedModal"
-      >
-        Embed Page
-      </DropdownMenuItem>
+
       
       <!-- Divider -->
       <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
@@ -327,11 +314,7 @@
       </DropdownMenuItem>
     </DropdownMenu>
     
-    <!-- Embed Modal -->
-    <EmbedModal 
-      :is-visible="isEmbedModalVisible"
-      @close="closeEmbedModal"
-    />
+
     
     <!-- Paste Modal -->
     <PasteModal 
@@ -391,7 +374,7 @@ import {
 import SearchInput from "./SearchInput.vue";
 import DropdownMenu from "./DropdownMenu.vue";
 import DropdownMenuItem from "./DropdownMenuItem.vue";
-import EmbedModal from "./EmbedModal.vue";
+
 import PasteModal from "./PasteModal.vue";
 import HistoryModal from "./HistoryModal.vue";
 import TagConfigModal from "./TagConfigModal.vue";
@@ -448,7 +431,7 @@ const globalStore = useGlobalStore();
 const router = useRouter();
 const route = useRoute();
 const searchInput = ref();
-const isEmbedModalVisible = ref(false);
+
 const isPasteModalVisible = ref(false);
 const isHistoryModalVisible = ref(false);
 const showTagConfigModal = ref(false);
@@ -501,10 +484,7 @@ const showRawView = computed(() => {
   return route.name === 'note' && route.params.filename && globalStore.currentNoteCategory === 'output';
 });
 
-const showEmbedView = computed(() => {
-  // Check if we're on a note page and the note has 'embed' category
-  return route.name === 'note' && route.params.filename && globalStore.currentNoteCategory === 'embed';
-});
+
 
 
 
@@ -625,10 +605,7 @@ function onRawView() {
   router.push({ name: 'output', params: { filename: route.params.filename } });
 }
 
-function onEmbedView() {
-  // Navigate to embed view
-  router.push({ name: 'embed', params: { filename: route.params.filename } });
-}
+
 
 function showReadme() {
   // Switch to view mode for README.md
@@ -640,13 +617,7 @@ function showImportModal() {
   emit("showImportModal");
 }
 
-function showEmbedModal() {
-  isEmbedModalVisible.value = true;
-}
 
-function closeEmbedModal() {
-  isEmbedModalVisible.value = false;
-}
 
 function showPasteModal() {
   // Remove focus from search input to prevent input capture

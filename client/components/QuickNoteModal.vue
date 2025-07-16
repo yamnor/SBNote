@@ -27,7 +27,7 @@
             <DialogPanel class="w-full transform overflow-visible rounded-lg bg-color-bg-neutral shadow-2xl transition-all quick-note-modal" style="max-width: var(--layout-width-note);">
               <!-- Header -->
               <div class="flex items-center justify-between p-2 pb-0">
-                <!-- Left side - Slide view button and Embed button -->
+                <!-- Left side - Slide view button -->
                 <div class="flex items-center space-x-2">
                   <button
                     type="button"
@@ -38,16 +38,7 @@
                     <Presentation class="w-4 h-4" />
                   </button>
                   
-                  <!-- Embed button (only show for embed category) -->
-                  <button
-                    v-if="note.category === 'embed'"
-                    type="button"
-                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
-                    @click="openInEmbed"
-                    title="Open in embed view"
-                  >
-                    <ExternalLink class="w-4 h-4" />
-                  </button>
+
                   
                   <!-- 3DmolViewer button (only show for coordinate category) -->
                   <button
@@ -138,7 +129,7 @@
 import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import { onMounted, ref, watch, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { X, Maximize2, Presentation, ExternalLink, Link2, Bolt, Scroll, StickyNote } from "lucide-vue-next";
+import { X, Maximize2, Presentation, Link2, Bolt, Scroll, StickyNote } from "lucide-vue-next";
 import { useGlobalStore } from "../lib/globalStore.js";
 import TagInput from "./TagInput.vue";
 import ToastUIEditor from "./ToastUIEditor.vue";
@@ -210,13 +201,7 @@ function openInSlide() {
   });
 }
 
-function openInEmbed() {
-  closeModal();
-  router.push({ 
-    name: 'embed', 
-    params: { filename: props.note.filename.replace(/\.md$/, '') } 
-  });
-}
+
 
 function openInMol() {
   closeModal();
