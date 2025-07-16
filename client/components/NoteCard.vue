@@ -56,7 +56,7 @@
 
     <!-- Note Preview Modal -->
     <QuickNoteModal
-      v-if="note.category !== 'image'"
+      v-if="note.category !== 'image' && note.category !== 'coordinate'"
       v-model="showPreviewModal"
       :note="note"
       @close="showPreviewModal = false"
@@ -65,7 +65,15 @@
     
     <!-- Image Preview Modal -->
     <PreviewImageModal
-      v-else
+      v-else-if="note.category === 'image'"
+      v-model="showPreviewModal"
+      :note="note"
+      @close="showPreviewModal = false"
+    />
+    
+    <!-- Coordinate Preview Modal -->
+    <PreviewCoordinateModal
+      v-else-if="note.category === 'coordinate'"
       v-model="showPreviewModal"
       :note="note"
       @close="showPreviewModal = false"
@@ -78,6 +86,7 @@ import { computed, ref } from "vue";
 import { useGlobalStore } from "../lib/globalStore.js";
 import QuickNoteModal from "./QuickNoteModal.vue";
 import PreviewImageModal from "./PreviewImageModal.vue";
+import PreviewCoordinateModal from "./PreviewCoordinateModal.vue";
 import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, ExternalLink, Scroll } from "lucide-vue-next";
 
 const props = defineProps({

@@ -195,16 +195,9 @@ function retryLoad() {
   loadMolecule();
 }
 
-// Watch for file content changes
-watch(() => props.fileContent, (newContent) => {
-  if (newContent) {
-    loadMolecule();
-  }
-}, { immediate: true });
-
-// Watch for attachment filename changes
-watch(() => props.attachmentFilename, (newFilename) => {
-  if (newFilename && props.fileContent) {
+// Watch for file content and attachment filename changes
+watch([() => props.fileContent, () => props.attachmentFilename], ([newContent, newFilename]) => {
+  if (newContent && newFilename) {
     loadMolecule();
   }
 }, { immediate: true });
