@@ -134,6 +134,8 @@ function getOptionIcon(option) {
       return ArrowDownNarrowWide;
     } else if (option.icon === 'Calendar') {
       return CalendarArrowDown;
+    } else if (option.icon === 'ArrowUp01') {
+      return ArrowUp01;
     }
   }
   
