@@ -163,6 +163,11 @@
         --color-button-danger-hover-bg: var(--color-bg-error);
         --color-button-danger-focus-border: var(--color-error);
         
+        /* Label color system */
+        --color-label-private: var(--color-gray-600);
+        --color-label-limited: var(--color-blue-500);
+        --color-label-public: var(--color-red-500);
+
         /* Layout */
         --layout-width-note: 768px;
         --layout-width-grid: 1024px;

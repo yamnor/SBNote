@@ -24,7 +24,7 @@
         <div class="w-5 h-5 flex items-center justify-center text-gray-500">
           <component :is="categoryIcon" class="w-4 h-4" />
         </div>
-        <div class="w-5 h-5 flex items-center justify-center text-gray-400">
+        <div class="w-5 h-5 flex items-center justify-center" :class="visibilityIconColor">
           <component :is="visibilityIcon" class="w-4 h-4" />
         </div>
       </div>
@@ -65,7 +65,7 @@
 import { computed, ref } from "vue";
 import { useGlobalStore } from "../lib/globalStore.js";
 import PreviewNoteModal from "./PreviewNoteModal.vue";
-import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, ExternalLink } from "lucide-vue-next";
+import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, ExternalLink, Scroll } from "lucide-vue-next";
 
 const props = defineProps({
   note: {
@@ -145,7 +145,7 @@ const categoryIcon = computed(() => {
     case 'coordinate':
       return Bolt;
     case 'output':
-      return FileText;
+      return Scroll;
     case 'embed':
       return ExternalLink;
     case 'note':
@@ -166,6 +166,21 @@ const visibilityIcon = computed(() => {
     case 'private':
     default:
       return Lock;
+  }
+});
+
+// Get visibility icon color based on note visibility
+const visibilityIconColor = computed(() => {
+  const visibility = props.note.visibility || 'private';
+  
+  switch (visibility) {
+    case 'public':
+      return 'text-color-label-public';
+    case 'limited':
+      return 'text-color-label-limited';
+    case 'private':
+    default:
+      return 'text-color-label-private';
   }
 });
 

@@ -80,6 +80,11 @@ export default {
         "color-button-danger-hover-bg": "var(--color-button-danger-hover-bg)",
         "color-button-danger-focus-border": "var(--color-button-danger-focus-border)",
         
+        // Label color system
+        "color-label-private": "var(--color-label-private)",
+        "color-label-limited": "var(--color-label-limited)",
+        "color-label-public": "var(--color-label-public)",
+        
         // 後方互換性のための既存クラス（一時的）
         "theme-brand": "var(--theme-brand)",
         "theme-brand-dark": "var(--theme-brand-dark)",

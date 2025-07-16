@@ -68,7 +68,7 @@
                     @click="openInOutput"
                     title="Open in output view"
                   >
-                    <Grip class="w-4 h-4" />
+                    <Scroll class="w-4 h-4" />
                   </button>
                 </div>
                 
@@ -138,7 +138,7 @@
 import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import { onMounted, ref, watch, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { X, Maximize2, Presentation, ExternalLink, Link2, Bolt, Grip } from "lucide-vue-next";
+import { X, Maximize2, Presentation, ExternalLink, Link2, Bolt, Scroll } from "lucide-vue-next";
 import { useGlobalStore } from "../lib/globalStore.js";
 import TagInput from "./TagInput.vue";
 import ToastUIEditor from "./ToastUIEditor.vue";
