@@ -56,10 +56,19 @@
 
     <!-- Note Preview Modal -->
     <QuickNoteModal
+      v-if="note.category !== 'image'"
       v-model="showPreviewModal"
       :note="note"
       @close="showPreviewModal = false"
       @note-updated="handleNoteUpdated"
+    />
+    
+    <!-- Image Preview Modal -->
+    <PreviewImageModal
+      v-else
+      v-model="showPreviewModal"
+      :note="note"
+      @close="showPreviewModal = false"
     />
   </div>
 </template>
@@ -68,6 +77,7 @@
 import { computed, ref } from "vue";
 import { useGlobalStore } from "../lib/globalStore.js";
 import QuickNoteModal from "./QuickNoteModal.vue";
+import PreviewImageModal from "./PreviewImageModal.vue";
 import { StickyNote, FileText, Bolt, Image, Lock, Users, Globe, ExternalLink, Scroll } from "lucide-vue-next";
 
 const props = defineProps({
