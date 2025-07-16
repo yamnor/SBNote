@@ -26,36 +26,49 @@
           >
             <DialogPanel class="transform overflow-visible rounded-lg bg-color-bg-neutral shadow-2xl transition-all preview-coordinate-modal" style="max-width: 90vw; max-height: 90vh;">
               <!-- Header -->
-              <div class="flex items-center justify-end p-2 gap-2">
-                <!-- Copy Link button -->
+              <div class="flex items-center justify-between p-2">
+                <!-- Left side - Maximize button -->
                 <button
                   type="button"
                   class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
-                  @click="copyLink"
-                  title="Copy link"
+                  @click="openInFullView"
+                  :title="note.category === 'output' ? 'Open in output view' : 'Open in coordinate view'"
                 >
-                  <Link2 class="w-4 h-4" />
+                  <Maximize2 class="w-4 h-4" />
                 </button>
                 
-                <!-- Sticky button -->
-                <button
-                  type="button"
-                  class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
-                  @click="openInNote"
-                  title="Open in note view"
-                >
-                  <StickyNote class="w-4 h-4" />
-                </button>
-                
-                <!-- Close button -->
-                <button
-                  type="button"
-                  class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
-                  @click="closeModal"
-                  title="Close"
-                >
-                  <X class="w-4 h-4" />
-                </button>
+                <!-- Right side - Copy Link, Sticky, and Close buttons -->
+                <div class="flex items-center gap-2">
+                  <!-- Copy Link button -->
+                  <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    @click="copyLink"
+                    title="Copy link"
+                  >
+                    <Link2 class="w-4 h-4" />
+                  </button>
+                  
+                  <!-- Sticky button -->
+                  <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    @click="openInNote"
+                    title="Open in note view"
+                  >
+                    <StickyNote class="w-4 h-4" />
+                  </button>
+                  
+                  <!-- Close button -->
+                  <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    @click="closeModal"
+                    title="Close"
+                  >
+                    <X class="w-4 h-4" />
+                  </button>
+                </div>
               </div>
               
               <!-- Content -->
@@ -64,7 +77,9 @@
                 <div v-if="isLoading" class="flex items-center justify-center py-16">
                   <div class="text-center">
                     <Loader2 class="w-8 h-8 mx-auto text-color-primary animate-spin mb-2" />
-                    <p class="text-sm text-color-text-secondary">Loading molecular structure...</p>
+                    <p class="text-sm text-color-text-secondary">
+                      {{ note.category === 'output' ? 'Loading output structure...' : 'Loading molecular structure...' }}
+                    </p>
                   </div>
                 </div>
                 
@@ -72,7 +87,9 @@
                 <div v-else-if="error" class="flex items-center justify-center py-16">
                   <div class="text-center">
                     <FileX class="w-16 h-16 mx-auto text-color-text-secondary mb-4" />
-                    <h2 class="text-xl font-semibold text-color-text-primary mb-2">Failed to load molecular structure</h2>
+                    <h2 class="text-xl font-semibold text-color-text-primary mb-2">
+                      {{ note.category === 'output' ? 'Failed to load output structure' : 'Failed to load molecular structure' }}
+                    </h2>
                     <p class="text-color-text-secondary mb-4">{{ error }}</p>
                     <button
                       @click="retryLoad"
@@ -119,7 +136,7 @@
 import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import { ref, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import { X, Loader2, FileX, RefreshCw, Link2, StickyNote } from "lucide-vue-next";
+import { X, Loader2, FileX, RefreshCw, Link2, StickyNote, Maximize2 } from "lucide-vue-next";
 import { useNoteAttachment } from "../composables/useNoteAttachment.js";
 import { useGlobalStore } from "../lib/globalStore.js";
 import TagInput from "./TagInput.vue";
@@ -264,6 +281,21 @@ function openInNote() {
     name: 'note', 
     params: { filename: props.note.filename.replace(/\.md$/, '') } 
   });
+}
+
+function openInFullView() {
+  closeModal();
+  if (props.note.category === 'output') {
+    router.push({ 
+      name: 'output', 
+      params: { filename: props.note.filename.replace(/\.md$/, '') } 
+    });
+  } else {
+    router.push({ 
+      name: 'coordinate', 
+      params: { filename: props.note.filename.replace(/\.md$/, '') } 
+    });
+  }
 }
 
 function handleTagConfirmed() {

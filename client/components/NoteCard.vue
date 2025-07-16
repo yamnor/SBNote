@@ -56,7 +56,7 @@
 
     <!-- Note Preview Modal -->
     <QuickNoteModal
-      v-if="note.category !== 'image' && note.category !== 'coordinate'"
+      v-if="note.category !== 'image' && note.category !== 'coordinate' && note.category !== 'output'"
       v-model="showPreviewModal"
       :note="note"
       @close="showPreviewModal = false"
@@ -71,9 +71,9 @@
       @close="showPreviewModal = false"
     />
     
-    <!-- Coordinate Preview Modal -->
+    <!-- Molecular Preview Modal (for coordinate and output) -->
     <PreviewCoordinateModal
-      v-else-if="note.category === 'coordinate'"
+      v-else-if="note.category === 'coordinate' || note.category === 'output'"
       v-model="showPreviewModal"
       :note="note"
       @close="showPreviewModal = false"

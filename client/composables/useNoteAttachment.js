@@ -48,10 +48,12 @@ export function useNoteAttachment() {
     if (category) {
       let extension = attachmentExtension;
       if (category === 'output') {
-        extension = 'txt';
+        extension = 'xyz'; // output category uses .xyz files for molecular viewing
+      } else if (category === 'coordinate') {
+        extension = extension || 'xyz';
       } else if (!extension) {
-        // Fallback for coordinate and image
-        extension = category === 'coordinate' ? 'xyz' : 'png';
+        // Fallback for other categories
+        extension = category === 'image' ? 'png' : 'txt';
       }
       return `${basename}/${category}.${extension}`;
     }
