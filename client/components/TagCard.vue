@@ -21,9 +21,13 @@
     
     <!-- Note count badge in bottom-right corner -->
     <div class="absolute bottom-1 right-1">
-      <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded"
+      <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded min-w-[1.25rem]"
             :class="isSelected ? 'bg-color-bg-base text-color-text-primary' : 'bg-color-bg-primary text-color-text-primary'">
-        {{ tagData.count }}
+        <span v-if="tagData.searchResultCount !== undefined && tagData.otherCount !== undefined">
+          <span class="text-color-text-secondary">{{ tagData.searchResultCount }}</span>
+          <span class="text-color-primary">+{{ tagData.otherCount }}</span>
+        </span>
+        <span v-else>{{ tagData.count }}</span>
       </span>
     </div>
     

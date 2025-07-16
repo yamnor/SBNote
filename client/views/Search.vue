@@ -29,10 +29,10 @@
     >
       <template #sort-controls>
         <SortDropdown
-          v-if="expandedRelatedTags.size > 0"
-          v-model="relatedTagsNoteSortBy"
-          :sort-order="relatedTagsNoteSortOrder"
-          @update:sort-order="updateRelatedTagsNoteSortOrder"
+          v-if="selectedRelatedTag && displayedRelatedTagNotes.length > 0"
+          v-model="relatedTagNoteSortBy"
+          :sort-order="relatedTagNoteSortOrder"
+          @update:sort-order="updateRelatedTagNoteSortOrder"
           :options="noteSortOptions"
           label="Sort Notes by"
         />
@@ -49,9 +49,9 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch, computed } from "vue";
+import { onMounted, ref, watch, computed, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import { apiErrorHandler, getNotes, getNotesByTag } from "../lib/api.js";
+import { apiErrorHandler, getNotes, getNotesByTag, getTagsWithCounts } from "../lib/api.js";
 import SortDropdown from "../components/SortDropdown.vue";
 import Grid from "../components/Grid.vue";
 import GridLayout from "../components/GridLayout.vue";
@@ -87,14 +87,16 @@ const sortOrder = ref('desc'); // 'asc' or 'desc'
 
 // Related tags state
 const relatedTags = ref([]);
-const relatedTagNotes = ref({});
-const expandedRelatedTags = ref(new Set());
+const selectedRelatedTag = ref(null);
+const displayedRelatedTagNotes = ref([]);
 const relatedTagsSortBy = ref('count');
 const relatedTagsSortOrder = ref('desc');
+const relatedTagCounts = ref({}); // Store actual tag counts
+const relatedTagNotes = ref({}); // Store pre-fetched notes for each related tag
 
 // Related tags note sort state
-const relatedTagsNoteSortBy = ref('lastModified');
-const relatedTagsNoteSortOrder = ref('desc');
+const relatedTagNoteSortBy = ref('lastModified');
+const relatedTagNoteSortOrder = ref('desc');
 
 // Related tags sort options
 const relatedTagsSortOptions = [
@@ -136,6 +138,39 @@ const extractRelatedTags = computed(() => {
   return Array.from(tagSet);
 });
 
+// Fetch actual counts for related tags
+async function fetchRelatedTagCounts() {
+  if (!props.tagName || !extractRelatedTags.value.length) {
+    relatedTagCounts.value = {};
+    return;
+  }
+  
+  try {
+    // Get all tags with counts
+    const allTagsWithCounts = await getTagsWithCounts();
+    
+    // Filter for related tags only
+    const counts = {};
+    extractRelatedTags.value.forEach(tagName => {
+      const tagData = allTagsWithCounts.find(tag => tag.tag === tagName);
+      counts[tagName] = tagData ? tagData.count : 0;
+    });
+    
+    relatedTagCounts.value = counts;
+  } catch (error) {
+    console.error('Failed to fetch related tag counts:', error);
+    // Fallback to search result counts if API fails
+    const fallbackCounts = {};
+    extractRelatedTags.value.forEach(tagName => {
+      // 検索結果のノートも含めてカウント
+      fallbackCounts[tagName] = results.value.filter(note => 
+        note.tags && Array.isArray(note.tags) && note.tags.includes(tagName)
+      ).length;
+    });
+    relatedTagCounts.value = fallbackCounts;
+  }
+}
+
 // Sort related tags
 const sortedRelatedTags = computed(() => {
   const tags = [...relatedTags.value];
@@ -148,18 +183,16 @@ const sortedRelatedTags = computed(() => {
       });
     case 'count':
       return tags.sort((a, b) => {
-        const countA = relatedTagNotes.value[a]?.length || 0;
-        const countB = relatedTagNotes.value[b]?.length || 0;
+        const countA = relatedTagCounts.value[a] || 0;
+        const countB = relatedTagCounts.value[b] || 0;
         const result = countA - countB;
         return relatedTagsSortOrder.value === 'asc' ? result : -result;
       });
     case 'updated':
       return tags.sort((a, b) => {
-        const notesA = relatedTagNotes.value[a] || [];
-        const notesB = relatedTagNotes.value[b] || [];
-        const latestA = notesA.length > 0 ? Math.max(...notesA.map(n => n.lastModified || 0)) : 0;
-        const latestB = notesB.length > 0 ? Math.max(...notesB.map(n => n.lastModified || 0)) : 0;
-        const result = latestA - latestB;
+        // For updated sorting, we'll use a placeholder since we don't pre-fetch all notes
+        // This could be enhanced later if needed
+        const result = 0;
         return relatedTagsSortOrder.value === 'asc' ? result : -result;
       });
     default:
@@ -167,16 +200,13 @@ const sortedRelatedTags = computed(() => {
   }
 });
 
-// Sort related tag notes
-const sortedRelatedTagNotes = computed(() => {
-  const sortedNotes = {};
+// Sort related tag notes for display
+const sortedDisplayedRelatedTagNotes = computed(() => {
+  if (!selectedRelatedTag.value || !displayedRelatedTagNotes.value.length) {
+    return [];
+  }
   
-  Object.keys(relatedTagNotes.value).forEach(tagName => {
-    const notes = relatedTagNotes.value[tagName] || [];
-    sortedNotes[tagName] = sortItems(notes, relatedTagsNoteSortBy.value, relatedTagsNoteSortOrder.value, 'notes');
-  });
-  
-  return sortedNotes;
+  return sortItems(displayedRelatedTagNotes.value, relatedTagNoteSortBy.value, relatedTagNoteSortOrder.value, 'notes');
 });
 
 // Computed property for related tags grid items
@@ -184,26 +214,35 @@ const relatedTagsGridItems = computed(() => {
   const items = [];
   
   sortedRelatedTags.value.forEach(tagName => {
-    const noteCount = relatedTagNotes.value[tagName]?.length || 0;
+    const notes = relatedTagNotes.value[tagName] || [];
+    const searchResultCount = notes.filter(note => note.isSearchResult).length;
+    const otherCount = notes.filter(note => !note.isSearchResult).length;
+    const totalCount = searchResultCount + otherCount;
     
     // Add tag card
     items.push({
       type: 'tag',
-      data: { tag: tagName, count: noteCount },
+      data: { 
+        tag: tagName, 
+        count: totalCount,
+        searchResultCount: searchResultCount,
+        otherCount: otherCount
+      },
       key: `related-tag-${tagName}`,
-      isSelected: expandedRelatedTags.value.has(tagName),
-      hasAnySelection: expandedRelatedTags.value.size > 0,
+      isSelected: selectedRelatedTag.value === tagName,
+      hasAnySelection: selectedRelatedTag.value !== null,
       isPinned: false
     });
     
-    // Add notes if tag is expanded
-    if (expandedRelatedTags.value.has(tagName)) {
-      const notes = sortedRelatedTagNotes.value[tagName] || [];
+    // Add notes if tag is selected
+    if (selectedRelatedTag.value === tagName) {
+      const notes = sortedDisplayedRelatedTagNotes.value;
       notes.forEach(note => {
         items.push({
           type: 'note',
           data: note,
-          key: `related-note-${note.filename}`
+          key: `related-note-${note.filename}`,
+          isSearchResult: note.isSearchResult || false
         });
       });
     }
@@ -232,9 +271,9 @@ function updateRelatedTagsSortOrder(newOrder) {
   relatedTagsSortOrder.value = newOrder;
 }
 
-// Update related tags note sort order
-function updateRelatedTagsNoteSortOrder(newOrder) {
-  relatedTagsNoteSortOrder.value = newOrder;
+// Update related tag note sort order
+function updateRelatedTagNoteSortOrder(newOrder) {
+  relatedTagNoteSortOrder.value = newOrder;
 }
 
 // Handle tag double click - navigate to home with tag selected
@@ -243,11 +282,76 @@ function onTagDoubleClick(tagName) {
 }
 
 // Handle related tag click - expand/collapse notes
-function onRelatedTagClick(tagName) {
-  if (expandedRelatedTags.value.has(tagName)) {
-    expandedRelatedTags.value.delete(tagName);
-  } else {
-    expandedRelatedTags.value.add(tagName);
+async function onRelatedTagClick(tagName) {
+  try {
+    const previousSelectedTag = selectedRelatedTag.value;
+    
+    // If clicking the same tag, start animation and clear notes with delay
+    if (selectedRelatedTag.value === tagName) {
+      // Start animation first
+      startNoteAnimation();
+      
+      // Wait for animation to complete before clearing notes
+      setTimeout(() => {
+        // Clear notes after animation is done
+        displayedRelatedTagNotes.value = [];
+        selectedRelatedTag.value = null;
+        stopNoteAnimation();
+      }, 500); // Wait for animation to complete
+      return;
+    }
+    
+    // If clicking a different tag and there are currently displayed notes, animate them out first
+    if (selectedRelatedTag.value && displayedRelatedTagNotes.value.length > 0) {
+      // Start animation first
+      startNoteAnimation();
+      
+      // Wait for animation to complete before switching to new tag
+      setTimeout(async () => {
+        try {
+          // Clear previous notes and set new selected tag
+          displayedRelatedTagNotes.value = [];
+          selectedRelatedTag.value = tagName;
+          stopNoteAnimation();
+          
+          // Use pre-fetched notes for the selected tag
+          const notes = relatedTagNotes.value[tagName] || [];
+          displayedRelatedTagNotes.value = notes;
+          
+          // Wait for DOM update before starting animation
+          await nextTick();
+          
+          // Start enter animation for new notes
+          startNoteEnterAnimation();
+        } catch (error) {
+          console.error('Failed to display notes for related tag:', error);
+          // Clear selection on error
+          selectedRelatedTag.value = null;
+          displayedRelatedTagNotes.value = [];
+        }
+      }, 500); // Wait for animation to complete
+      return;
+    }
+    
+    // If no current notes are displayed, switch immediately
+    displayedRelatedTagNotes.value = [];
+    selectedRelatedTag.value = tagName;
+    stopNoteAnimation();
+    
+    // Use pre-fetched notes for the selected tag
+    const notes = relatedTagNotes.value[tagName] || [];
+    displayedRelatedTagNotes.value = notes;
+    
+    // Wait for DOM update before starting animation
+    await nextTick();
+    
+    // Start enter animation for new notes
+    startNoteEnterAnimation();
+  } catch (error) {
+    console.error('Failed to display notes for related tag:', error);
+    // Clear selection on error
+    selectedRelatedTag.value = null;
+    displayedRelatedTagNotes.value = [];
   }
 }
 
@@ -259,8 +363,17 @@ function onRelatedTagDoubleClick(tagName) {
 // Fetch notes for a related tag
 async function fetchRelatedTagNotes(tagName) {
   try {
-    const notes = await fetchNotesByTag(getNotesByTag, tagName, "lastModified", "desc", null, false);
-    return notes;
+    // 全てのノートを取得
+    const allNotes = await fetchNotesByTag(getNotesByTag, tagName, "lastModified", "desc", null, false);
+    
+    // 検索結果のノートにフラグを追加（除外しない）
+    const searchResultFilenames = new Set(results.value.map(note => note.filename));
+    const processedNotes = allNotes.map(note => ({
+      ...note,
+      isSearchResult: searchResultFilenames.has(note.filename)
+    }));
+    
+    return processedNotes;
   } catch (error) {
     console.error('Failed to fetch related tag notes:', error);
     return [];
@@ -271,29 +384,164 @@ async function fetchRelatedTagNotes(tagName) {
 async function processRelatedTags() {
   if (!props.tagName || !results.value.length) {
     relatedTags.value = [];
+    selectedRelatedTag.value = null;
+    displayedRelatedTagNotes.value = [];
+    relatedTagCounts.value = {};
     relatedTagNotes.value = {};
-    expandedRelatedTags.value.clear();
     return;
   }
   
   const extractedTags = extractRelatedTags.value;
   relatedTags.value = extractedTags;
   
-  if (extractedTags.length === 0) {
+  // Fetch actual counts for related tags
+  await fetchRelatedTagCounts();
+  
+  // Pre-fetch notes for each related tag
+  const allRelatedTagNotes = {};
+  for (const tagName of extractedTags) {
+    try {
+      const notes = await fetchRelatedTagNotes(tagName);
+      allRelatedTagNotes[tagName] = notes;
+    } catch (error) {
+      console.error(`Failed to fetch notes for related tag ${tagName}:`, error);
+      allRelatedTagNotes[tagName] = [];
+    }
+  }
+  
+  // Store pre-fetched notes
+  relatedTagNotes.value = allRelatedTagNotes;
+  
+  // Clear any existing selection when processing new related tags
+  // アニメーション付きでクリア
+  if (selectedRelatedTag.value && displayedRelatedTagNotes.value.length > 0) {
+    startNoteAnimation();
+    setTimeout(() => {
+      selectedRelatedTag.value = null;
+      displayedRelatedTagNotes.value = [];
+      stopNoteAnimation();
+    }, 500);
+  } else {
+    selectedRelatedTag.value = null;
+    displayedRelatedTagNotes.value = [];
+  }
+}
+
+// Start note animation by adding classes to DOM elements
+function startNoteAnimation() {
+  const relatedTagsGrid = relatedTagsGridComponent.value?.$el;
+  if (!relatedTagsGrid) {
+    setTimeout(startNoteAnimation, 100);
     return;
   }
   
-  // Fetch notes for all related tags in parallel
-  const tagNotesPromises = extractedTags.map(async (tagName) => {
-    const notes = await fetchRelatedTagNotes(tagName);
-    return { tagName, notes };
+  const selectors = [
+    '.note-card-wrapper',
+    '.note-card'
+  ];
+  
+  let foundCards = [];
+  
+  selectors.forEach(selector => {
+    // 関連タググリッド内のノートカードのみを取得
+    const cards = relatedTagsGrid.querySelectorAll(selector);
+    foundCards = foundCards.concat(Array.from(cards));
   });
   
-  const tagNotesResults = await Promise.all(tagNotesPromises);
+  // Remove duplicates
+  foundCards = [...new Set(foundCards)];
   
-  // Update relatedTagNotes
-  tagNotesResults.forEach(({ tagName, notes }) => {
-    relatedTagNotes.value[tagName] = notes;
+  if (foundCards.length === 0) {
+    setTimeout(startNoteAnimation, 100);
+    return;
+  }
+  
+  foundCards.forEach((card, index) => {
+    card.classList.add('leaving');
+    card.style.setProperty('--animation-index', index);
+  });
+}
+
+// Start note enter animation by adding classes to DOM elements
+function startNoteEnterAnimation() {
+  // Use nextTick to ensure DOM is updated
+  nextTick(() => {
+    const relatedTagsGrid = relatedTagsGridComponent.value?.$el;
+    if (!relatedTagsGrid) {
+      setTimeout(startNoteEnterAnimation, 50);
+      return;
+    }
+    
+    const selectors = [
+      '.note-card-wrapper',
+      '.note-card'
+    ];
+    
+    let foundCards = [];
+    
+    selectors.forEach(selector => {
+      // 関連タググリッド内のノートカードのみを取得
+      const cards = relatedTagsGrid.querySelectorAll(selector);
+      foundCards = foundCards.concat(Array.from(cards));
+    });
+    
+    // Remove duplicates
+    foundCards = [...new Set(foundCards)];
+    
+    if (foundCards.length === 0) {
+      // If no cards found, try again after a short delay
+      setTimeout(startNoteEnterAnimation, 50);
+      return;
+    }
+    
+    // Set initial state for all cards
+    foundCards.forEach((card, index) => {
+      // Set initial position (left side, invisible)
+      card.style.transform = 'translateX(-100px)';
+      card.style.opacity = '0';
+      card.style.transition = 'all 0.5s ease-in-out';
+      card.style.zIndex = '1';
+    });
+    
+    // Force browser reflow to ensure initial state is applied
+    foundCards[0]?.offsetHeight;
+    
+    // Animate to final position
+    requestAnimationFrame(() => {
+      foundCards.forEach((card) => {
+        card.style.transform = 'translateX(0)';
+        // 検索結果のノートは半透明、それ以外は完全に不透明
+        const isSearchResult = card.classList.contains('opacity-50');
+        card.style.opacity = isSearchResult ? '0.5' : '1';
+      });
+    });
+    
+    // Clean up after animation
+    setTimeout(() => {
+      foundCards.forEach(card => {
+        card.style.transform = '';
+        card.style.transition = '';
+        card.style.zIndex = '';
+        // opacityはNoteCardコンポーネントのCSSクラスで制御するため、ここではクリアしない
+      });
+    }, 500);
+  });
+}
+
+// Stop note animation by removing classes
+function stopNoteAnimation() {
+  const relatedTagsGrid = relatedTagsGridComponent.value?.$el;
+  if (!relatedTagsGrid) return;
+  
+  const noteCards = relatedTagsGrid.querySelectorAll('.note-card-wrapper');
+  const noteCardElements = relatedTagsGrid.querySelectorAll('.note-card');
+  
+  noteCards.forEach(card => {
+    card.classList.remove('leaving');
+  });
+  
+  noteCardElements.forEach(card => {
+    card.classList.remove('leaving');
   });
 }
 

@@ -25,7 +25,7 @@
         class="note-card-wrapper"
         :key="item.key"
       >
-        <NoteCard :note="item.data" />
+        <NoteCard :note="item.data" :is-search-result="item.isSearchResult || false" />
       </div>
     </template>
   </div>

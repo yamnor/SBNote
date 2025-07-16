@@ -10,7 +10,10 @@
       @touchend="handleTouchEnd"
       @touchcancel="handleTouchCancel"
       class="bg-color-bg-base p-2 cursor-pointer duration-200 group h-36 w-full flex flex-col border-t-4 border-t-color-primary relative border border-color-bg-base hover:border-color-primary note-card"
-      :class="{ 'click-active': isClicking }"
+      :class="{ 
+        'click-active': isClicking,
+        'opacity-50': isSearchResult
+      }"
       style="touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;"
       :title="globalStore.editMode ? 'Click to preview' : 'Click to preview'"
     >
@@ -71,6 +74,10 @@ const props = defineProps({
   note: {
     type: Object,
     required: true
+  },
+  isSearchResult: {
+    type: Boolean,
+    default: false
   }
 });
 

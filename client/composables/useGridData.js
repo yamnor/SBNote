@@ -72,7 +72,7 @@ export function useGridData() {
         type: 'tag',
         data: { tag: tagName, count: results.length },
         key: `tag-${tagName}`,
-        isSelected: true,
+        isSelected: false,  // 検索タグは常に表示状態（選択状態ではない）
         hasAnySelection: false,
         isPinned: false
       });
