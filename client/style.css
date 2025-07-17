@@ -149,7 +149,7 @@
         
         /* Legacy variables for backward compatibility (temporary) */
         --theme-text: var(--color-text-base);
-        --theme-text-muted: var(--color-text-light);
+        --color-text-light: var(--color-text-light);
         --theme-border: var(--color-border-base);
         --theme-shadow-sm: var(--color-shadow-sm);
         --theme-shadow-md: var(--color-shadow-md);

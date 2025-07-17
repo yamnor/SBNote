@@ -95,7 +95,7 @@ export default {
         "color-background-light": "var(--color-background-light)",
         "color-background-elevated": "var(--color-background-elevated)",
         "theme-text": "var(--theme-text)",
-        "theme-text-muted": "var(--theme-text-muted)",
+        "color-text-light": "var(--color-text-light)",
         "theme-border": "var(--theme-border)",
         
         // Static

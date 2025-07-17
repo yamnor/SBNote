@@ -3,9 +3,9 @@
     <!-- Error message -->
     <div v-if="error" class="h-full flex items-center justify-center p-8">
       <div class="text-center">
-        <FileX class="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
+        <FileX class="w-16 h-16 mx-auto text-color-text-light mb-4" />
         <h2 class="text-xl font-semibold text-theme-text mb-2">Failed to load molecule</h2>
-        <p class="text-theme-text-muted mb-4">{{ error }}</p>
+        <p class="text-color-text-light mb-4">{{ error }}</p>
         <button
           @click="retryLoad"
           class="inline-flex items-center px-4 py-2 bg-color-primary text-color-on-primary rounded-lg hover:bg-color-primary-dark transition-colors"
@@ -28,7 +28,7 @@
       <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50">
         <div class="text-center">
           <Loader2 class="w-8 h-8 mx-auto text-color-primary animate-spin mb-2" />
-          <p class="text-sm text-theme-text-muted">Loading molecular structure...</p>
+          <p class="text-sm text-color-text-light">Loading molecular structure...</p>
         </div>
       </div>
     </div>

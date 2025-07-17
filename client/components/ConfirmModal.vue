@@ -34,7 +34,7 @@
               </DialogTitle>
               
               <div class="mt-2">
-                <p class="text-sm text-theme-text-muted">
+                <p class="text-sm text-color-text-light">
                   {{ message }}
                 </p>
                 <!-- Custom content slot -->
