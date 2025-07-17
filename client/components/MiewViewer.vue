@@ -33,7 +33,7 @@
       <!-- Loading overlay -->
       <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50">
         <div class="text-center">
-          <Loader2 class="w-8 h-8 mx-auto text-theme-brand animate-spin mb-2" />
+          <Loader2 class="w-8 h-8 mx-auto text-color-primary animate-spin mb-2" />
           <p class="text-sm text-theme-text-muted">Loading molecular structure...</p>
         </div>
       </div>

@@ -148,9 +148,6 @@
         --layout-width-grid: 1024px;
         
         /* Legacy variables for backward compatibility (temporary) */
-        --theme-brand: var(--color-primary);
-        --theme-button: var(--color-surface);
-        --theme-button-hover: #e1e3e6;
         --theme-text: var(--color-text-base);
         --theme-text-muted: var(--color-text-light);
         --theme-border: var(--color-border-base);

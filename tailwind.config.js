@@ -91,12 +91,9 @@ export default {
         "color-label-public": "var(--color-label-public)",
         
         // 後方互換性のための既存クラス（一時的）
-        "theme-brand": "var(--theme-brand)",
         "color-background": "var(--color-background)",
         "color-background-light": "var(--color-background-light)",
         "color-background-elevated": "var(--color-background-elevated)",
-        "theme-button": "var(--theme-button)",
-        "theme-button-hover": "var(--theme-button-hover)",
         "theme-text": "var(--theme-text)",
         "theme-text-muted": "var(--theme-text-muted)",
         "theme-border": "var(--theme-border)",

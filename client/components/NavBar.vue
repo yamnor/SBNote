@@ -240,7 +240,7 @@
         <!-- Unsaved Changes Indicator (Edit mode only) -->
         <div
           v-show="canModify && unsavedChanges && !autoSaveState.isAutoSaving"
-          class="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-theme-brand"
+          class="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-color-primary"
           title="Unsaved changes"
         ></div>
       </template>

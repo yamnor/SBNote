@@ -601,13 +601,13 @@ onMounted(init);
 <style>
 /* Highlight display styles */
 .highlight {
-  @apply text-theme-brand font-semibold bg-yellow-100 px-0.5 rounded;
+  @apply text-color-primary font-semibold bg-yellow-100 px-0.5 rounded;
 }
 
 /* Search highlight styles */
 .search-highlights .match,
 .search-highlights .highlight {
-  @apply text-theme-brand font-semibold bg-yellow-100 px-0.5 rounded;
+  @apply text-color-primary font-semibold bg-yellow-100 px-0.5 rounded;
 }
 
 /* Styles for highlight tags returned from server */
@@ -615,6 +615,6 @@ onMounted(init);
 .search-highlights .highlight,
 .search-highlights .match,
 .search-highlights b {
-  @apply text-theme-brand font-semibold bg-yellow-100 px-0.5 rounded;
+  @apply text-color-primary font-semibold bg-yellow-100 px-0.5 rounded;
 }
 </style>
