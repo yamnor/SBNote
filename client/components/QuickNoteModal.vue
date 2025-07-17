@@ -183,6 +183,11 @@ function closeModal() {
   isVisible.value = false;
   emit("close");
   cleanup();
+  
+  // Reset scroll position when modal closes
+  setTimeout(() => {
+    scrollToTop();
+  }, 100);
 }
 
 function openInEditor() {
@@ -251,6 +256,35 @@ function initializeEditing() {
     isAutoSaving: false,
     isAutoSavingInProgress: false
   });
+  
+  // Scroll to top when modal opens
+  scrollToTop();
+}
+
+// Scroll to top of the modal content
+function scrollToTop() {
+  // Use immediate scrolling to ensure it takes effect
+  window.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: 'auto'
+  });
+  
+  // Also try scrolling the document element for better compatibility
+  if (document.documentElement) {
+    document.documentElement.scrollTop = 0;
+  }
+  
+  // And the body element
+  if (document.body) {
+    document.body.scrollTop = 0;
+  }
+  
+  // Scroll the modal content area to top
+  const modalContent = document.querySelector('.quick-note-modal .max-h-96');
+  if (modalContent) {
+    modalContent.scrollTop = 0;
+  }
 }
 
 // Title generation function (Note.vueと同様)
@@ -487,6 +521,11 @@ watch(isVisible, async (visible) => {
     
     // Initialize editing state
     initializeEditing();
+    
+    // Ensure scroll position is at top when modal opens
+    setTimeout(() => {
+      scrollToTop();
+    }, 50);
   }
 });
 
@@ -537,6 +576,11 @@ function handleKeydownCapture(event) {
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
   document.addEventListener('keydown', handleKeydownCapture, true); // Use capture phase
+  
+  // Ensure scroll position is at top when component is mounted
+  setTimeout(() => {
+    scrollToTop();
+  }, 50);
 });
 
 onUnmounted(() => {

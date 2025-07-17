@@ -418,6 +418,11 @@ function createEmptyNote() {
       // Update local state
       updateUIState({ unsavedChanges: false });
       setBeforeUnloadConfirmation(false);
+      
+      // Scroll to top after note creation is complete
+      setTimeout(() => {
+        scrollToTop();
+      }, 50);
     })
     .catch((error) => {
       console.error('Failed to create empty note:', error);
@@ -485,6 +490,9 @@ async function init() {
           selectedNoteTag: null,
           displayedTagNotes: []
         });
+        
+        // Scroll to top after note is loaded
+        scrollToTop();
       })
       .catch((error) => {
         console.error('Failed to load note:', error);
@@ -536,6 +544,11 @@ async function init() {
     
     // Immediately create empty note to get filename
     createEmptyNote();
+    
+    // Scroll to top after creating empty note
+    setTimeout(() => {
+      scrollToTop();
+    }, 100);
   }
 }
 
@@ -1022,6 +1035,26 @@ function loadDefaultEditorMode() {
   return defaultWysiwygMode || "markdown";
 }
 
+// Scroll to top of the page
+function scrollToTop() {
+  // Use immediate scrolling to ensure it takes effect
+  window.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: 'auto'
+  });
+  
+  // Also try scrolling the document element for better compatibility
+  if (document.documentElement) {
+    document.documentElement.scrollTop = 0;
+  }
+  
+  // And the body element
+  if (document.body) {
+    document.body.scrollTop = 0;
+  }
+}
+
 function isContentChanged() {
   if (autoSaveState.value.isAutoSavingInProgress) {
     return false;
@@ -1117,6 +1150,14 @@ watch(canModify, (newCanModify) => {
   }
 }, { immediate: true });
 
+// Watch for route changes to reset scroll position
+watch(() => route.path, () => {
+  // Reset scroll position when route changes
+  setTimeout(() => {
+    scrollToTop();
+  }, 100);
+}, { immediate: true });
+
 onMounted(async () => {
   await init();
   
@@ -1132,6 +1173,12 @@ onMounted(async () => {
   
   // Update file menu state in App.vue
   updateFileMenuState();
+  
+  // Ensure scroll position is at top when component is mounted
+  // Use setTimeout to ensure DOM is fully rendered
+  setTimeout(() => {
+    scrollToTop();
+  }, 50);
 });
 
 onUnmounted(() => {
