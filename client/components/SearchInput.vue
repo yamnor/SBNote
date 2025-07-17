@@ -2,10 +2,10 @@
   <div class="relative w-full search-input overflow-visible">
     <!-- Input -->
     <div
-      class="flex items-center w-full rounded-lg bg-color-button-secondary-bg"
+      class="flex items-center w-full rounded-lg bg-color-surface"
       :class="{ 'px-3 py-2': !large, 'px-5 py-4': large }"
     >
-      <Search class="w-5 h-5 mr-2 text-color-text-secondary flex-shrink-0" />
+      <Search class="w-5 h-5 mr-2 text-color-text-light flex-shrink-0" />
       <input
         type="text"
         ref="input"
@@ -24,14 +24,14 @@
     <!-- Tag Menu -->
     <div
       v-if="tagMenuVisible"
-      class="absolute z-dropdown left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-color-border-primary bg-color-bg-base p-1"
+      class="absolute z-dropdown left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-color-border-base bg-color-surface p-1"
       style="z-index: 25;"
     >
       <p
         v-for="(tag, index) in tagMatches"
         ref="tagMenuItems"
-        class="cursor-pointer rounded px-2 py-1 hover:bg-color-bg-neutral"
-        :class="{ 'bg-color-primary text-color-text-inverse': index === tagMenuIndex, 'text-color-text-primary': index !== tagMenuIndex }"
+        class="cursor-pointer rounded px-2 py-1 hover:bg-color-background"
+        :class="{ 'bg-color-primary text-color-text-inverse': index === tagMenuIndex, 'text-color-text-base': index !== tagMenuIndex }"
         @click="tagChosen(tag)"
         @mousedown.prevent
       >
@@ -43,25 +43,25 @@
     <!-- Search Results Menu -->
     <div
       v-if="searchResultsMenuVisible && searchResults.length > 0"
-      class="absolute z-dropdown left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-color-border-primary bg-color-bg-base p-1"
+      class="absolute z-dropdown left-0 mt-2 max-h-64 w-full overflow-scroll rounded-md border border-color-border-base bg-color-surface p-1"
       style="z-index: 25;"
     >
       <div
         v-for="(result, index) in searchResults"
         ref="searchResultMenuItems"
-        class="cursor-pointer rounded px-2 py-1 hover:bg-color-bg-neutral"
+        class="cursor-pointer rounded px-2 py-1 hover:bg-color-background"
         :class="{ 'bg-color-primary': index === searchResultMenuIndex }"
         @click="searchResultChosen(result)"
         @mousedown.prevent
       >
         <div class="flex items-center">
           <div class="flex-1 min-w-0">
-            <div class="font-medium truncate" :class="{ 'text-color-text-inverse': index === searchResultMenuIndex, 'text-color-text-primary': index !== searchResultMenuIndex }">{{ result.title }}</div>
-            <div v-if="result.content" class="text-sm truncate" :class="{ 'text-color-text-inverse/80': index === searchResultMenuIndex, 'text-color-text-secondary': index !== searchResultMenuIndex }">
+            <div class="font-medium truncate" :class="{ 'text-color-text-inverse': index === searchResultMenuIndex, 'text-color-text-base': index !== searchResultMenuIndex }">{{ result.title }}</div>
+            <div v-if="result.content" class="text-sm truncate" :class="{ 'text-color-text-inverse/80': index === searchResultMenuIndex, 'text-color-text-light': index !== searchResultMenuIndex }">
               {{ result.content.substring(0, 100) }}{{ result.content.length > 100 ? '...' : '' }}
             </div>
           </div>
-          <SquareArrowOutUpRight class="w-4 h-4 flex-shrink-0 ml-2" :class="{ 'text-color-text-inverse/60': index === searchResultMenuIndex, 'text-color-text-secondary': index !== searchResultMenuIndex }" />
+          <SquareArrowOutUpRight class="w-4 h-4 flex-shrink-0 ml-2" :class="{ 'text-color-text-inverse/60': index === searchResultMenuIndex, 'text-color-text-light': index !== searchResultMenuIndex }" />
         </div>
       </div>
     </div>
@@ -69,24 +69,24 @@
     <!-- New Note Menu (when no search results or empty search term) -->
     <div
       v-if="searchResultsMenuVisible && searchResults.length === 0"
-      class="absolute z-dropdown left-0 mt-2 w-full rounded-md border border-color-border-primary bg-color-bg-base p-1"
+      class="absolute z-dropdown left-0 mt-2 w-full rounded-md border border-color-border-base bg-color-surface p-1"
       style="z-index: 25;"
     >
       <div
         ref="newNoteMenuItem"
-        class="cursor-pointer rounded px-2 py-1 hover:bg-color-bg-neutral"
+        class="cursor-pointer rounded px-2 py-1 hover:bg-color-background"
         :class="{ 'bg-color-primary': searchResultMenuIndex === 0 }"
         @click="newNoteChosen"
         @mousedown.prevent
       >
         <div class="flex items-center">
           <div class="flex-1 min-w-0">
-            <div class="font-medium" :class="{ 'text-color-text-inverse': searchResultMenuIndex === 0, 'text-color-text-primary': searchResultMenuIndex !== 0 }">New</div>
-            <div class="text-sm" :class="{ 'text-color-text-inverse/80': searchResultMenuIndex === 0, 'text-color-text-secondary': searchResultMenuIndex !== 0 }">
+            <div class="font-medium" :class="{ 'text-color-text-inverse': searchResultMenuIndex === 0, 'text-color-text-base': searchResultMenuIndex !== 0 }">New</div>
+            <div class="text-sm" :class="{ 'text-color-text-inverse/80': searchResultMenuIndex === 0, 'text-color-text-light': searchResultMenuIndex !== 0 }">
               {{ searchTerm.trim() ? `Create new note with "${searchTerm}"` : 'Create new note' }}
             </div>
           </div>
-          <Plus class="w-4 h-4 flex-shrink-0 ml-2" :class="{ 'text-color-text-inverse/60': searchResultMenuIndex === 0, 'text-color-text-secondary': searchResultMenuIndex !== 0 }" />
+          <Plus class="w-4 h-4 flex-shrink-0 ml-2" :class="{ 'text-color-text-inverse/60': searchResultMenuIndex === 0, 'text-color-text-light': searchResultMenuIndex !== 0 }" />
         </div>
       </div>
     </div>

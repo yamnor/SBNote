@@ -38,17 +38,17 @@
 }
 
 :deep(.cm-editor .cm-gutters) {
-  background-color: var(--color-bg-subtle);
-  border-right: 1px solid var(--color-border-primary);
-  color: var(--color-text-secondary);
+  background-color: var(--color-background-light);
+  border-right: 1px solid var(--color-border-base);
+  color: var(--color-text-light);
 }
 
 :deep(.cm-editor .cm-lineNumbers) {
-  color: var(--color-text-secondary);
+  color: var(--color-text-light);
 }
 
 :deep(.cm-editor .cm-activeLineGutter) {
-  background-color: var(--color-bg-subtle);
+  background-color: var(--color-background-light);
 }
 
 :deep(.cm-editor .cm-selectionBackground) {
@@ -56,31 +56,31 @@
 }
 
 :deep(.cm-editor .cm-cursor) {
-  border-left-color: var(--color-text-primary);
+  border-left-color: var(--color-text-base);
 }
 
 :deep(.cm-editor .cm-tooltip) {
-  background-color: var(--color-bg-base);
-  border: 1px solid var(--color-border-primary);
-  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-base);
+  color: var(--color-text-base);
 }
 
 :deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete) {
-  background-color: var(--color-bg-base);
-  border: 1px solid var(--color-border-primary);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-base);
 }
 
 :deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete ul) {
-  background-color: var(--color-bg-base);
+  background-color: var(--color-surface);
 }
 
 :deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete li) {
-  color: var(--color-text-primary);
+  color: var(--color-text-base);
 }
 
 :deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete li[aria-selected]) {
   background-color: var(--color-primary-light);
-  color: var(--color-text-primary);
+  color: var(--color-text-base);
 }
 </style>
 
@@ -271,15 +271,15 @@ async function initializeEditor() {
           padding: "0.5rem !important",
           whiteSpace: "pre-wrap",
           wordWrap: "break-word",
-          backgroundColor: "var(--color-bg-base)"
+          backgroundColor: "var(--color-surface)"
         },
         ".cm-line": {
           padding: "0"
         },
         ".cm-gutters": {
-          backgroundColor: "var(--color-bg-neutral) !important",
-          borderRight: "1px solid var(--color-bg-base) !important",
-          color: "var(--color-text-secondary) !important"
+          backgroundColor: "var(--color-background) !important",
+          borderRight: "1px solid var(--color-surface) !important",
+          color: "var(--color-text-light) !important"
         },
         ".cm-activeLine": {
           backgroundColor: "var(--color-primary-light) !important"
@@ -289,7 +289,7 @@ async function initializeEditor() {
           color: "var(--color-text-inverse) !important"
         },
         ".cm-cursor": {
-          borderLeftColor: "var(--color-text-primary)"
+          borderLeftColor: "var(--color-text-base)"
         }
       }),
       EditorView.updateListener.of((update) => {
@@ -371,21 +371,21 @@ watch(() => props.language, async (newLanguage) => {
             padding: "0"
           },
           ".cm-gutters": {
-            backgroundColor: "var(--color-bg-subtle)",
-            borderRight: "1px solid var(--color-border-primary)",
-            color: "var(--color-text-secondary)"
+            backgroundColor: "var(--color-background-light)",
+            borderRight: "1px solid var(--color-border-base)",
+            color: "var(--color-text-light)"
           },
           ".cm-lineNumbers": {
-            color: "var(--color-text-secondary)"
+            color: "var(--color-text-light)"
           },
           ".cm-activeLineGutter": {
-            backgroundColor: "var(--color-bg-subtle)"
+            backgroundColor: "var(--color-background-light)"
           },
           ".cm-selectionBackground": {
             backgroundColor: "var(--color-primary-light)"
           },
           ".cm-cursor": {
-            borderLeftColor: "var(--color-text-primary)"
+            borderLeftColor: "var(--color-text-base)"
           }
         }),
         EditorView.updateListener.of((update) => {

@@ -3,7 +3,7 @@
     <!-- Trigger Button -->
     <button
       @click="toggleMenu"
-      class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg text-color-button-secondary-fg transition-colors"
+      class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-color-surface hover:bg-color-primary hover:text-color-on-primary text-color-text-light transition-colors"
       :class="triggerClass"
     >
       <component :is="triggerIcon" class="w-6 h-6" />

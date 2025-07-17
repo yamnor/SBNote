@@ -25,7 +25,7 @@
         type="text"
         id="one-time-code"
         placeholder="2FA Code"
-        class="w-full rounded-md border border-color-border-primary px-3 py-2 focus:outline-none mb-3"
+        class="w-full rounded-md border border-color-border-base px-3 py-2 focus:outline-none mb-3"
         autocomplete="one-time-code"
         required
       />
@@ -36,9 +36,9 @@
           v-model="rememberMe"
           class="mr-2"
         />
-        <label for="remember-me" class="text-color-text-primary text-sm">Remember Me</label>
+        <label for="remember-me" class="text-color-text-base text-sm">Remember Me</label>
       </div>
-      <button type="submit" class="flex items-center justify-center px-4 py-2 rounded-lg bg-color-button-primary-bg text-color-button-primary-fg hover:bg-color-button-primary-hover-bg transition-colors">
+      <button type="submit" class="flex items-center justify-center px-4 py-2 rounded-lg bg-color-primary text-color-on-primary hover:bg-color-primary-dark transition-colors">
         <LogIn class="w-4 h-4 mr-2" />
         Log In
       </button>

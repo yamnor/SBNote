@@ -17,7 +17,7 @@
         size="48"
         class="mb-4 text-color-primary"
       />
-      <span class="max-w-80 text-center text-lg text-color-text-secondary">{{
+      <span class="max-w-80 text-center text-lg text-color-text-light">{{
         failedMessage
       }}</span>
     </div>

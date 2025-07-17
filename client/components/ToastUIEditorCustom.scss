@@ -16,8 +16,8 @@
   // Typography foundation
   font-family: "Noto Sans JP", sans-serif;
   font-size: 15px;
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-base);
+  color: var(--color-text-base);
+  background-color: var(--color-surface);
 }
 
 .toastui-editor-contents {
@@ -177,7 +177,7 @@
   h4, .toastui-editor-md-heading4,
   h5, .toastui-editor-md-heading5,
   h6, .toastui-editor-md-heading6 {
-    color: var(--color-text-primary);
+    color: var(--color-text-base);
     padding: 0;
     border-bottom: none;
     
@@ -188,7 +188,7 @@
   
   // Text elements (Editor mode の margin 調整)
   p {
-    color: var(--color-text-primary);
+    color: var(--color-text-base);
     
     &:last-of-type {
       margin-bottom: 0;
@@ -197,7 +197,7 @@
   
   // Lists (Editor mode の margin 調整)
   ul, ol {
-    color: var(--color-text-primary);
+    color: var(--color-text-base);
     padding-left: 1.5rem;
   }
   
@@ -215,7 +215,7 @@
   
   // Text formatting
   strong, em {
-    color: var(--color-text-primary);
+    color: var(--color-text-base);
   }
   
   strong {
@@ -250,8 +250,8 @@
 .toastui-editor-contents {
   // Code (inline)
   code {
-    background-color: var(--color-bg-subtle);
-    color: var(--color-text-primary);
+    background-color: var(--color-background-light);
+    color: var(--color-text-base);
     font-family: "Noto Sans Mono", "Consolas", "Lucida Console", Monaco, "Andale Mono", monospace;
     font-size: 0.875em;
     padding: 0.125rem 0.25rem;
@@ -260,7 +260,7 @@
   
   // Code blocks
   pre {
-    background-color: var(--color-bg-subtle);
+    background-color: var(--color-background-light);
     padding: 1rem;
     border-radius: 4px;
     overflow-x: auto;
@@ -277,7 +277,7 @@
 
 // Code block line backgrounds
 .toastui-editor-md-code-block-line-background {
-  background-color: var(--color-bg-subtle);
+  background-color: var(--color-background-light);
 }
 
 // Editor code block line spacing
@@ -311,8 +311,8 @@
 .toastui-editor-contents {
   // Blockquotes
   blockquote {
-    color: var(--color-text-secondary);
-    border-left: 4px solid var(--color-border-primary);
+    color: var(--color-text-light);
+    border-left: 4px solid var(--color-border-base);
     padding-left: 1rem;
     margin: 1rem 0;
     font-style: italic;
@@ -333,19 +333,19 @@
     width: 100%;
     border-collapse: collapse;
     margin: 1rem 0;
-    color: var(--color-text-primary);
+    color: var(--color-text-base);
     
     th {
-      background-color: var(--color-bg-subtle);
-      border: 1px solid var(--color-border-primary);
+      background-color: var(--color-background-light);
+      border: 1px solid var(--color-border-base);
       font-weight: 600;
       text-align: left;
-      color: var(--color-text-primary);
+      color: var(--color-text-base);
     }
     
     td {
-      border: 1px solid var(--color-border-primary);
-      color: var(--color-text-primary);
+      border: 1px solid var(--color-border-base);
+      color: var(--color-text-base);
     }
     
     th p, td p {
@@ -359,22 +359,22 @@
 
 // Blockquote markdown styling
 .toastui-editor-md-block-quote .toastui-editor-md-marked-text {
-  color: var(--color-text-secondary);
+  color: var(--color-text-light);
 }
 
 // Table markdown styling
 .toastui-editor-md-table .toastui-editor-md-table-cell {
-  color: var(--color-text-primary);
+  color: var(--color-text-base);
 }
 
 // Additional content overrides
 .toastui-editor-contents {
   ul, menu, ol, dir {
-    color: var(--color-text-primary);
+    color: var(--color-text-base);
   }
   
   pre code {
-    color: var(--color-text-primary);
+    color: var(--color-text-base);
   }
 }
 

@@ -8,7 +8,7 @@
         <p class="text-theme-text-muted mb-4">{{ error }}</p>
         <button
           @click="retryLoad"
-          class="inline-flex items-center px-4 py-2 bg-color-button-primary-bg text-color-button-primary-fg rounded-lg hover:bg-color-button-primary-hover-bg transition-colors"
+          class="inline-flex items-center px-4 py-2 bg-color-primary text-color-on-primary rounded-lg hover:bg-color-primary-dark transition-colors"
         >
           <RefreshCw class="w-4 h-4 mr-2" />
           Retry
@@ -43,7 +43,7 @@
         v-if="showTerminal"
         ref="terminalPanel"
         :class="[
-          'absolute bottom-0 left-0 right-0 z-toolbar border-t border-color-border-primary terminal-panel',
+          'absolute bottom-0 left-0 right-0 z-toolbar border-t border-color-border-base terminal-panel',
           isTerminalMinimized ? 'h-12 min-h-[40px] backdrop-blur-md' : 'backdrop-blur-md'
         ]"
         :style="!isTerminalMinimized ? { height: `${terminalHeight}px`, zIndex: 30 } : { zIndex: 30 }"
@@ -51,19 +51,19 @@
         <!-- Resize handle -->
         <div 
           v-if="!isTerminalMinimized"
-          class="absolute top-0 left-0 right-0 h-1 hover:bg-color-border-primary cursor-ns-resize transition-colors"
+          class="absolute top-0 left-0 right-0 h-1 hover:bg-color-border-base cursor-ns-resize transition-colors"
           @mousedown.stop="startResize"
           title="Drag to resize terminal"
         ></div>
         <!-- Minimize/Restore Button -->
         <button 
           @click.stop="toggleTerminal"
-          class="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg border border-color-border-primary transition-colors focus:outline-none"
+          class="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full bg-color-surface hover:bg-color-primary border border-color-border-base transition-colors focus:outline-none"
           :title="isTerminalMinimized ? 'Restore Terminal' : 'Minimize Terminal'"
           style="z-index:30;"
         >
-          <ChevronUp v-if="isTerminalMinimized" class="w-5 h-5 text-color-button-secondary-fg hover:text-color-button-secondary-hover-fg" />
-          <ChevronDown v-else class="w-6 h-6 text-color-button-secondary-fg hover:text-color-button-secondary-hover-fg" />
+          <ChevronUp v-if="isTerminalMinimized" class="w-5 h-5 text-color-text-light hover:text-color-on-primary" />
+          <ChevronDown v-else class="w-6 h-6 text-color-text-light hover:text-color-on-primary" />
         </button>
         <div v-show="!isTerminalMinimized" ref="terminalContainer" class="w-full h-full pt-1"></div>
       </div>

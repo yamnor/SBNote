@@ -52,15 +52,15 @@
         <!-- Note Information Display -->
         <div class="note-content-width">
           <!-- Header with toggle -->
-          <div class="flex items-center gap-1 p-1 bg-color-bg-base border-b border-color-bg-base cursor-pointer hover:bg-color-bg-base transition-colors" @click="toggleInfoSection">
-            <ChevronDown v-if="state.uiState.isInfoExpanded" class="w-4 h-4 text-color-text-secondary" />
-            <ChevronRight v-else class="w-4 h-4 text-color-text-secondary" />
-            <Info class="w-4 h-4 text-color-text-secondary" />
-            <span class="text-sm text-color-text-secondary">Info</span>
+          <div class="flex items-center gap-1 p-1 bg-color-surface border-b border-color-surface cursor-pointer hover:bg-color-surface transition-colors" @click="toggleInfoSection">
+            <ChevronDown v-if="state.uiState.isInfoExpanded" class="w-4 h-4 text-color-text-light" />
+            <ChevronRight v-else class="w-4 h-4 text-color-text-light" />
+            <Info class="w-4 h-4 text-color-text-light" />
+            <span class="text-sm text-color-text-light">Info</span>
           </div>
           
           <!-- Collapsible content -->
-          <div v-show="state.uiState.isInfoExpanded" class="text-xs text-color-text-secondary flex flex-col gap-1 p-1 bg-color-bg-base">
+          <div v-show="state.uiState.isInfoExpanded" class="text-xs text-color-text-light flex flex-col gap-1 p-1 bg-color-surface">
             <div class="flex flex-row justify-between">
               <div class="flex flex-col">
                 <span v-if="note.category">Category: {{ note.category }}</span>

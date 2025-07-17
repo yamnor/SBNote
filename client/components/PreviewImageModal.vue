@@ -24,13 +24,13 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="transform overflow-visible rounded-lg bg-color-bg-neutral shadow-2xl transition-all preview-image-modal" style="max-width: 90vw; max-height: 90vh;">
+            <DialogPanel class="transform overflow-visible rounded-lg bg-color-background shadow-2xl transition-all preview-image-modal" style="max-width: 90vw; max-height: 90vh;">
               <!-- Header -->
               <div class="flex items-center justify-end p-2 gap-2">
                 <!-- Copy Link button -->
                 <button
                   type="button"
-                  class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                  class="inline-flex justify-center rounded-md bg-color-surface p-2 text-color-text-light hover:bg-color-primary hover:text-color-on-primary"
                   @click="copyLink"
                   title="Copy link"
                 >
@@ -40,7 +40,7 @@
                 <!-- Sticky button -->
                 <button
                   type="button"
-                  class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                  class="inline-flex justify-center rounded-md bg-color-surface p-2 text-color-text-light hover:bg-color-primary hover:text-color-on-primary"
                   @click="openInNote"
                   title="Open in note view"
                 >
@@ -50,7 +50,7 @@
                 <!-- Close button -->
                 <button
                   type="button"
-                  class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                  class="inline-flex justify-center rounded-md bg-color-surface p-2 text-color-text-light hover:bg-color-primary hover:text-color-on-primary"
                   @click="closeModal"
                   title="Close"
                 >
@@ -64,19 +64,19 @@
                 <div v-if="isLoading" class="flex items-center justify-center py-16">
                   <div class="text-center">
                     <Loader2 class="w-8 h-8 mx-auto text-color-primary animate-spin mb-2" />
-                    <p class="text-sm text-color-text-secondary">Loading image...</p>
+                    <p class="text-sm text-color-text-light">Loading image...</p>
                   </div>
                 </div>
                 
                 <!-- Error state -->
                 <div v-else-if="error" class="flex items-center justify-center py-16">
                   <div class="text-center">
-                    <FileX class="w-16 h-16 mx-auto text-color-text-secondary mb-4" />
-                    <h2 class="text-xl font-semibold text-color-text-primary mb-2">Failed to load image</h2>
-                    <p class="text-color-text-secondary mb-4">{{ error }}</p>
+                    <FileX class="w-16 h-16 mx-auto text-color-text-light mb-4" />
+                    <h2 class="text-xl font-semibold text-color-text-base mb-2">Failed to load image</h2>
+                    <p class="text-color-text-light mb-4">{{ error }}</p>
                     <button
                       @click="retryLoad"
-                      class="inline-flex items-center px-4 py-2 bg-color-button-primary-bg text-color-button-primary-fg rounded-lg hover:bg-color-button-primary-hover-bg transition-colors"
+                      class="inline-flex items-center px-4 py-2 bg-color-primary text-color-on-primary rounded-lg hover:bg-color-primary-dark transition-colors"
                     >
                       <RefreshCw class="w-4 h-4 mr-2" />
                       Retry

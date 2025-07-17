@@ -9,7 +9,7 @@
       @touchstart="handleTouchStart"
       @touchend="handleTouchEnd"
       @touchcancel="handleTouchCancel"
-      class="bg-color-bg-base p-2 cursor-pointer duration-200 group h-36 w-full flex flex-col border-t-4 border-t-color-primary relative border border-color-bg-base hover:border-color-primary note-card"
+      class="bg-color-surface p-2 cursor-pointer duration-200 group h-36 w-full flex flex-col border-t-4 border-t-color-primary relative border border-color-surface hover:border-color-primary note-card"
       :class="{ 
         'click-active': isClicking,
         'opacity-50': isSearchResult
@@ -20,6 +20,17 @@
       <!-- Recent edit indicator in top-right corner -->
       <div v-if="isRecentlyEdited" class="absolute top-1 right-1">
         <div class="w-2 h-2 rounded-full" style="background-color: var(--color-accent);"></div>
+      </div>
+      
+      <!-- Priority star indicator in top-left corner -->
+      <div v-if="note.priority" class="absolute top-1 left-1">
+        <div class="flex">
+          <span v-for="i in 5" :key="i" 
+                class="text-xs"
+                :class="i <= note.priority ? 'text-color-complementary' : 'text-gray-300'">
+            ★
+          </span>
+        </div>
       </div>
       
       <!-- Category icon in bottom-left corner -->
@@ -34,7 +45,7 @@
       
       <!-- Tag count badge in bottom-right corner -->
       <!--<div v-if="note.tags && note.tags.length > 0" class="absolute bottom-1 right-1">
-        <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-color-bg-primary text-color-text-primary">
+        <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded bg-color-primary-light text-color-text-base">
           {{ note.tags.length }}
         </span>
       </div>-->
@@ -252,7 +263,7 @@ function formatDate(timestamp) {
 }
 
 /* Smooth transition for all card properties */
-.bg-color-bg-base {
+.bg-color-surface {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

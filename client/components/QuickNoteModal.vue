@@ -24,14 +24,14 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full transform overflow-visible rounded-lg bg-color-bg-neutral shadow-2xl transition-all quick-note-modal" style="max-width: var(--layout-width-note);">
+            <DialogPanel class="w-full transform overflow-visible rounded-lg bg-color-background shadow-2xl transition-all quick-note-modal" style="max-width: var(--layout-width-note);">
               <!-- Header -->
               <div class="flex items-center justify-between p-2 pb-0">
                 <!-- Left side - Slide view button -->
                 <div class="flex items-center space-x-2">
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    class="inline-flex justify-center rounded-md bg-color-surface p-2 text-color-text-light hover:bg-color-primary hover:text-color-on-primary"
                     @click="openInSlide"
                     title="Open in slide view"
                   >
@@ -44,7 +44,7 @@
                   <button
                     v-if="note.category === 'coordinate'"
                     type="button"
-                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    class="inline-flex justify-center rounded-md bg-color-surface p-2 text-color-text-light hover:bg-color-primary hover:text-color-on-primary"
                     @click="openInMol"
                     title="Open in molecular viewer"
                   >
@@ -55,7 +55,7 @@
                   <button
                     v-if="note.category === 'output'"
                     type="button"
-                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    class="inline-flex justify-center rounded-md bg-color-surface p-2 text-color-text-light hover:bg-color-primary hover:text-color-on-primary"
                     @click="openInOutput"
                     title="Open in output view"
                   >
@@ -68,7 +68,7 @@
                   <!-- Copy Link button -->
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    class="inline-flex justify-center rounded-md bg-color-surface p-2 text-color-text-light hover:bg-color-primary hover:text-color-on-primary"
                     @click="copyLink"
                     title="Copy link"
                   >
@@ -78,7 +78,7 @@
                   <!-- Open in editor button -->
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    class="inline-flex justify-center rounded-md bg-color-surface p-2 text-color-text-light hover:bg-color-primary hover:text-color-on-primary"
                     @click="openInEditor"
                     title="Open in full editor"
                   >
@@ -88,7 +88,7 @@
                   <!-- Close button -->
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md bg-color-button-secondary-bg p-2 text-color-button-secondary-fg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg"
+                    class="inline-flex justify-center rounded-md bg-color-surface p-2 text-color-text-light hover:bg-color-primary hover:text-color-on-primary"
                     @click="closeModal"
                     title="Close"
                   >

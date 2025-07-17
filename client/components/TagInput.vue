@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-wrap gap-2 p-2 bg-color-bg-base min-h-10 items-start">
+  <div class="flex flex-wrap gap-2 p-2 bg-color-surface min-h-10 items-start">
     <div class="flex flex-wrap gap-1">
       <div
         v-for="(tag, index) in tags"
@@ -52,8 +52,8 @@
           :key="suggestion"
           @click="selectSuggestion(suggestion)"
           @mouseenter="selectedIndex = index"
-          class="suggestion-item px-3 py-2 cursor-pointer text-sm text-color-text-primary transition-colors duration-150 first:rounded-t-md last:rounded-b-md hover:bg-color-bg-neutral-lighter"
-          :class="{ 'bg-color-bg-neutral-lighter': index === selectedIndex }"
+          class="suggestion-item px-3 py-2 cursor-pointer text-sm text-color-text-base transition-colors duration-150 first:rounded-t-md last:rounded-b-md hover:bg-color-background-lighter"
+          :class="{ 'bg-color-background-lighter': index === selectedIndex }"
           :ref="el => { if (el && index === selectedIndex) selectedItemRef = el }"
         >
           {{ suggestion }}
@@ -266,9 +266,9 @@ onMounted(() => {
   align-items: center;
   gap: 0.25rem;
   padding: 0.125rem 0.5rem;
-  background-color: var(--color-button-secondary-bg);
-  color: var(--color-button-secondary-fg);
-  border: 1px solid var(--color-border-primary);
+  background-color: var(--color-surface);
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border-base);
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -278,8 +278,8 @@ onMounted(() => {
 }
 
 .tag-chip:hover {
-  background-color: var(--color-button-secondary-hover-bg);
-  color: var(--color-button-secondary-hover-fg);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 .tag-link {
@@ -322,11 +322,11 @@ onMounted(() => {
   outline: none;
   background: transparent;
   font-size: 0.875rem;
-  color: var(--color-text-secondary);
+  color: var(--color-text-light);
 }
 
 .tag-input::placeholder {
-  color: var(--color-text-secondary);
+  color: var(--color-text-light);
 }
 
 .suggestions-dropdown {
@@ -334,8 +334,8 @@ onMounted(() => {
   top: 100%;
   left: 0;
   right: 0;
-  background-color: var(--color-bg-base);
-  border: 1px solid var(--color-border-primary);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-base);
   border-radius: 0.375rem;
   box-shadow: var(--color-shadow-md);
   z-index: 25;

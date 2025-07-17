@@ -1,17 +1,17 @@
 <template>
-  <div class="fixed inset-0 z-modal bg-color-bg-neutral">
+  <div class="fixed inset-0 z-modal bg-color-background">
     <!-- Header -->
     <div class="absolute top-0 left-0 right-0 z-navigation flex items-center justify-center">
-      <div class="flex items-center justify-between gap-4 py-4 h-14 bg-color-bg-neutral backdrop-blur-sm w-full max-w-[var(--layout-width-note)]">
+      <div class="flex items-center justify-between gap-4 py-4 h-14 bg-color-background backdrop-blur-sm w-full max-w-[var(--layout-width-note)]">
       <button
         @click="goBack" 
-        class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-secondary-hover-bg hover:text-color-button-secondary-hover-fg text-color-button-secondary-fg transition-colors cursor-pointer flex-shrink-0"
+        class="flex items-center justify-center w-10 h-10 rounded-lg bg-color-surface hover:bg-color-primary hover:text-color-on-primary text-color-text-light transition-colors cursor-pointer flex-shrink-0"
         title="Go back"
       >
         <ArrowLeft class="w-6 h-6" />
       </button>
       
-      <h1 class="text-sm text-color-text-secondary truncate min-w-0 flex-1">
+      <h1 class="text-sm text-color-text-light truncate min-w-0 flex-1">
         {{ noteTitle }}
       </h1>
       
@@ -19,8 +19,8 @@
         <!-- Output button -->
         <button
           @click="setViewMode('output')"
-          class="flex items-center justify-center w-9 h-9 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-primary-bg hover:text-color-button-primary-fg text-color-button-secondary-fg transition-colors shadow-sm"
-          :class="viewMode === 'output' ? '!bg-color-button-primary-bg !text-color-button-primary-fg' : ''"
+          class="flex items-center justify-center w-9 h-9 rounded-lg bg-color-surface hover:bg-color-primary hover:text-color-on-primary text-color-text-light transition-colors shadow-sm"
+          :class="viewMode === 'output' ? '!bg-color-primary !text-color-on-primary' : ''"
           :title="viewMode === 'output' ? 'Current view' : 'Output View'"
         >
           <Scroll class="w-6 h-6" />
@@ -29,8 +29,8 @@
         <!-- Coordinate button -->
         <button
           @click="setViewMode('coordinate')"
-          class="flex items-center justify-center w-9 h-9 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-primary-bg hover:text-color-button-primary-fg text-color-button-secondary-fg transition-colors shadow-sm"
-          :class="viewMode === 'coordinate' ? '!bg-color-button-primary-bg !text-color-button-primary-fg' : ''"
+          class="flex items-center justify-center w-9 h-9 rounded-lg bg-color-surface hover:bg-color-primary hover:text-color-on-primary text-color-text-light transition-colors shadow-sm"
+          :class="viewMode === 'coordinate' ? '!bg-color-primary !text-color-on-primary' : ''"
           :title="viewMode === 'coordinate' ? 'Current view' : 'Coordinate View'"
         >
           <Eye class="w-6 h-6" />
@@ -39,8 +39,8 @@
         <!-- Chem button -->
         <button
           @click="setViewMode('chem')"
-          class="flex items-center justify-center w-9 h-9 rounded-lg bg-color-button-secondary-bg hover:bg-color-button-primary-bg hover:text-color-button-primary-fg text-color-button-secondary-fg transition-colors shadow-sm"
-          :class="viewMode === 'chem' ? '!bg-color-button-primary-bg !text-color-button-primary-fg' : ''"
+          class="flex items-center justify-center w-9 h-9 rounded-lg bg-color-surface hover:bg-color-primary hover:text-color-on-primary text-color-text-light transition-colors shadow-sm"
+          :class="viewMode === 'chem' ? '!bg-color-primary !text-color-on-primary' : ''"
           :title="viewMode === 'chem' ? 'Current view' : 'Chem View'"
         >
           <Terminal class="w-6 h-6" />
@@ -52,12 +52,12 @@
     <!-- Error message -->
     <div v-if="error" class="h-screen flex items-center justify-center p-8">
       <div class="text-center">
-        <FileX class="w-16 h-16 mx-auto text-color-text-secondary mb-4" />
-        <h2 class="text-xl font-semibold text-color-text-primary mb-2">Failed to load data</h2>
-        <p class="text-color-text-secondary mb-4">{{ error }}</p>
+        <FileX class="w-16 h-16 mx-auto text-color-text-light mb-4" />
+        <h2 class="text-xl font-semibold text-color-text-base mb-2">Failed to load data</h2>
+        <p class="text-color-text-light mb-4">{{ error }}</p>
         <button
           @click="retryLoad"
-          class="inline-flex items-center px-4 py-2 bg-color-button-primary-bg text-color-button-primary-fg rounded-lg hover:bg-color-button-primary-hover-bg transition-colors"
+          class="inline-flex items-center px-4 py-2 bg-color-primary text-color-on-primary rounded-lg hover:bg-color-primary-dark transition-colors"
         >
           <RefreshCw class="w-4 h-4 mr-2" />
           Retry
@@ -69,7 +69,7 @@
     <div v-else-if="isLoading" class="h-screen flex items-center justify-center bg-white/50 dark:bg-gray-900/50">
       <div class="text-center">
         <Loader2 class="w-8 h-8 mx-auto text-color-primary animate-spin mb-2" />
-        <p class="text-sm text-color-text-secondary">Loading data...</p>
+        <p class="text-sm text-color-text-light">Loading data...</p>
       </div>
     </div>
 

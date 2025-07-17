@@ -24,7 +24,7 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-lg bg-theme-background border border-theme-border p-6 text-left align-middle shadow-2xl transition-all">
+            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-lg bg-color-background border border-theme-border p-6 text-left align-middle shadow-2xl transition-all">
               <DialogTitle
                 v-if="title"
                 as="h3"
@@ -102,10 +102,10 @@ function getButtonClasses(style, type) {
   const baseClasses = "inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
   
   const styleClasses = {
-    cta: "bg-color-button-primary-bg text-color-button-primary-fg hover:bg-color-button-primary-hover-bg focus-visible:ring-color-primary",
-    subtle: "bg-color-button-secondary-grayed-bg text-color-button-secondary-grayed-fg border-color-button-secondary-grayed-border hover:bg-color-button-secondary-grayed-hover-bg focus-visible:ring-color-primary",
-    danger: "bg-color-button-danger-bg text-color-button-danger-fg border-color-button-danger-border hover:bg-color-button-danger-hover-bg focus-visible:ring-color-error focus:border-color-button-danger-focus-border",
-    secondary: "bg-color-button-secondary-bg text-color-button-secondary-fg border-color-button-secondary-border hover:bg-color-button-secondary-hover-bg focus-visible:ring-color-primary"
+    cta: "bg-color-primary text-color-on-primary hover:bg-color-primary-dark focus-visible:ring-color-primary",
+    subtle: "bg-color-background-lighter text-color-text-base border-color-border-base hover:bg-color-background focus-visible:ring-color-primary",
+    danger: "bg-color-surface text-color-accent border-color-border-base hover:bg-color-background focus-visible:ring-color-accent focus:border-color-border-base",
+    secondary: "bg-color-background-lighter text-color-text-base border-color-border-base hover:bg-color-background focus-visible:ring-color-primary"
   };
   
   return `${baseClasses} ${styleClasses[style] || styleClasses.cta}`;

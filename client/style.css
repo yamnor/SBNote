@@ -97,45 +97,38 @@
         --color-pink-100: #fcb5db;
         --color-pink-300: #ff3ea8; /* triadic */
         --color-pink-500: #ff0077;
+        --color-cyan-200: #3efff5; /* analogous */
         
         /* Semantic colors */
         --color-primary: var(--color-blue-500);
         --color-primary-light: var(--color-blue-300);
         --color-primary-dark: var(--color-blue-700);
-        --color-secondary: #807aff;
-        --color-success: #10b981;
-        --color-warning: #f59e0b;
-        --color-error: var(--color-pink-500);
-        --color-info: var(--color-blue-500);
+        --color-secondary: var(--color-purple-400);
+        --color-complementary: var(--color-yellow-800);
         --color-accent: var(--color-pink-500);
-        
+        --color-analogous: var(--color-cyan-200);
+
         /* Background colors */
-        --color-bg-base: #ffffff;
-        --color-bg-base-rgb: 255 255 255;
-        --color-bg-neutral: var(--color-gray-300);
-        --color-bg-neutral-light: var(--color-gray-200);
-        --color-bg-neutral-lighter: var(--color-gray-100);
-        --color-bg-elevated: #ffffff;
-        --color-bg-subtle: #f8f9fa;
-        --color-bg-primary: var(--color-blue-300);
-        --color-bg-primary-light: var(--color-blue-200);
-        --color-bg-secondary: var(--color-purple-200);
-        --color-bg-error: var(--color-pink-100);
-        --color-bg-warning: #fff6e4;
-        --color-bg-success: #ecfdf5;
-        --color-bg-popover: var(--color-bg-base);
-        --color-bg-backdrop: #242d3340;
+        --color-surface: #ffffff;
+        --color-background: var(--color-gray-300);
+        --color-background-light: var(--color-gray-200);
+        --color-background-lighter: var(--color-gray-100);
         
         /* Text colors */
-        --color-text-primary: #343434;
-        --color-text-secondary: var(--color-gray-700);
-        --color-text-disabled: var(--color-gray-600);
+        --color-text-base: #343434;
+        --color-text-light: var(--color-gray-700);
+        --color-text-lighter: var(--color-gray-600);
         --color-text-link: var(--color-blue-600);
         --color-text-link-visited: #4b4f52;
         --color-text-inverse: #ffffff;
-        
+
+        --color-on-primary: var(--color-text-inverse);
+        --color-on-secondary: var(--color-text-inverse);
+        --color-on-complementary: var(--color-text-inverse);
+        --color-on-accent: var(--color-text-inverse);
+
         /* Border colors */
-        --color-border-primary: #c7c7c7;
+        --color-border-base: #c7c7c7;
         --color-border-light: var(--color-gray-400);
         --color-border-lighter: var(--color-gray-300);
         --color-border-focus: var(--color-blue-400);
@@ -144,31 +137,7 @@
         --color-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         --color-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         --color-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        
-        /* Button color system */
-        --color-button-primary-bg: var(--color-primary);
-        --color-button-primary-fg: var(--color-bg-base);
-        --color-button-primary-hover-bg: var(--color-blue-600);
-        --color-button-secondary-bg: var(--color-bg-base);
-        --color-button-secondary-fg: var(--color-text-secondary);
-        --color-button-secondary-border: var(--color-primary);
-        --color-button-secondary-hover-bg: var(--color-primary);
-        --color-button-secondary-hover-fg: var(--color-bg-base);
-        --color-button-secondary-grayed-bg: var(--color-bg-neutral-lighter);
-        --color-button-secondary-grayed-fg: var(--color-text-primary);
-        --color-button-secondary-grayed-border: var(--color-border-primary);
-        --color-button-secondary-grayed-hover-bg: var(--color-bg-neutral);
-        --color-button-tertiary-fg: var(--color-text-link);
-        --color-button-tertiary-hover-bg: var(--color-bg-primary-light);
-        --color-button-quaternary-fg: var(--color-text-primary);
-        --color-button-quaternary-hover-bg: var(--color-bg-neutral);
-        --color-button-quaternary-disabled-fg: var(--color-text-disabled);
-        --color-button-danger-bg: var(--color-bg-base);
-        --color-button-danger-fg: var(--color-error);
-        --color-button-danger-border: var(--color-pink-300);
-        --color-button-danger-hover-bg: var(--color-bg-error);
-        --color-button-danger-focus-border: var(--color-error);
-        
+                
         /* Label color system */
         --color-label-private: var(--color-gray-600);
         --color-label-limited: var(--color-blue-500);
@@ -180,17 +149,11 @@
         
         /* Legacy variables for backward compatibility (temporary) */
         --theme-brand: var(--color-primary);
-        --theme-brand-dark: var(--color-primary-dark);
-        --theme-brand-accent: #e35183;
-        --theme-background: var(--color-bg-neutral);
-        --theme-background-surface: var(--color-bg-base);
-        --theme-background-subtle: var(--color-bg-subtle);
-        --theme-button: var(--color-bg-base);
+        --theme-button: var(--color-surface);
         --theme-button-hover: #e1e3e6;
-        --theme-background-elevated: var(--color-bg-elevated);
-        --theme-text: var(--color-text-primary);
-        --theme-text-muted: var(--color-text-secondary);
-        --theme-border: var(--color-border-primary);
+        --theme-text: var(--color-text-base);
+        --theme-text-muted: var(--color-text-light);
+        --theme-border: var(--color-border-base);
         --theme-shadow-sm: var(--color-shadow-sm);
         --theme-shadow-md: var(--color-shadow-md);
         --theme-shadow-lg: var(--color-shadow-lg);
@@ -219,23 +182,23 @@
     }
 
     ::-webkit-scrollbar-track {
-        background: var(--color-bg-base);
+        background: var(--color-surface);
     }
 
     ::-webkit-scrollbar-thumb {
-        background: var(--color-border-primary);
+        background: var(--color-border-base);
         border-radius: 6px;
-        border: 2px solid var(--color-bg-base);
+        border: 2px solid var(--color-surface);
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--color-text-secondary);
+        background: var(--color-text-light);
     }
 
     /* Firefox scrollbar styling */
     * {
         scrollbar-width: thin;
-        scrollbar-color: var(--color-border-primary) var(--color-bg-base);
+        scrollbar-color: var(--color-border-base) var(--color-surface);
     }
 }
 

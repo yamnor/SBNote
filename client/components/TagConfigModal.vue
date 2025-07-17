@@ -68,7 +68,7 @@
                 :key="star"
                 @click="priority = star"
                 class="text-2xl transition-colors"
-                :class="star <= priority ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'"
+                :class="star <= priority ? 'text-color-primary' : 'text-gray-300 dark:text-gray-600'"
               >
                 ★
               </button>

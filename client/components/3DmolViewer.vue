@@ -8,7 +8,7 @@
         <p class="text-theme-text-muted mb-4">{{ error }}</p>
         <button
           @click="retryLoad"
-          class="inline-flex items-center px-4 py-2 bg-color-button-primary-bg text-color-button-primary-fg rounded-lg hover:bg-color-button-primary-hover-bg transition-colors"
+          class="inline-flex items-center px-4 py-2 bg-color-primary text-color-on-primary rounded-lg hover:bg-color-primary-dark transition-colors"
         >
           <RefreshCw class="w-4 h-4 mr-2" />
           Retry

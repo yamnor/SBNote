@@ -11,7 +11,7 @@
   flex-direction: row !important;
   max-width: var(--layout-width-split-view) !important;
   margin: 0 auto;
-  background-color: var(--theme-background-surface);
+  background-color: var(--color-surface);
 }
 
 .toastui-editor-md-container.toastui-editor-md-vertical-style {
@@ -46,7 +46,7 @@
 
 // Toolbar styling
 .toastui-editor-defaultUI-toolbar {
-  background-color: var(--theme-background);
+  background-color: var(--color-background);
   border-bottom: none;
   padding: 0;
 }
@@ -60,28 +60,28 @@
 }
 
 .toastui-editor-defaultUI .toastui-editor-md-tab-container {
-  background-color: var(--theme-background);
+  background-color: var(--color-background);
   border-bottom: none;
   float: right;
 }
 
 .toastui-editor-mode-switch {
-  background-color: var(--theme-background);
+  background-color: var(--color-background);
   border-color: var(--theme-border);
 }
 
 .toastui-editor-defaultUI-toolbar button {
-  border: 1px solid var(--theme-background);
+  border: 1px solid var(--color-background);
 }
 
 .toastui-editor-defaultUI .tab-item.active {
-  background-color: var(--theme-background-surface);
+  background-color: var(--color-surface);
   color: var(--theme-text);
   border-color: var(--theme-border);
 }
 
 .toastui-editor-defaultUI .tab-item {
-  background-color: var(--theme-background);
+  background-color: var(--color-background);
   color: var(--theme-text-muted);
   border: none;
 }
@@ -95,13 +95,13 @@
 }
 
 .toastui-editor-defaultUI-toolbar button:not(:disabled):hover {
-  background-color: var(--theme-background-elevated);
-  border: 1px solid var(--theme-background);
+  background-color: var(--color-background-elevated);
+  border: 1px solid var(--color-background);
 }
 
 // Popup styling
 .toastui-editor-popup {
-  background-color: var(--theme-background-surface);
+  background-color: var(--color-surface);
   border: 1px solid var(--theme-border);
 }
 
@@ -110,24 +110,24 @@
     color: var(--theme-text);
   }
   input {
-    background-color: var(--theme-background-surface);
+    background-color: var(--color-surface);
     border: 1px solid var(--theme-border);
   }
 }
 
 .toastui-editor-popup-add-table .toastui-editor-table-cell,
 .toastui-editor-popup-add-table .toastui-editor-table-cell.header {
-  background-color: var(--theme-background-surface);
+  background-color: var(--color-surface);
   border-color: var(--theme-border);
 }
 
 .toastui-editor-popup-add-heading ul li:hover {
-  background-color: var(--theme-background-subtle);
+  background-color: var(--color-background-light);
 }
 
 .toastui-editor-popup-add-image .toastui-editor-tabs .tab-item {
   color: var(--theme-text);
-  background-color: var(--theme-background-surface);
+  background-color: var(--color-surface);
   border-color: var(--theme-border);
 }
 
@@ -137,43 +137,43 @@
 
 .toastui-editor-popup-body input[type="text"] {
   color: var(--theme-text);
-  background-color: var(--theme-background-surface);
+  background-color: var(--color-surface);
 }
 
 .toastui-editor-dropdown-toolbar {
-  background-color: var(--theme-background-surface);
+  background-color: var(--color-surface);
   border-color: var(--theme-border);
 }
 
 // Chart plugin UI styling
 .toastui-editor-chart {
-  background-color: var(--color-bg-base);
-  border: 1px solid var(--color-border-primary);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-base);
   border-radius: 4px;
   margin: 1rem 0;
 }
 
 .toastui-editor-chart canvas {
-  background-color: var(--color-bg-base);
+  background-color: var(--color-surface);
 }
 
 // Chart popup UI styling
 .toastui-editor-chart-popup {
-  background-color: var(--color-bg-base);
-  border: 1px solid var(--color-border-primary);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-base);
 }
 
 .toastui-editor-chart-popup .toastui-editor-chart-popup-body {
-  background-color: var(--color-bg-base);
+  background-color: var(--color-surface);
 }
 
 .toastui-editor-chart-popup input,
 .toastui-editor-chart-popup textarea {
-  background-color: var(--color-bg-base);
-  border: 1px solid var(--color-border-primary);
-  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-base);
+  color: var(--color-text-base);
 }
 
 .toastui-editor-chart-popup label {
-  color: var(--color-text-primary);
+  color: var(--color-text-base);
 }
