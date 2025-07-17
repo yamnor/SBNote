@@ -121,6 +121,8 @@ const baseOptions = {
     ['task', 'table', 'image', 'link', 'codeblock'],
   ],
   hideModeSwitch: true,
+  autoFocus: false,
+  previewHighlight: true,
 };
 
 // Function to get options with specific previewStyle

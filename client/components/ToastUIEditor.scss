@@ -7,13 +7,6 @@
   display: none !important;
 }
 
-.ProseMirror,
-.toastui-editor-contents {
-  padding: 0.5rem 1rem !important;
-  margin: 0 auto;
-  max-width: var(--layout-width-note) !important;
-}
-
 .toastui-editor-md-mode .toastui-editor-md-vertical-style {
   flex-direction: row !important;
   max-width: var(--layout-width-split-view) !important;
@@ -21,11 +14,18 @@
   background-color: var(--theme-background-surface);
 }
 
+.toastui-editor-md-container.toastui-editor-md-vertical-style {
+  max-width: 85vw !important;
+  height: calc(100vh - 125px) !important;
+}
+
 .toastui-editor-md-vertical-style .toastui-editor.md-mode,
 .toastui-editor-md-vertical-style .toastui-editor-md-preview {
   padding: 0 !important;
   min-height: 0 !important;
   width: 50% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 .toastui-editor.md-mode,
@@ -143,4 +143,37 @@
 .toastui-editor-dropdown-toolbar {
   background-color: var(--theme-background-surface);
   border-color: var(--theme-border);
+}
+
+// Chart plugin UI styling
+.toastui-editor-chart {
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.toastui-editor-chart canvas {
+  background-color: var(--color-bg-base);
+}
+
+// Chart popup UI styling
+.toastui-editor-chart-popup {
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-primary);
+}
+
+.toastui-editor-chart-popup .toastui-editor-chart-popup-body {
+  background-color: var(--color-bg-base);
+}
+
+.toastui-editor-chart-popup input,
+.toastui-editor-chart-popup textarea {
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-primary);
+  color: var(--color-text-primary);
+}
+
+.toastui-editor-chart-popup label {
+  color: var(--color-text-primary);
 }

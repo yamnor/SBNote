@@ -1,153 +1,298 @@
-// Editor Custom Styles - Content Styling
+// =============================================================================
+// TOAST UI EDITOR - CONTENT STYLING
+// =============================================================================
+// This file contains all content display styling for the editor
+// Focused on typography, layout, and content presentation
 
-// Font family for content
+// 1. CONTENT AREA LAYOUT
+// =============================================================================
+
 .ProseMirror,
 .toastui-editor-contents {
+  // Layout
+  padding: 0.5rem 1rem;
+  margin: 0 auto;
+  
+  // Typography foundation
   font-family: "Noto Sans JP", sans-serif;
-  font-size: 16px;
+  font-size: 15px;
+  color: var(--color-text-primary);
   background-color: var(--color-bg-base);
 }
 
-// Apply custom styles to Editor content
+.toastui-editor-contents {
+  max-width: var(--layout-width-note);
+}
+
+.toastui-editor-md-delimiter {
+  font-family: "Noto Sans Mono", "Consolas", "Lucida Console", Monaco, "Andale Mono", monospace;
+  padding: 0.125rem;
+}
+
+// Editor mode: 編集しやすい統一line-height
+.ProseMirror {
+  line-height: 1.6;
+  
+  // すべての要素で統一（コードエリアは除く）
+  h1, h2, h3, h4, h5, h6,
+  .toastui-editor-md-heading,
+  p, li, th, td, blockquote p {
+    line-height: 1.6;
+  }
+  
+  // コードエリアは行間を詰める
+  code, pre code {
+    line-height: 1.4;
+  }
+  
+  // 見出しも同じフォントサイズに統一
+  h1, h2, h3, h4, h5, h6,
+  .toastui-editor-md-heading {
+    font-size: 15px;  // 基本フォントサイズと同じ
+    font-weight: 600;  // 見出しであることを示す
+  }
+
+  .toastui-editor-md-heading .toastui-editor-md-delimiter {
+    color: var(--color-primary);
+    font-weight: 600;
+    opacity: 0.5;
+  }
+}
+
+// Viewer mode: 読みやすさ重視の調整
+.toastui-editor-contents {
+  line-height: 1.8;
+
+  // 見出し - 階層に応じた調整
+  h1 {
+    line-height: 1.3;
+    margin: 2.5rem 0 1.5rem;
+    
+    &::before {
+      content: "# ";
+    }
+  }
+  
+  h2 {
+    line-height: 1.4;
+    margin: 2rem 0 1.25rem;
+    
+    &::before {
+      content: "## ";
+    }
+  }
+  
+  h3 {
+    line-height: 1.5;
+    margin: 1.75rem 0 1rem;
+    
+    &::before {
+      content: "### ";
+    }
+  }
+  
+  h4 {
+    line-height: 1.5;
+    margin: 1.5rem 0 0.875rem;
+    
+    &::before {
+      content: "#### ";
+    }
+  }
+  
+  h5 {
+    line-height: 1.5;
+    margin: 1.5rem 0 0.875rem;
+    
+    &::before {
+      content: "##### ";
+    }
+  }
+  
+  h6 {
+    line-height: 1.5;
+    margin: 1.5rem 0 0.875rem;
+    
+    &::before {
+      content: "###### ";
+    }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    &::before {
+      color: var(--color-primary);
+      font-weight: 600;
+      opacity: 0.5;
+    }
+  }
+  
+  // 段落 - 読みやすさ重視
+  p {
+    margin: 0 0 1.25rem;
+  }
+  
+  // リスト - 読みやすさ重視
+  ul, ol {
+    li {
+      margin-bottom: 0.375rem;
+    }
+  }
+  
+  // コード - 技術的コンテンツは詰める
+  code {
+    line-height: 1.4;
+  }
+  
+  pre {
+    code {
+      line-height: 1.4;
+    }
+  }
+  
+  // テーブル - データ表示は詰める
+  table {
+    th, td {
+      line-height: 1.4;
+      padding: 0.25rem 0.5rem;
+    }
+  }
+  
+  // ブロッククォート - 引用は読みやすく
+  blockquote {
+    p {
+      margin: 0.75rem 0;
+    }
+  }
+}
+
+// 2. TYPOGRAPHY & TEXT ELEMENTS
+// =============================================================================
+
+// 共通の見出しスタイル（色、パディング、ボーダー）
 .ProseMirror,
 .toastui-editor-contents {
-  // Headers
-  h1, .toastui-editor-md-heading1 {
+  h1, .toastui-editor-md-heading1,
+  h2, .toastui-editor-md-heading2,
+  h3, .toastui-editor-md-heading3,
+  h4, .toastui-editor-md-heading4,
+  h5, .toastui-editor-md-heading5,
+  h6, .toastui-editor-md-heading6 {
     color: var(--color-text-primary);
-    font-weight: 600;
-    font-size: 1.75rem;
-    margin: 1em 0 0.5em;
     padding: 0;
     border-bottom: none;
-
+    
     &:first-of-type {
       margin-top: 0;
     }
   }
   
-  h2, .toastui-editor-md-heading2 {
-    color: var(--color-text-primary);
-    font-weight: 600;
-    font-size: 1.5rem;
-    margin: 1em 0 0.5em;
-    padding: 0;
-    border-bottom: none;
-  }
-  
-  h3, .toastui-editor-md-heading3 {
-    color: var(--color-text-primary);
-    font-weight: 600;
-    font-size: 1.25rem;
-    margin: 1em 0 0.5em;
-    padding: 0;
-    border-bottom: none;
-  }
-  
-  h4, .toastui-editor-md-heading4,
-  h5, .toastui-editor-md-heading5,
-  h6, .toastui-editor-md-heading6 {
-    color: var(--color-text-primary);
-    font-weight: 500;
-    font-size: 1.125rem;
-    margin: 1em 0 0.5em;
-    padding: 0;
-    border-bottom: none;
-  }
-  
-  // Text elements
+  // Text elements (Editor mode の margin 調整)
   p {
     color: var(--color-text-primary);
-    margin: 0 0 1rem;
+    
     &:last-of-type {
       margin-bottom: 0;
     }
   }
   
-  ul, ol, strong, em {
+  // Lists (Editor mode の margin 調整)
+  ul, ol {
+    color: var(--color-text-primary);
+    padding-left: 1.5rem;
+  }
+  
+  ul > li::before {
+    margin-top: 0.7rem;
+  }
+  
+  // Toast UI Editor list items
+  .toastui-editor-md-list-item {
+    &.toastui-editor-md-list-item-odd,
+    &.toastui-editor-md-list-item-even {
+      font-family: "Noto Sans Mono", "Consolas", "Lucida Console", Monaco, "Andale Mono", monospace;
+    }
+  }
+  
+  // Text formatting
+  strong, em {
     color: var(--color-text-primary);
   }
   
-  // List styling
-  ul > li::before {
-    margin-top: 0.7rem;
+  strong {
+    font-weight: 600;
+  }
+  
+  em {
+    font-style: italic;
   }
   
   // Links
   a {
     color: var(--color-primary);
     text-decoration: underline;
+    transition: color 0.2s ease;
     
     &:hover {
       color: var(--color-primary-dark);
     }
+    
+    &:focus {
+      outline: 2px solid var(--color-border-focus);
+      outline-offset: 2px;
+    }
   }
-  
-  // Code blocks
+}
+
+// 3. CODE & TECHNICAL CONTENT
+// =============================================================================
+
+.ProseMirror,
+.toastui-editor-contents {
+  // Code (inline)
   code {
     background-color: var(--color-bg-subtle);
     color: var(--color-text-primary);
     font-family: "Noto Sans Mono", "Consolas", "Lucida Console", Monaco, "Andale Mono", monospace;
+    font-size: 0.875em;
+    padding: 0.125rem 0.25rem;
+    border-radius: 3px;
   }
   
+  // Code blocks
   pre {
     background-color: var(--color-bg-subtle);
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.4;
     
     code {
       background-color: transparent;
+      padding: 0;
+      font-size: 0.875rem;
     }
   }
-  
-  // Blockquotes
-  blockquote {
-    color: var(--color-text-secondary);
-    border-left-color: var(--color-border-primary);
-  }
-  
-  // Tables
-  table {
-    color: var(--color-text-primary);
-    
-    th {
-      background-color: var(--color-bg-subtle);
-      border-color: var(--color-border-primary);
-      color: var(--color-text-primary);
-    }
-    
-    td {
-      border-color: var(--color-border-primary);
-    }
-  }
-}
-
-// Additional content styling
-.toastui-editor-contents {
-  ul, menu, ol, dir {
-    color: var(--color-text-primary);
-  }
-  
-  pre code {
-    color: var(--color-text-primary);
-  }
-  
-  th p {
-    color: var(--color-text-primary);
-  }
-}
-
-// Editor text color
-.ProseMirror {
-  color: var(--color-text-primary);
-}
-
-// Code styling
-.toastui-editor-md-code,
-.toastui-editor-contents code {
-  background-color: var(--color-bg-subtle);
 }
 
 // Code block line backgrounds
 .toastui-editor-md-code-block-line-background {
   background-color: var(--color-bg-subtle);
+}
+
+// Editor code block line spacing
+.toastui-editor-md-code-block-line-background {
+  line-height: 1.4;  // Reduce line spacing for code block lines in editor
+}
+
+.toastui-editor-md-code {
+  font-family: "Noto Sans Mono", "Consolas", "Lucida Console", Monaco, "Andale Mono", monospace;
+  font-size: 0.875rem;
+}
+
+.toastui-editor-md-code-block {
+  font-family: "Noto Sans Mono", "Consolas", "Lucida Console", Monaco, "Andale Mono", monospace;
+  font-size: 0.875rem;
 }
 
 // Syntax highlighting tokens
@@ -159,45 +304,122 @@
   background: none;
 }
 
-// Blockquote styling
+// 4. STRUCTURAL ELEMENTS
+// =============================================================================
+
+.ProseMirror,
+.toastui-editor-contents {
+  // Blockquotes
+  blockquote {
+    color: var(--color-text-secondary);
+    border-left: 4px solid var(--color-border-primary);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    
+    p {
+      &:first-child {
+        margin-top: 0;
+      }
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+  
+  // Tables
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    color: var(--color-text-primary);
+    
+    th {
+      background-color: var(--color-bg-subtle);
+      border: 1px solid var(--color-border-primary);
+      font-weight: 600;
+      text-align: left;
+      color: var(--color-text-primary);
+    }
+    
+    td {
+      border: 1px solid var(--color-border-primary);
+      color: var(--color-text-primary);
+    }
+    
+    th p, td p {
+      margin: 0;
+    }
+  }
+}
+
+// 5. ADDITIONAL STYLING & OVERRIDES
+// =============================================================================
+
+// Blockquote markdown styling
 .toastui-editor-md-block-quote .toastui-editor-md-marked-text {
   color: var(--color-text-secondary);
 }
 
-// Table styling
+// Table markdown styling
 .toastui-editor-md-table .toastui-editor-md-table-cell {
   color: var(--color-text-primary);
 }
 
-// Chart plugin styling
-.toastui-editor-chart {
-  background-color: var(--color-bg-base);
-  border: 1px solid var(--color-border-primary);
-  border-radius: 4px;
-  margin: 1rem 0;
+// Additional content overrides
+.toastui-editor-contents {
+  ul, menu, ol, dir {
+    color: var(--color-text-primary);
+  }
+  
+  pre code {
+    color: var(--color-text-primary);
+  }
 }
 
-.toastui-editor-chart canvas {
-  background-color: var(--color-bg-base);
+// 6. RESPONSIVE DESIGN
+// =============================================================================
+
+@media (max-width: 768px) {
+  // Editor mode
+  .ProseMirror {
+    padding: 0.75rem;
+    font-size: 15px;
+    line-height: 1.6;  // 編集時は統一維持
+  }
+  
+  // Viewer mode
+  .toastui-editor-contents {
+    padding: 0.75rem;
+    font-size: 15px;
+    line-height: 1.7;  // モバイルでは少し詰める
+    
+    h1, .toastui-editor-md-heading1 {
+      font-size: 1.5rem;
+      line-height: 1.3;
+      margin: 1.25rem 0 0.75rem;
+    }
+    
+    h2, .toastui-editor-md-heading2 {
+      font-size: 1.25rem;
+      line-height: 1.4;
+      margin: 1rem 0 0.5rem;
+    }
+    
+    p, li, blockquote p {
+      line-height: 1.7;
+    }
+    
+    pre {
+      padding: 0.75rem;
+      font-size: 0.8rem;
+      
+      code {
+        line-height: 1.5;
+      }
+    }
+  }
 }
 
-// Chart popup styling
-.toastui-editor-chart-popup {
-  background-color: var(--color-bg-base);
-  border: 1px solid var(--color-border-primary);
-}
 
-.toastui-editor-chart-popup .toastui-editor-chart-popup-body {
-  background-color: var(--color-bg-base);
-}
-
-.toastui-editor-chart-popup input,
-.toastui-editor-chart-popup textarea {
-  background-color: var(--color-bg-base);
-  border: 1px solid var(--color-border-primary);
-  color: var(--color-text-primary);
-}
-
-.toastui-editor-chart-popup label {
-  color: var(--color-text-primary);
-}
