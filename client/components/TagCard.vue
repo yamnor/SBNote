@@ -14,7 +14,7 @@
       <div class="flex">
         <span v-for="i in 5" :key="i" 
               class="text-xs"
-              :class="i <= tagData.priority ? (isSelected ? 'text-color-on-primary' : 'text-color-primary') : (isSelected ? 'text-color-primary' : 'text-color-background')">
+              :class="i <= tagData.priority ? (isSelected ? 'text-color-on-primary' : 'text-color-primary-light') : (isSelected ? 'text-color-primary' : 'text-color-surface')">
           ★
         </span>
       </div>
@@ -34,7 +34,7 @@
     <!-- Note count badge in bottom-right corner -->
     <div class="absolute bottom-1 right-1">
       <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded min-w-[1.25rem]"
-            :class="isSelected ? 'bg-color-surface text-color-text-base' : 'bg-color-primary-light text-color-text-base'">
+            :class="isSelected ? 'bg-color-surface text-color-text-base' : 'bg-color-primary-subtle text-color-text-base'">
         <span v-if="tagData.searchResultCount !== undefined && tagData.otherCount !== undefined">
           <span class="text-color-text-light">{{ tagData.searchResultCount }}</span>
           <span class="text-color-primary">+{{ tagData.otherCount }}</span>

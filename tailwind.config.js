@@ -18,6 +18,7 @@ export default {
         // Semantic colors
         "color-primary": "var(--color-primary)",
         "color-primary-light": "var(--color-primary-light)",
+        "color-primary-subtle": "var(--color-primary-subtle)",
         "color-primary-dark": "var(--color-primary-dark)",
         "color-secondary": "var(--color-secondary)",
         "color-complementary": "var(--color-complementary)",

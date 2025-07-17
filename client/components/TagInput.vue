@@ -271,7 +271,7 @@ onMounted(() => {
   border: 1px solid var(--color-border-base);
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: normal;
   transition: all 0.2s ease;
   max-width: 200px; /* Maximum width for tags */
   min-width: 0; /* Allow shrinking */

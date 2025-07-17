@@ -49,12 +49,12 @@
   h1, h2, h3, h4, h5, h6,
   .toastui-editor-md-heading {
     font-size: 15px;  // 基本フォントサイズと同じ
-    font-weight: 600;  // 見出しであることを示す
+    font-weight: bold;  // 見出しであることを示す
   }
 
   .toastui-editor-md-heading .toastui-editor-md-delimiter {
     color: var(--color-primary);
-    font-weight: 600;
+    font-weight: bold;
     opacity: 0.5;
   }
 }
@@ -121,7 +121,7 @@
   h1, h2, h3, h4, h5, h6 {
     &::before {
       color: var(--color-primary);
-      font-weight: 600;
+      font-weight: bold;
       opacity: 0.5;
     }
   }
@@ -219,7 +219,7 @@
   }
   
   strong {
-    font-weight: 600;
+    font-weight: bold;
   }
   
   em {
@@ -338,7 +338,7 @@
     th {
       background-color: var(--color-background-light);
       border: 1px solid var(--color-border-base);
-      font-weight: 600;
+      font-weight: bold;
       text-align: left;
       color: var(--color-text-base);
     }

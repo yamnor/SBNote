@@ -101,7 +101,8 @@
         
         /* Semantic colors */
         --color-primary: var(--color-blue-500);
-        --color-primary-light: var(--color-blue-300);
+        --color-primary-light: var(--color-blue-400);
+        --color-primary-subtle: var(--color-blue-300);
         --color-primary-dark: var(--color-blue-700);
         --color-secondary: var(--color-purple-400);
         --color-complementary: var(--color-yellow-800);

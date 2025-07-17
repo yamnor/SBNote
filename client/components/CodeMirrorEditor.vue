@@ -52,7 +52,7 @@
 }
 
 :deep(.cm-editor .cm-selectionBackground) {
-  background-color: var(--color-primary-light);
+  background-color: var(--color-primary-subtle);
 }
 
 :deep(.cm-editor .cm-cursor) {
@@ -79,7 +79,7 @@
 }
 
 :deep(.cm-editor .cm-tooltip.cm-tooltip-autocomplete li[aria-selected]) {
-  background-color: var(--color-primary-light);
+  background-color: var(--color-primary-subtle);
   color: var(--color-text-base);
 }
 </style>
@@ -282,7 +282,7 @@ async function initializeEditor() {
           color: "var(--color-text-light) !important"
         },
         ".cm-activeLine": {
-          backgroundColor: "var(--color-primary-light) !important"
+          backgroundColor: "var(--color-primary-subtle) !important"
         },
         ".cm-activeLineGutter": {
           backgroundColor: "var(--color-primary) !important",
@@ -382,7 +382,7 @@ watch(() => props.language, async (newLanguage) => {
             backgroundColor: "var(--color-background-light)"
           },
           ".cm-selectionBackground": {
-            backgroundColor: "var(--color-primary-light)"
+            backgroundColor: "var(--color-primary-subtle)"
           },
           ".cm-cursor": {
             borderLeftColor: "var(--color-text-base)"
