@@ -67,7 +67,7 @@
 
 .toastui-editor-mode-switch {
   background-color: var(--color-background);
-  border-color: var(--theme-border);
+  border-color: var(--color-border-base);
 }
 
 .toastui-editor-defaultUI-toolbar button {
@@ -76,8 +76,8 @@
 
 .toastui-editor-defaultUI .tab-item.active {
   background-color: var(--color-surface);
-  color: var(--theme-text);
-  border-color: var(--theme-border);
+  color: var(--color-text-base);
+  border-color: var(--color-border-base);
 }
 
 .toastui-editor-defaultUI .tab-item {
@@ -91,7 +91,7 @@
 }
 
 .toastui-editor-toolbar-divider {
-  background-color: var(--theme-text);
+  background-color: var(--color-text-base);
 }
 
 .toastui-editor-defaultUI-toolbar button:not(:disabled):hover {
@@ -102,23 +102,23 @@
 // Popup styling
 .toastui-editor-popup {
   background-color: var(--color-surface);
-  border: 1px solid var(--theme-border);
+  border: 1px solid var(--color-border-base);
 }
 
 .toastui-editor-popup-body {
   label {
-    color: var(--theme-text);
+    color: var(--color-text-base);
   }
   input {
     background-color: var(--color-surface);
-    border: 1px solid var(--theme-border);
+    border: 1px solid var(--color-border-base);
   }
 }
 
 .toastui-editor-popup-add-table .toastui-editor-table-cell,
 .toastui-editor-popup-add-table .toastui-editor-table-cell.header {
   background-color: var(--color-surface);
-  border-color: var(--theme-border);
+  border-color: var(--color-border-base);
 }
 
 .toastui-editor-popup-add-heading ul li:hover {
@@ -126,23 +126,23 @@
 }
 
 .toastui-editor-popup-add-image .toastui-editor-tabs .tab-item {
-  color: var(--theme-text);
+  color: var(--color-text-base);
   background-color: var(--color-surface);
-  border-color: var(--theme-border);
+  border-color: var(--color-border-base);
 }
 
 .toastui-editor-popup-add-image .toastui-editor-file-name.has-file {
-  color: var(--theme-text);
+  color: var(--color-text-base);
 }
 
 .toastui-editor-popup-body input[type="text"] {
-  color: var(--theme-text);
+  color: var(--color-text-base);
   background-color: var(--color-surface);
 }
 
 .toastui-editor-dropdown-toolbar {
   background-color: var(--color-surface);
-  border-color: var(--theme-border);
+  border-color: var(--color-border-base);
 }
 
 // Chart plugin UI styling

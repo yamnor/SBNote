@@ -4,7 +4,7 @@
     <div v-if="error" class="h-full flex items-center justify-center p-8">
       <div class="text-center">
         <FileX class="w-16 h-16 mx-auto text-color-text-light mb-4" />
-        <h2 class="text-xl font-semibold text-theme-text mb-2">Failed to load molecule</h2>
+        <h2 class="text-xl font-semibold text-color-text-base mb-2">Failed to load molecule</h2>
         <p class="text-color-text-light mb-4">{{ error }}</p>
         <button
           @click="retryLoad"

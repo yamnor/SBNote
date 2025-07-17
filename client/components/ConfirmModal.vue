@@ -24,11 +24,11 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-lg bg-color-background border border-theme-border p-6 text-left align-middle shadow-2xl transition-all">
+            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-lg bg-color-background border border-color-border-base p-6 text-left align-middle shadow-2xl transition-all">
               <DialogTitle
                 v-if="title"
                 as="h3"
-                class="text-lg font-medium leading-6 text-theme-text mb-4"
+                class="text-lg font-medium leading-6 text-color-text-base mb-4"
               >
                 {{ title }}
               </DialogTitle>

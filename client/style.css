@@ -147,13 +147,6 @@
         --layout-width-note: 768px;
         --layout-width-grid: 1024px;
         
-        /* Legacy variables for backward compatibility (temporary) */
-        --theme-text: var(--color-text-base);
-        --color-text-light: var(--color-text-light);
-        --theme-border: var(--color-border-base);
-        --theme-shadow-sm: var(--color-shadow-sm);
-        --theme-shadow-md: var(--color-shadow-md);
-        --theme-shadow-lg: var(--color-shadow-lg);
     }
 
     body {

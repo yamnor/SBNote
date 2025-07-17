@@ -14,37 +14,7 @@ export default {
       lg: "1024px",
     },
     extend: {
-      colors: {
-        // Base color values
-        "color-blue-50": "var(--color-blue-50)",
-        "color-blue-100": "var(--color-blue-100)",
-        "color-blue-200": "var(--color-blue-200)",
-        "color-blue-300": "var(--color-blue-300)",
-        "color-blue-350": "var(--color-blue-350)",
-        "color-blue-400": "var(--color-blue-400)",
-        "color-blue-500": "var(--color-blue-500)",
-        "color-blue-600": "var(--color-blue-600)",
-        "color-blue-700": "var(--color-blue-700)",
-        "color-gray-100": "var(--color-gray-100)",
-        "color-gray-200": "var(--color-gray-200)",
-        "color-gray-300": "var(--color-gray-300)",
-        "color-gray-400": "var(--color-gray-400)",
-        "color-gray-500": "var(--color-gray-500)",
-        "color-gray-600": "var(--color-gray-600)",
-        "color-gray-700": "var(--color-gray-700)",
-        "color-gray-800": "var(--color-gray-800)",
-        "color-yellow-200": "var(--color-yellow-200)",
-        "color-yellow-400": "var(--color-yellow-400)",
-        "color-yellow-600": "var(--color-yellow-600)",
-        "color-yellow-800": "var(--color-yellow-800)",
-        "color-purple-50": "var(--color-purple-50)",
-        "color-purple-200": "var(--color-purple-200)",
-        "color-purple-400": "var(--color-purple-400)",
-        "color-pink-50": "var(--color-pink-50)",
-        "color-pink-100": "var(--color-pink-100)",
-        "color-pink-300": "var(--color-pink-300)",
-        "color-pink-500": "var(--color-pink-500)",
-        
+      colors: {        
         // Semantic colors
         "color-primary": "var(--color-primary)",
         "color-primary-light": "var(--color-primary-light)",
@@ -88,19 +58,7 @@ export default {
         // Label color system
         "color-label-private": "var(--color-label-private)",
         "color-label-limited": "var(--color-label-limited)",
-        "color-label-public": "var(--color-label-public)",
-        
-        // 後方互換性のための既存クラス（一時的）
-        "color-background": "var(--color-background)",
-        "color-background-light": "var(--color-background-light)",
-        "color-background-elevated": "var(--color-background-elevated)",
-        "theme-text": "var(--theme-text)",
-        "color-text-light": "var(--color-text-light)",
-        "theme-border": "var(--theme-border)",
-        
-        // Static
-        "theme-success": colors.emerald[600],
-        "theme-danger": colors.rose[600],
+        "color-label-public": "var(--color-label-public)",        
       },
       maxWidth: {
         "layout-note": "var(--layout-width-note)",
