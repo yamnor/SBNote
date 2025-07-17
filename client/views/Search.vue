@@ -93,6 +93,7 @@ const relatedTagsSortBy = ref('count');
 const relatedTagsSortOrder = ref('desc');
 const relatedTagCounts = ref({}); // Store actual tag counts
 const relatedTagNotes = ref({}); // Store pre-fetched notes for each related tag
+const allTagsWithCounts = ref([]); // Store complete tag data with priority
 
 // Related tags note sort state
 const relatedTagNoteSortBy = ref('lastModified');
@@ -115,6 +116,13 @@ const actualSearchTerm = computed(() => {
 
 // Computed property for grid items in search results
 const searchGridItems = computed(() => {
+  // For tag search: use complete tag data with priority
+  if (props.tagName) {
+    const tagData = allTagsWithCounts.value.find(tag => tag.tag === props.tagName);
+    if (tagData) {
+      return createSearchGridItems(results.value, props.tagName, tagData);
+    }
+  }
   return createSearchGridItems(results.value, props.tagName);
 });
 
@@ -146,13 +154,13 @@ async function fetchRelatedTagCounts() {
   }
   
   try {
-    // Get all tags with counts
-    const allTagsWithCounts = await getTagsWithCounts();
+    // Use already fetched complete tag data
+    const tagsWithCounts = allTagsWithCounts.value.length > 0 ? allTagsWithCounts.value : await getTagsWithCounts();
     
     // Filter for related tags only
     const counts = {};
     extractRelatedTags.value.forEach(tagName => {
-      const tagData = allTagsWithCounts.find(tag => tag.tag === tagName);
+      const tagData = tagsWithCounts.find(tag => tag.tag === tagName);
       counts[tagName] = tagData ? tagData.count : 0;
     });
     
@@ -219,19 +227,31 @@ const relatedTagsGridItems = computed(() => {
     const otherCount = notes.filter(note => !note.isSearchResult).length;
     const totalCount = searchResultCount + otherCount;
     
+    // Get complete tag data with priority
+    const completeTagData = allTagsWithCounts.value.find(tag => tag.tag === tagName);
+    const tagData = completeTagData ? {
+      ...completeTagData,
+      count: totalCount,
+      searchResultCount: searchResultCount,
+      otherCount: otherCount
+    } : {
+      tag: tagName,
+      count: totalCount,
+      searchResultCount: searchResultCount,
+      otherCount: otherCount,
+      priority: 3, // Default priority if not found
+      description: '',
+      is_pinned: false
+    };
+    
     // Add tag card
     items.push({
       type: 'tag',
-      data: { 
-        tag: tagName, 
-        count: totalCount,
-        searchResultCount: searchResultCount,
-        otherCount: otherCount
-      },
+      data: tagData,
       key: `related-tag-${tagName}`,
       isSelected: selectedRelatedTag.value === tagName,
       hasAnySelection: selectedRelatedTag.value !== null,
-      isPinned: false
+      isPinned: tagData.is_pinned || false
     });
     
     // Add notes if tag is selected
@@ -581,6 +601,14 @@ function init(showLoading = true) {
       results.value = data;
       if (showLoading) {
         gridComponent.value.setLoaded();
+      }
+      
+      // Fetch complete tag data for both main search and related tags
+      try {
+        const tagsWithCounts = await getTagsWithCounts();
+        allTagsWithCounts.value = tagsWithCounts;
+      } catch (error) {
+        console.error('Failed to fetch complete tag data:', error);
       }
       
       // Process related tags after results are loaded

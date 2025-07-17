@@ -63,18 +63,27 @@ export function useGridData() {
   };
 
   // Create search grid items (Search.vue style)
-  const createSearchGridItems = (results = [], tagName = null) => {
+  const createSearchGridItems = (results = [], tagName = null, completeTagData = null) => {
     const items = [];
     
     // For tag search: show tag card first, then notes
     if (tagName) {
+      // Use complete tag data if provided, otherwise create basic data
+      const tagData = completeTagData ? {
+        ...completeTagData,
+        count: results.length
+      } : {
+        tag: tagName,
+        count: results.length
+      };
+      
       items.push({
         type: 'tag',
-        data: { tag: tagName, count: results.length },
+        data: tagData,
         key: `tag-${tagName}`,
         isSelected: false,  // 検索タグは常に表示状態（選択状態ではない）
         hasAnySelection: false,
-        isPinned: false
+        isPinned: completeTagData ? completeTagData.is_pinned || false : false
       });
     }
     
