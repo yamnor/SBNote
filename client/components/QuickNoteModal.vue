@@ -174,16 +174,13 @@ const toastEditor = ref();
 const editingContent = ref('');
 const editingTags = ref([]);
 
-// Auto-save state management (Note.vueと同様の状態管理)
-const autoSaveState = ref({ isAutoSaving: false, isAutoSavingInProgress: false });
-
 // Phase 1: 既存機能の統一 - タイムアウト管理はuseNoteコンポーザブルで管理
 
 // Phase 1: 既存機能の統一 - 新しいコンポーザブル
 const { scrollToTop } = useScrollControl();
 const {
   // 自動保存・タイトル生成
-  autoSaveState: autoSaveStateFromComposable,
+  autoSaveState,
   startContentChangedTimeout,
   generateTitleFromContent,
   startTitleGeneration,
@@ -208,11 +205,13 @@ const {
   apiErrorHandler,
   
   // コールバック関数
-  onSaveSuccess: (data) => {
+  onSaveSuccess: (data, isAuto = false) => {
     emit('note-updated', data);
     
-
-    editingContent.value = data.content;
+    // 自動保存時はコンテンツを更新しない（カーソル位置を保持するため）
+    if (!isAuto) {
+      editingContent.value = data.content;
+    }
     editingTags.value = [...data.tags];
   },
   onSaveFailure: (error) => {
@@ -220,7 +219,7 @@ const {
     apiErrorHandler(error);
   },
   onStateUpdate: (newState) => {
-    Object.assign(autoSaveState.value, newState);
+    // 状態管理はuseNoteコンポーザブルで一元管理
   },
   onContentChange: () => {
     return hasChanges();
@@ -328,7 +327,7 @@ function initializeEditing() {
 
 function handleEditorChange() {
   // ✅ 修正: ToastUIEditorの初期化チェックを追加
-  if (!toastEditor.value || autoSaveState.value.isAutoSavingInProgress) {
+  if (!toastEditor.value || autoSaveState.isAutoSavingInProgress) {
     return;
   }
   
@@ -361,7 +360,7 @@ function handleTagConfirmed() {
 
 // ✅ 修正: hasChanges関数をNote.vueと同様に最適化
 function hasChanges() {
-  if (!toastEditor.value || autoSaveState.value.isAutoSavingInProgress) {
+  if (!toastEditor.value || autoSaveState.isAutoSavingInProgress) {
     return false; // 自動保存中は変更チェックをスキップ
   }
   
@@ -475,7 +474,7 @@ function handleKeydownCapture(event) {
                           target.closest('.quick-note-modal');
     
     // Check if the target is within tag input container
-    const isTagInput = target.closest('.tag-input-container');
+    const isTagInput = target.closest('.tag-input') || target.closest('input[class*="tag-input"]');
     
     // For tag input elements, don't stop propagation to allow Enter key handling
     if (isTagInput) {
