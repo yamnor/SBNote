@@ -32,6 +32,7 @@
             :initialEditType="loadDefaultEditorMode()"
             :addImageBlobHook="addImageBlobHook"
             :previewStyle="globalStore.previewStyle"
+
             @change="handleEditorChange"
           />
           <ToastUIEditorViewer
@@ -190,6 +191,8 @@ import { useSorting } from "../composables/useSorting.js";
 import { useGridData } from "../composables/useGridData.js";
 import { useTagInteractions } from "../composables/useTagInteractions.js";
 import { useDataFetching } from "../composables/useDataFetching.js";
+import { useNote } from "../composables/useNote.js";
+import { useScrollControl } from "../composables/useScrollControl.js";
 
 const props = defineProps({
   filename: String,
@@ -205,9 +208,8 @@ const canModify = computed(() => {
   }
   return globalStore.isAuthenticated && globalStore.config.authType !== 'read_only' && globalStore.editMode;
 });
-let contentChangedTimeout = null;
-let autoSaveTimeout = null;
-let titleGenerationTimeout = null;
+// Phase 1: 既存機能の統一 - タイムアウト管理をコンポーザブルに移行
+// let autoSaveTimeout = null; // 現在はuseNoteコンポーザブルで管理
 const loadingIndicator = ref();
 const router = useRouter();
 const toastEditor = ref();
@@ -217,6 +219,9 @@ const { noteSortOptions, tagSortOptions, sortItems } = useSorting();
 const { createNestedGridItems } = useGridData();
 const { handleTagClick, handleTagDoubleClick } = useTagInteractions();
 const { fetchNotesByTag } = useDataFetching();
+
+// Phase 1: 既存機能の統一 - 新しいコンポーザブル（isNewNoteの定義後に移動）
+const { scrollToTop } = useScrollControl();
 
 // State management - grouped related states
 const state = ref({
@@ -253,6 +258,8 @@ const note = computed(() => state.value.noteState.note);
 const newTitle = computed(() => state.value.noteState.newTitle);
 const isNewNote = computed(() => state.value.noteState.isNewNote);
 
+// Phase 1: 既存機能の統一 - useNoteは関数定義後に移動
+
 // Tag grid computed properties
 const selectedNoteTag = computed(() => state.value.tagGridState.selectedNoteTag);
 const displayedTagNotes = computed(() => state.value.tagGridState.displayedTagNotes);
@@ -261,8 +268,7 @@ const noteTagSortOrder = computed(() => state.value.tagGridState.noteTagSortOrde
 const tagSortBy = computed(() => state.value.tagGridState.tagSortBy);
 const tagSortOrder = computed(() => state.value.tagGridState.tagSortOrder);
 
-// ✅ 修正: autoSaveStateのcomputed propertyを追加
-const autoSaveState = computed(() => state.value.autoSaveState);
+// Phase 1: 既存機能の統一 - autoSaveStateはuseNoteから取得
 
 // Computed property for tag display
 const displayTags = computed({
@@ -328,9 +334,7 @@ function updateUIState(updates) {
   updateState('uiState', updates);
 }
 
-function updateAutoSaveState(updates) {
-  updateState('autoSaveState', updates);
-}
+// Phase 1: 既存機能の統一 - updateAutoSaveStateはuseNoteコンポーザブルで管理
 
 function updateTagGridState(updates) {
   updateState('tagGridState', updates);
@@ -342,96 +346,74 @@ function updateTagCountsState(updates) {
 
 // Load tag counts
 async function loadTagCounts() {
-  try {
-    const tagsWithCounts = await getTagsWithCounts();
-    updateTagCountsState({ allTagsWithCounts: tagsWithCounts });
-  } catch (error) {
-    console.error('Failed to load tag counts:', error);
-  }
+  await loadTagCountsComposable();
+  // 状態を更新
+  updateTagCountsState({ allTagsWithCounts: tagCountsStateComposable.value.allTagsWithCounts });
 }
 
 // Tag grid event handlers
 async function onNoteTagClick(tagName) {
-  try {
-    const previousSelectedTag = selectedNoteTag.value;
-    
-    handleTagClick(tagName, selectedNoteTag.value, (tag) => updateTagGridState({ selectedNoteTag: tag }), () => updateTagGridState({ displayedTagNotes: [] }));
-    
-    // Only fetch notes if a new tag was selected (not the same tag)
-    if (selectedNoteTag.value === tagName && previousSelectedTag !== tagName) {
-      // Get notes for the selected tag
-      const notes = await fetchNotesByTag(getNotesByTag, tagName, noteTagSortBy.value, noteTagSortOrder.value, 10);
-      updateTagGridState({ displayedTagNotes: notes });
-    }
-  } catch (error) {
-    console.error('Failed to get notes for tag:', error);
-  }
+  await onNoteTagClickComposable(tagName);
+  // 状態を更新
+  updateTagGridState({
+    selectedNoteTag: tagGridStateComposable.value.selectedNoteTag,
+    displayedTagNotes: tagGridStateComposable.value.displayedTagNotes
+  });
 }
 
 function onNoteTagDoubleClick(tagName) {
-  handleTagDoubleClick(tagName, '/tag/');
+  onNoteTagDoubleClickComposable(tagName);
 }
 
 function updateNoteTagSortOrder(newOrder) {
+  updateNoteTagSortOrderComposable(newOrder);
   updateTagGridState({ noteTagSortOrder: newOrder });
 }
 
 function updateTagSortOrder(newOrder) {
+  updateTagSortOrderComposable(newOrder);
   updateTagGridState({ tagSortOrder: newOrder });
 }
 
 // Create empty note to get filename immediately
-function createEmptyNote() {
+async function createEmptyNote() {
   const emptyTitle = newTitle.value || noteConstants.DEFAULT_TITLE;
   const emptyContent = note.value.content || "";
   const defaultTags = newTags.value;
   
-  createNote(emptyTitle, emptyContent, defaultTags)
-    .then((data) => {
-      // Update note with server data
-      updateNoteState({
-        note: {
-          ...note.value,
-          title: data.title,
-          tags: data.tags,
-          content: data.content,
-          filename: data.filename
-        },
-        newTitle: data.title,
-        isNewNote: false  // Mark as existing note after creation
-      });
-      
-      // Update newTags with server data (silently to avoid watch trigger)
-      const serverTags = data.tags || [];
-      if (newTags.value.length !== serverTags.length || 
-          newTags.value.some((tag, index) => tag !== serverTags[index])) {
-        newTags.value = serverTags;
+  try {
+    const data = await createEmptyNoteComposable({
+      title: emptyTitle,
+      content: emptyContent,
+      tags: defaultTags,
+      onStateUpdate: (updates) => {
+        updateNoteState(updates);
       }
-      
-      // Update browser tab title
-      document.title = `${data.title} - SBNote`;
-      
-      // Update URL with filename (without extension)
-      const filename = data.filename.replace(noteConstants.MARKDOWN_EXTENSION, '');
-      router.replace({ name: "note", params: { filename } });
-      
-      // Update local state
-      updateUIState({ unsavedChanges: false });
-      setBeforeUnloadConfirmation(false);
-      
-      // Scroll to top after note creation is complete
-      setTimeout(() => {
-        scrollToTop();
-      }, 50);
-    })
-    .catch((error) => {
-      console.error('Failed to create empty note:', error);
-      apiErrorHandler(error);
     });
+    
+    // Update newTags with server data (silently to avoid watch trigger)
+    const serverTags = data.tags || [];
+    if (newTags.value.length !== serverTags.length || 
+        newTags.value.some((tag, index) => tag !== serverTags[index])) {
+      newTags.value = serverTags;
+    }
+    
+    // Update local state
+    updateUIState({ unsavedChanges: false });
+    
+    // Phase 1: 既存機能の統一 - スクロール制御をコンポーザブルに移行
+    setTimeout(() => {
+      scrollToTop();
+    }, 50);
+  } catch (error) {
+    console.error('Failed to create empty note:', error);
+    apiErrorHandler(error);
+  }
 }
 
 function handleEditorChange() {
   if (canModify.value && toastEditor.value) {
+    // 自動保存タイムアウトを開始
     startContentChangedTimeout();
 
     const content = toastEditor.value.getMarkdown();
@@ -439,17 +421,12 @@ function handleEditorChange() {
       updateUIState({ unsavedChanges: true });
     }
 
-    // Auto-generate title from first line
-    clearTimeout(titleGenerationTimeout);
-    titleGenerationTimeout = setTimeout(() => {
-      if (toastEditor.value) {
-        const content = toastEditor.value.getMarkdown();
-        const generatedTitle = generateTitleFromContent(content);
-        if (generatedTitle && generatedTitle !== newTitle.value) {
-          updateNoteState({ newTitle: generatedTitle });
-        }
+    // Phase 1: 既存機能の統一 - タイトル生成をコンポーザブルに移行
+    startTitleGeneration(content, (generatedTitle) => {
+      if (generatedTitle && generatedTitle !== newTitle.value) {
+        updateNoteState({ newTitle: generatedTitle });
       }
-    }, noteConstants.TITLE_GENERATION_DELAY);
+    });
   }
 }
 
@@ -491,7 +468,7 @@ async function init() {
           displayedTagNotes: []
         });
         
-        // Scroll to top after note is loaded
+        // Phase 1: 既存機能の統一 - スクロール制御をコンポーザブルに移行
         scrollToTop();
       })
       .catch((error) => {
@@ -545,7 +522,7 @@ async function init() {
     // Immediately create empty note to get filename
     createEmptyNote();
     
-    // Scroll to top after creating empty note
+    // Phase 1: 既存機能の統一 - スクロール制御をコンポーザブルに移行
     setTimeout(() => {
       scrollToTop();
     }, 100);
@@ -557,53 +534,19 @@ function getInitialEditorValue() {
   if (isNewNote.value && note.value.content) {
     return note.value.content;
   }
+  
+  // 編集中はエディターの現在の内容を優先（カーソル位置を保持するため）
+  if (toastEditor.value && !isNewNote.value) {
+    const currentContent = toastEditor.value.getMarkdown();
+    // console.log('🔍 getInitialEditorValue: using editor content:', currentContent);
+    return currentContent;
+  }
+  
+  // console.log('🔍 getInitialEditorValue: using note content:', note.value.content);
   return note.value.content;
 }
 
-function generateTitleFromContent(content) {
-  if (!content) return "";
-  
-  // Split content into lines and get the first non-empty line
-  const lines = content.split('\n');
-  let firstLine = "";
-  
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    if (trimmedLine) {
-      firstLine = trimmedLine;
-      break;
-    }
-  }
-  
-  if (!firstLine) return "";
-  
-  // Remove markdown formatting
-  let title = firstLine
-    // Remove headers (# ## ### etc.)
-    .replace(noteConstants.MARKDOWN_PATTERNS.HEADERS, '')
-    // Remove bold/italic markers
-    .replace(noteConstants.MARKDOWN_PATTERNS.BOLD, '$1')
-    .replace(noteConstants.MARKDOWN_PATTERNS.ITALIC, '$1')
-    .replace(noteConstants.MARKDOWN_PATTERNS.BOLD_UNDERSCORE, '$1')
-    .replace(noteConstants.MARKDOWN_PATTERNS.ITALIC_UNDERSCORE, '$1')
-    // Remove code markers
-    .replace(noteConstants.MARKDOWN_PATTERNS.CODE, '$1')
-    // Remove links [text](url) -> text
-    .replace(noteConstants.MARKDOWN_PATTERNS.LINKS, '$1')
-    // Remove images ![alt](url) -> alt
-    .replace(noteConstants.MARKDOWN_PATTERNS.IMAGES, '$1')
-    // Remove HTML tags
-    .replace(noteConstants.MARKDOWN_PATTERNS.HTML_TAGS, '')
-    // Trim whitespace
-    .trim();
-  
-  // Limit title length to reasonable size
-  if (title.length > noteConstants.MAX_TITLE_LENGTH) {
-    title = title.substring(0, noteConstants.TITLE_TRUNCATE_LENGTH) + '...';
-  }
-  
-  return title;
-}
+// Phase 1: 既存機能の統一 - generateTitleFromContentはuseNoteコンポーザブルで管理
 
 
 
@@ -672,51 +615,42 @@ function changeVisibilityHandler(event) {
   changeNoteVisibility(visibility);
 }
 
-function deleteConfirmedHandler() {
-  // Add .md extension for API call
-  const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
-  deleteNote(filenameWithExtension)
-    .then(() => {
-      router.push({ name: "home" });
-    })
-    .catch((error) => {
-      apiErrorHandler(error);
-    });
+async function deleteConfirmedHandler() {
+  await deleteConfirmedHandlerComposable(props.filename);
 }
 
-function changeNoteVisibility(visibility) {
+async function changeNoteVisibility(visibility) {
   if (!canModify.value || isNewNote.value) {
     return;
   }
   
-  // Add .md extension for API call
-  const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
-  
-  // Update note with new visibility
-  updateNote(filenameWithExtension, newTitle.value, note.value.content, newTags.value, visibility)
-    .then(async (data) => {
-      // Update note state
-      updateNoteState({
-        note: data
-      });
-      
-      // Update file menu state to reflect new visibility
-      updateFileMenuState();
-      
-      // Show success toast
-      globalStore.toast?.addToast(
-        `Note visibility changed to ${visibility}`,
-        'Visibility Updated',
-        'success'
-      );
-      
-      // Reload tag counts to reflect changes
-      await loadTagCounts();
-    })
-    .catch((error) => {
-      console.error('Failed to change note visibility:', error);
-      apiErrorHandler(error);
+  try {
+    await changeNoteVisibilityComposable({
+      visibility,
+      filename: props.filename,
+      title: newTitle.value,
+      content: note.value.content,
+      tags: newTags.value,
+      canModify: canModify.value,
+      isNewNote: isNewNote.value
     });
+    
+    // Update file menu state to reflect new visibility
+    updateFileMenuState();
+    
+    // Show success toast
+    globalStore.toast?.addToast(
+      `Note visibility changed to ${visibility}`,
+      'Visibility Updated',
+      'success'
+    );
+    
+    // Reload tag counts to reflect changes
+    await loadTagCountsComposable();
+  } catch (error) {
+    console.error('Failed to change note visibility:', error);
+    apiErrorHandler(error);
+  }
 }
 
 
@@ -734,8 +668,8 @@ function handleSaveFailure(error) {
 
 
 function closeNote() {
-  clearAutoSaveTimeout();
-  clearTitleGenerationTimeout();
+  // Phase 1: 既存機能の統一 - クリーンアップはコンポーザブルに移行
+  cleanupNote();
   if (isNewNote.value) {
     router.push({ name: "home" });
   }
@@ -743,96 +677,14 @@ function closeNote() {
 
 // Image Upload
 function addImageBlobHook(file, callback) {
-  postAttachment(file)
-    .then((data) => {
-      if (data) {
-        // Use original filename as alt text for better accessibility
-        const altText = data.originalFilename || data.filename;
-        callback(data.url, altText);
-      }
-    })
-    .catch((error) => {
-      console.warn('Image upload failed, using local URL:', error);
-      // Fallback to local URL if upload fails
-      const url = URL.createObjectURL(file);
-      callback(url, file.name);
-    });
+  addImageBlobHookComposable(file, callback);
 }
 
 function postAttachment(file) {
-  if (!file.name || file.name.trim() === "") {
-    globalStore.toast?.addToast(
-      "Invalid filename",
-      "Invalid Attachment",
-      "error"
-    );
-    return Promise.reject(new Error("Invalid filename"));
-  }
-
-  return createAttachment(file)
-    .then((data) => {
-      return data;
-    })
-    .catch((error) => {
-      if (error.response?.status === 409) {
-        // File already exists, will be handled by server
-        return Promise.reject(error);
-      } else if (error.response?.status === 413) {
-        showFileSizeModal("attachment");
-        return Promise.reject(error);
-      } else {
-        apiErrorHandler(error);
-        return Promise.reject(error);
-      }
-    });
+  return postAttachmentComposable(file);
 }
 
-function startContentChangedTimeout() {
-  clearContentChangedTimeout();
-  contentChangedTimeout = setTimeout(contentChangedHandler, noteConstants.CONTENT_CHANGE_DELAY);
-}
-
-function clearContentChangedTimeout() {
-  if (contentChangedTimeout != null) {
-    clearTimeout(contentChangedTimeout);
-  }
-}
-
-function contentChangedHandler() {
-  if (autoSaveState.value.isAutoSavingInProgress) {
-    return;
-  }
-  
-  if (isContentChanged()) {
-    updateState('uiState', { unsavedChanges: true });
-    setBeforeUnloadConfirmation(true);
-    const delay = isNewNote.value ? noteConstants.NEW_NOTE_AUTO_SAVE_DELAY : noteConstants.AUTO_SAVE_DELAY;
-    startAutoSaveTimeout(delay);
-  } else {
-    updateState('uiState', { unsavedChanges: false });
-    setBeforeUnloadConfirmation(false);
-    clearAutoSaveTimeout();
-  }
-}
-
-function startAutoSaveTimeout(delay = noteConstants.AUTO_SAVE_DELAY) {
-  clearAutoSaveTimeout();
-  autoSaveTimeout = setTimeout(autoSaveHandler, delay);
-}
-
-function clearAutoSaveTimeout() {
-  if (autoSaveTimeout != null) {
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = null;
-  }
-}
-
-function clearTitleGenerationTimeout() {
-  if (titleGenerationTimeout) {
-    clearTimeout(titleGenerationTimeout);
-    titleGenerationTimeout = null;
-  }
-}
+// Phase 1: 既存機能の統一 - タイムアウト管理はuseNoteコンポーザブルで管理
 
 function onTagConfirmed() {
   // Only proceed if we can modify the note
@@ -840,12 +692,7 @@ function onTagConfirmed() {
     return
   }
   
-  // Clear any pending auto-save timeout
-  if (autoSaveTimeout) {
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = null;
-  }
-  
+  // Phase 1: 既存機能の統一 - タイムアウト管理はコンポーザブルに移行
   // Force save immediately for tag changes
   if (!autoSaveState.value.isAutoSaving) {
     performSave(false, true);
@@ -855,14 +702,12 @@ function onTagConfirmed() {
 // ✅ 修正: 保存処理を統合
 async function saveNote(title, content, tags, close = false, isAuto = false) {
   try {
-    let data;
-    
-    if (isNewNote.value) {
-      data = await createNote(title, content, tags);
-    } else {
-      const filenameWithExtension = props.filename + noteConstants.MARKDOWN_EXTENSION;
-      data = await updateNote(filenameWithExtension, title, content, tags);
-    }
+    const data = await saveNoteComposable(title, content, tags, {
+      close,
+      isAuto,
+      isNewNote: isNewNote.value,
+      filename: props.filename
+    });
     
     // 共通の成功処理
     handleSaveSuccess(data, close, isAuto);
@@ -870,7 +715,6 @@ async function saveNote(title, content, tags, close = false, isAuto = false) {
     return data;
   } catch (error) {
     console.error('Failed to save note:', error);
-    if (isAuto) resetAutoSaveState();
     handleSaveFailure(error);
     throw error;
   }
@@ -878,13 +722,17 @@ async function saveNote(title, content, tags, close = false, isAuto = false) {
 
 // ✅ 修正: 保存成功処理を共通化
 async function handleSaveSuccess(data, close = false, isAuto = false) {
-  // For auto-save, don't update note object to preserve cursor position
+
+  
+  // 編集中は note.content を更新しない（カーソル位置を保持するため）
   if (!isAuto) {
+    // console.log('🔍 Manual save: updating note content');
     updateState('noteState', {
       note: data,
       isNewNote: false
     });
   } else {
+    // console.log('🔍 Auto save: only updating isNewNote flag');
     // Only update isNewNote flag for auto-save
     updateState('noteState', {
       isNewNote: false
@@ -915,7 +763,7 @@ async function handleSaveSuccess(data, close = false, isAuto = false) {
   // Reload tag counts to reflect changes
   await loadTagCounts();
   
-  if (isAuto) resetAutoSaveState();
+  // if (isAuto) resetAutoSaveState(); // 現在はuseNoteコンポーザブルで管理
   if (close) closeNote();
 }
 
@@ -924,22 +772,24 @@ function performSave(close = false, isAuto = false) {
   saveDefaultEditorMode();
   ensureTitle();
   
-  updateState('autoSaveState', { 
-    isAutoSaving: true, 
-    isAutoSavingInProgress: true 
-  });
+  // ✅ 削除: 状態設定を削除（useNoteコンポーザブルで一元管理）
+  // updateState('autoSaveState', { 
+  //   isAutoSaving: true, 
+  //   isAutoSavingInProgress: true 
+  // });
   
   const newContent = toastEditor.value ? toastEditor.value.getMarkdown() : '';
-  saveNote(newTitle.value, newContent, newTags.value, close, isAuto);
+  
+  // ✅ 修正: 正しいsaveNoteComposableを使用
+  return saveNoteComposable(newTitle.value, newContent, newTags.value, {
+    close,
+    isAuto,
+    isNewNote: isNewNote.value,
+    filename: props.filename
+  });
 }
 
-function autoSaveHandler() {
-  if (!isContentChanged()) {
-    resetAutoSaveState();
-    return;
-  }
-  performSave(false, true);
-}
+// Phase 1: 既存機能の統一 - autoSaveHandlerはuseNoteコンポーザブルで管理
 
 function ensureTitle() {
   if (!newTitle.value || newTitle.value.trim() === "") {
@@ -955,16 +805,9 @@ function ensureTitle() {
 
 
 
-function resetAutoSaveState() {
-  updateState('autoSaveState', { 
-    isAutoSaving: false, 
-    isAutoSavingInProgress: false 
-  });
-}
+// Phase 1: 既存機能の統一 - resetAutoSaveStateはuseNoteコンポーザブルで管理
 
-// ✅ 削除: 重複する保存関数を削除
-// function saveNewNote(title, content, tags, close = false, isAuto = false) { ... }
-// function saveExistingNote(filename, title, content, tags, close = false, isAuto = false) { ... }
+// ✅ 削除: 重複する保存関数はuseNoteコンポーザブルで統合済み
 
 function showFileSizeModal(entityName) {
   fileSizeModalMessage.value = `The ${entityName} you're trying to upload is too large. Please choose a smaller file.`;
@@ -977,39 +820,31 @@ function closeFileSizeModal() {
 
 // Toggle info section and save to localStorage
 function toggleInfoSection() {
-  const newExpandedState = !state.value.uiState.isInfoExpanded;
-  updateUIState({ isInfoExpanded: newExpandedState });
-  localStorage.setItem('noteInfoExpanded', newExpandedState.toString());
+  toggleInfoSectionComposable();
+  // 状態を更新
+  updateUIState({ isInfoExpanded: isInfoExpandedComposable.value });
 }
 
 // Load info section state from localStorage
 function loadInfoSectionState() {
-  const savedState = localStorage.getItem('noteInfoExpanded');
-  if (savedState !== null) {
-    updateUIState({ isInfoExpanded: savedState === 'true' });
-  }
+  loadInfoSectionStateComposable();
+  // 状態を更新
+  updateUIState({ isInfoExpanded: isInfoExpandedComposable.value });
 }
 
-function setBeforeUnloadConfirmation(enable = true) {
-  if (enable) {
-    window.onbeforeunload = () => {
-      return true;
-    };
-  } else {
-    window.onbeforeunload = null;
-  }
-}
+// setBeforeUnloadConfirmationはuseNoteコンポーザブルから取得済み
 
 // Update file menu state in App.vue
 function updateFileMenuState() {
   if (window.updateNoteFileMenuState) {
-    window.updateNoteFileMenuState({
+    const menuState = {
       canModify: canModify.value,
       isNewNote: isNewNote.value,
-      autoSaveState: autoSaveState.value,
+      autoSaveState: state.value.autoSaveState,
       unsavedChanges: state.value.uiState.unsavedChanges,
       currentVisibility: note.value.visibility || 'private'
-    });
+    };
+    window.updateNoteFileMenuState(menuState);
   }
   
   // Update current note tags globally for NavBar component
@@ -1021,39 +856,14 @@ function updateFileMenuState() {
 }
 
 function saveDefaultEditorMode() {
-  if (toastEditor.value) {
-    const isWysiwygMode = toastEditor.value.isWysiwygMode();
-    localStorage.setItem(
-      "defaultEditorMode",
-      isWysiwygMode ? "wysiwyg" : "markdown",
-    );
-  }
+  saveDefaultEditorModeComposable(toastEditor.value);
 }
 
 function loadDefaultEditorMode() {
-  const defaultWysiwygMode = localStorage.getItem("defaultEditorMode");
-  return defaultWysiwygMode || "markdown";
+  return loadDefaultEditorModeComposable();
 }
 
-// Scroll to top of the page
-function scrollToTop() {
-  // Use immediate scrolling to ensure it takes effect
-  window.scrollTo({
-    top: 0,
-    left: 0,
-    behavior: 'auto'
-  });
-  
-  // Also try scrolling the document element for better compatibility
-  if (document.documentElement) {
-    document.documentElement.scrollTop = 0;
-  }
-  
-  // And the body element
-  if (document.body) {
-    document.body.scrollTop = 0;
-  }
-}
+// Phase 1: 既存機能の統一 - scrollToTopはuseScrollControlコンポーザブルで管理
 
 function isContentChanged() {
   if (autoSaveState.value.isAutoSavingInProgress) {
@@ -1072,6 +882,107 @@ function isContentChanged() {
   );
 }
 
+// Phase 1: 既存機能の統一 - useNoteコンポーザブルを導入
+const {
+  // 自動保存・タイトル生成
+  autoSaveState,
+  startContentChangedTimeout,
+  generateTitleFromContent,
+  startTitleGeneration,
+  resetAutoSaveState,
+  updateIsNewNote,
+  
+
+  
+  // ノート操作
+  saveNote: saveNoteComposable,
+  createEmptyNote: createEmptyNoteComposable,
+  deleteConfirmedHandler: deleteConfirmedHandlerComposable,
+  changeNoteVisibility: changeNoteVisibilityComposable,
+  addImageBlobHook: addImageBlobHookComposable,
+  postAttachment: postAttachmentComposable,
+  setBeforeUnloadConfirmation,
+  updateUnloadProtection,
+  
+  // UI状態管理
+  editorMode,
+  tagGridState: tagGridStateComposable,
+  tagCountsState: tagCountsStateComposable,
+  isInfoExpanded: isInfoExpandedComposable,
+  saveDefaultEditorMode: saveDefaultEditorModeComposable,
+  loadDefaultEditorMode: loadDefaultEditorModeComposable,
+  loadTagCounts: loadTagCountsComposable,
+  onNoteTagClick: onNoteTagClickComposable,
+  onNoteTagDoubleClick: onNoteTagDoubleClickComposable,
+  updateNoteTagSortOrder: updateNoteTagSortOrderComposable,
+  updateTagSortOrder: updateTagSortOrderComposable,
+  toggleInfoSection: toggleInfoSectionComposable,
+  loadInfoSectionState: loadInfoSectionStateComposable,
+  
+  // 統合クリーンアップ
+  cleanup: cleanupNote
+} = useNote({
+  // API関数
+  createNote,
+  updateNote,
+  deleteNote,
+  createAttachment,
+  getNotesByTag,
+  getTagsWithCounts,
+  
+  // 依存関係
+  router,
+  apiErrorHandler,
+  
+  // コールバック関数
+  onSaveSuccess: handleSaveSuccess,
+  onSaveFailure: handleSaveFailure,
+  onDeleteSuccess: () => {
+    // 削除成功時の処理は既存のdeleteConfirmedHandlerで処理
+  },
+  onDeleteFailure: (error) => {
+    apiErrorHandler(error);
+  },
+  onGlobalStateUpdate: (updates) => {
+    if (updates.currentNoteTitle) {
+      globalStore.currentNoteTitle = updates.currentNoteTitle;
+    }
+    if (updates.currentNoteTags) {
+      globalStore.currentNoteTags = updates.currentNoteTags;
+    }
+  },
+  onFileSizeError: (error) => {
+    showFileSizeModal("attachment");
+  },
+  onFileExistsError: (error) => {
+    // ファイル重複エラーはサーバー側で処理
+  },
+  onNetworkError: (error) => {
+    apiErrorHandler(error);
+  },
+  onTagClick: (tagName, previousSelectedTag) => {
+    handleTagClick(tagName, selectedNoteTag.value, (tag) => updateTagGridState({ selectedNoteTag: tag }), () => updateTagGridState({ displayedTagNotes: [] }));
+  },
+  onTagDoubleClick: (tagName) => {
+    handleTagDoubleClick(tagName, '/tag/');
+  },
+  onStateUpdate: (newState) => {
+    updateState('autoSaveState', newState);
+  },
+  onContentChange: () => {
+    return isContentChanged();
+  },
+  onAutoSave: async () => {
+    await performSave(false, true);
+  },
+  onTitleGenerated: (title) => {
+    if (title && title !== newTitle.value) {
+      updateNoteState({ newTitle: title });
+    }
+  },
+  isNewNote: () => isNewNote.value
+});
+
 // Unified watch for content changes
 function handleContentChange(isTagsOnlyChange = false) {
   if (autoSaveState.value.isAutoSavingInProgress) {
@@ -1082,20 +993,11 @@ function handleContentChange(isTagsOnlyChange = false) {
     updateState('uiState', { unsavedChanges: true });
     setBeforeUnloadConfirmation(true);
     
-    const delay = isTagsOnlyChange ? noteConstants.TAGS_ONLY_CHANGE_DELAY : noteConstants.AUTO_SAVE_DELAY;
-    
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout);
-    }
-    autoSaveTimeout = setTimeout(() => {
-      if (state.value.uiState.unsavedChanges && !autoSaveState.value.isAutoSaving) {
-        autoSaveHandler();
-      }
-    }, delay);
+    // 自動保存タイムアウトを開始
+    startContentChangedTimeout();
   } else {
     updateState('uiState', { unsavedChanges: false });
     setBeforeUnloadConfirmation(false);
-    clearAutoSaveTimeout();
   }
 }
 
@@ -1138,9 +1040,14 @@ watch(() => props.filename, async () => {
 });
 
 // Watch for changes that affect file menu state
-watch([canModify, isNewNote, autoSaveState, () => state.value.uiState.unsavedChanges], () => {
+watch([canModify, isNewNote, () => state.value.autoSaveState, () => state.value.uiState.unsavedChanges], () => {
   updateFileMenuState();
 }, { deep: true });
+
+// Phase 1: 既存機能の統一 - isNewNoteの変更をコンポーザブルに通知
+watch(isNewNote, (newValue) => {
+  updateIsNewNote(newValue);
+});
 
 // Watch for edit mode changes to set preview style for view mode
 watch(canModify, (newCanModify) => {
@@ -1150,6 +1057,7 @@ watch(canModify, (newCanModify) => {
   }
 }, { immediate: true });
 
+// Phase 1: 既存機能の統一 - スクロール制御をコンポーザブルに移行
 // Watch for route changes to reset scroll position
 watch(() => route.path, () => {
   // Reset scroll position when route changes
@@ -1174,7 +1082,7 @@ onMounted(async () => {
   // Update file menu state in App.vue
   updateFileMenuState();
   
-  // Ensure scroll position is at top when component is mounted
+  // Phase 1: 既存機能の統一 - スクロール制御をコンポーザブルに移行
   // Use setTimeout to ensure DOM is fully rendered
   setTimeout(() => {
     scrollToTop();
@@ -1188,5 +1096,10 @@ onUnmounted(() => {
   window.removeEventListener('note-delete', deleteHandler);
   window.removeEventListener('note-toggle-preview-style', togglePreviewStyleHandler);
   window.removeEventListener('note-change-visibility', changeVisibilityHandler);
+  
+  // Clean up ToastUIEditor IME event listeners（不要な変更 - コメントアウト）
+  // if (toastEditor.value && toastEditor.value.cleanup) {
+  //   toastEditor.value.cleanup();
+  // }
 });
 </script>

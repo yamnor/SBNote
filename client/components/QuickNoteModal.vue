@@ -65,6 +65,22 @@
                 
                 <!-- Right side - Copy Link, Editor and Close buttons -->
                 <div class="flex items-center space-x-2">
+                  <!-- Auto-save indicator -->
+                  <div class="flex items-center space-x-1">
+                    <!-- Auto-saving indicator -->
+                    <div
+                      v-show="autoSaveState.isAutoSaving"
+                      class="h-2 w-2 rounded-full bg-green-500 animate-pulse"
+                      title="Auto-saving..."
+                    ></div>
+                    <!-- Unsaved changes indicator -->
+                    <div
+                      v-show="hasChanges() && !autoSaveState.isAutoSaving"
+                      class="h-2 w-2 rounded-full bg-color-primary"
+                      title="Unsaved changes"
+                    ></div>
+                  </div>
+                  
                   <!-- Copy Link button -->
                   <button
                     type="button"
@@ -105,6 +121,7 @@
                   :initialValue="editingContent"
                   :initialEditType="'markdown'"
                   :previewStyle="'tab'"
+
                   @change="handleEditorChange"
                 />
               </div>
@@ -135,6 +152,8 @@ import TagInput from "./TagInput.vue";
 import ToastUIEditor from "./ToastUIEditor.vue";
 import { updateNote, apiErrorHandler } from "../lib/api.js";
 import { noteConstants } from "../lib/constants.js";
+import { useNote } from "../composables/useNote.js";
+import { useScrollControl } from "../composables/useScrollControl.js";
 
 const props = defineProps({
   note: {
@@ -155,21 +174,67 @@ const toastEditor = ref();
 const editingContent = ref('');
 const editingTags = ref([]);
 
-// Auto-save state (Note.vueと同様の状態管理)
-let autoSaveTimeout = null;
-let contentChangedTimeout = null;
-let titleGenerationTimeout = null;
+// Auto-save state management (Note.vueと同様の状態管理)
+const autoSaveState = ref({ isAutoSaving: false, isAutoSavingInProgress: false });
 
-// ✅ 修正: autoSaveStateをrefとして定義
-const autoSaveState = ref({
-  isAutoSaving: false,
-  isAutoSavingInProgress: false
+// Phase 1: 既存機能の統一 - タイムアウト管理はuseNoteコンポーザブルで管理
+
+// Phase 1: 既存機能の統一 - 新しいコンポーザブル
+const { scrollToTop } = useScrollControl();
+const {
+  // 自動保存・タイトル生成
+  autoSaveState: autoSaveStateFromComposable,
+  startContentChangedTimeout,
+  generateTitleFromContent,
+  startTitleGeneration,
+  resetAutoSaveState,
+  updateIsNewNote,
+  
+
+  
+  // ノート操作
+  saveNote: saveNoteComposable,
+  changeNoteVisibility: changeNoteVisibilityComposable,
+  
+  // 統合クリーンアップ
+  cleanup: cleanupNote
+} = useNote({
+  // API関数
+  updateNote,
+  apiErrorHandler,
+  
+  // 依存関係
+  router,
+  apiErrorHandler,
+  
+  // コールバック関数
+  onSaveSuccess: (data) => {
+    emit('note-updated', data);
+    
+
+    editingContent.value = data.content;
+    editingTags.value = [...data.tags];
+  },
+  onSaveFailure: (error) => {
+    console.error('Error saving note:', error);
+    apiErrorHandler(error);
+  },
+  onStateUpdate: (newState) => {
+    Object.assign(autoSaveState.value, newState);
+  },
+  onContentChange: () => {
+    return hasChanges();
+  },
+  onAutoSave: async () => {
+    await performSave();
+  },
+  onTitleGenerated: (title) => {
+    if (title && title !== generatedTitle.value) {
+      generatedTitle.value = title;
+    }
+  },
+  isNewNote: () => false // QuickNoteModalは既存ノートのみ
 });
-
-// ✅ 修正: 定数を正しく使用
-const AUTO_SAVE_DELAY = noteConstants.AUTO_SAVE_DELAY; // 1000ms
-const CONTENT_CHANGE_DELAY = noteConstants.CONTENT_CHANGE_DELAY; // 1000ms
-const TITLE_GENERATION_DELAY = noteConstants.TITLE_GENERATION_DELAY; // 500ms
 
 // Title generation state
 const generatedTitle = ref('');
@@ -184,9 +249,9 @@ function closeModal() {
   emit("close");
   cleanup();
   
-  // Reset scroll position when modal closes
+  // Phase 1: 既存機能の統一 - スクロール制御をコンポーザブルに移行
   setTimeout(() => {
-    scrollToTop();
+    scrollToTop({ target: 'modal' });
   }, 100);
 }
 
@@ -251,79 +316,15 @@ function initializeEditing() {
   editingTags.value = [...(props.note.tags || [])];
   generatedTitle.value = '';
   
-  // ✅ 修正: autoSaveStateを初期化
-  updateAutoSaveState({
-    isAutoSaving: false,
-    isAutoSavingInProgress: false
-  });
+  // Phase 1: 既存機能の統一 - autoSaveStateはコンポーザブルで管理
+  resetAutoSaveState();
   
-  // Scroll to top when modal opens
-  scrollToTop();
+  // Phase 1: 既存機能の統一 - スクロール制御をコンポーザブルに移行
+  scrollToTop({ target: 'modal' });
 }
 
-// Scroll to top of the modal content
-function scrollToTop() {
-  // Use immediate scrolling to ensure it takes effect
-  window.scrollTo({
-    top: 0,
-    left: 0,
-    behavior: 'auto'
-  });
-  
-  // Also try scrolling the document element for better compatibility
-  if (document.documentElement) {
-    document.documentElement.scrollTop = 0;
-  }
-  
-  // And the body element
-  if (document.body) {
-    document.body.scrollTop = 0;
-  }
-  
-  // Scroll the modal content area to top
-  const modalContent = document.querySelector('.quick-note-modal .max-h-96');
-  if (modalContent) {
-    modalContent.scrollTop = 0;
-  }
-}
-
-// Title generation function (Note.vueと同様)
-function generateTitleFromContent(content) {
-  if (!content) return "";
-  
-  // Split content into lines and get the first non-empty line
-  const lines = content.split('\n');
-  let firstLine = "";
-  
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    if (trimmedLine) {
-      firstLine = trimmedLine;
-      break;
-    }
-  }
-  
-  if (!firstLine) return "";
-  
-  // Remove markdown formatting
-  let title = firstLine
-    .replace(/^#+\s*/, '') // Remove heading markers
-    .replace(/^\*\s*/, '') // Remove list markers
-    .replace(/^-\s*/, '') // Remove list markers
-    .replace(/^>\s*/, '') // Remove blockquote markers
-    .replace(/^`+/, '') // Remove code markers at start
-    .replace(/`+$/, '') // Remove code markers at end
-    .replace(/^\|/, '') // Remove table markers
-    .replace(/\|$/, '') // Remove table markers
-    .trim();
-  
-  // Limit title length
-  if (title.length > 100) {
-    title = title.substring(0, 100) + '...';
-  }
-  
-  return title;
-}
+// Phase 1: 既存機能の統一 - scrollToTopはuseScrollControlコンポーザブルで管理
+// Phase 1: 既存機能の統一 - generateTitleFromContentはuseNoteコンポーザブルで管理
 
 function handleEditorChange() {
   // ✅ 修正: ToastUIEditorの初期化チェックを追加
@@ -342,92 +343,27 @@ function handleEditorChange() {
     }
   }
 
-  // Auto-generate title from first line (Note.vueと同様)
-  clearTimeout(titleGenerationTimeout);
-  titleGenerationTimeout = setTimeout(() => {
-    if (toastEditor.value) {
-      const content = toastEditor.value.getMarkdown();
-      const newGeneratedTitle = generateTitleFromContent(content);
-      if (newGeneratedTitle && newGeneratedTitle !== generatedTitle.value) {
-        generatedTitle.value = newGeneratedTitle;
-      }
+  // Phase 1: 既存機能の統一 - タイトル生成をコンポーザブルに移行
+  startTitleGeneration(content, (newGeneratedTitle) => {
+    if (newGeneratedTitle && newGeneratedTitle !== generatedTitle.value) {
+      generatedTitle.value = newGeneratedTitle;
     }
-  }, TITLE_GENERATION_DELAY);
+  });
 }
 
 function handleTagConfirmed() {
+  // Phase 1: 既存機能の統一 - タイムアウト管理はコンポーザブルに移行
   // Force save immediately for tag changes (Note.vueと同様)
-  if (autoSaveTimeout) {
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = null;
-  }
   performSave();
 }
 
-function startContentChangedTimeout() {
-  clearContentChangedTimeout();
-  contentChangedTimeout = setTimeout(contentChangedHandler, CONTENT_CHANGE_DELAY);
-}
-
-function clearContentChangedTimeout() {
-  if (contentChangedTimeout) {
-    clearTimeout(contentChangedTimeout);
-    contentChangedTimeout = null;
-  }
-}
-
-// ✅ 修正: contentChangedHandlerをNote.vueと同様に改善
-function contentChangedHandler() {
-  if (!toastEditor.value || autoSaveState.value.isAutoSavingInProgress) {
-    return; // 重要な: 保存中は処理をスキップ
-  }
-  
-  if (hasChanges()) {
-    startAutoSaveTimeout();
-  }
-  
-  // Auto-generate title from first line
-  clearTimeout(titleGenerationTimeout);
-  titleGenerationTimeout = setTimeout(() => {
-    if (toastEditor.value) {
-      const content = toastEditor.value.getMarkdown();
-      const generatedTitle = generateTitleFromContent(content);
-      if (generatedTitle && generatedTitle !== props.note.title) {
-        // タイトルが変更された場合のみ更新
-        props.note.title = generatedTitle;
-      }
-    }
-  }, TITLE_GENERATION_DELAY);
-}
-
-function startAutoSaveTimeout() {
-  clearAutoSaveTimeout();
-  autoSaveTimeout = setTimeout(autoSaveHandler, AUTO_SAVE_DELAY);
-}
-
-function clearAutoSaveTimeout() {
-  if (autoSaveTimeout) {
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = null;
-  }
-}
-
-function clearTitleGenerationTimeout() {
-  if (titleGenerationTimeout) {
-    clearTimeout(titleGenerationTimeout);
-    titleGenerationTimeout = null;
-  }
-}
-
-function autoSaveHandler() {
-  if (hasChanges()) {
-    performSave();
-  }
-}
+// Phase 1: 既存機能の統一 - タイムアウト管理はuseNoteコンポーザブルで管理
 
 // ✅ 修正: hasChanges関数をNote.vueと同様に最適化
 function hasChanges() {
-  if (!toastEditor.value) return false;
+  if (!toastEditor.value || autoSaveState.value.isAutoSavingInProgress) {
+    return false; // 自動保存中は変更チェックをスキップ
+  }
   
   const currentContent = toastEditor.value.getMarkdown();
   const currentTags = editingTags.value;
@@ -437,80 +373,55 @@ function hasChanges() {
     return true;
   }
   
-  // タグの変更チェック（最適化）
-  if (currentTags.length !== props.note.tags.length) {
+  // タグの変更チェック（Note.vueと同様の最適化）
+  const originalTags = props.note.tags || [];
+  if (currentTags.length !== originalTags.length) {
     return true;
   }
   
   // タグの内容チェック（順序を考慮）
   const sortedCurrentTags = [...currentTags].sort();
-  const sortedOriginalTags = [...props.note.tags].sort();
+  const sortedOriginalTags = [...originalTags].sort();
   
-  for (let i = 0; i < sortedCurrentTags.length; i++) {
-    if (sortedCurrentTags[i] !== sortedOriginalTags[i]) {
-      return true;
-    }
-  }
-  
-  return false;
+  return sortedCurrentTags.some((tag, index) => tag !== sortedOriginalTags[index]);
 }
 
-// ✅ 修正: resetAutoSaveState関数を追加
-function resetAutoSaveState() {
-  updateAutoSaveState({ 
-    isAutoSaving: false, 
-    isAutoSavingInProgress: false 
-  });
-}
+// Phase 1: 既存機能の統一 - resetAutoSaveStateはuseNoteコンポーザブルで管理
 
 async function performSave() {
-  if (!toastEditor.value || autoSaveState.value.isAutoSaving) return;
-  
-  updateAutoSaveState({ 
-    isAutoSaving: true, 
-    isAutoSavingInProgress: true 
-  });
+  if (!toastEditor.value) return; // isAutoSavingInProgressチェックを削除
   
   try {
     const currentContent = toastEditor.value.getMarkdown();
-    const filenameWithExtension = props.note.filename;
     
-    const updatedNote = await updateNote(
-      filenameWithExtension,
+    await saveNoteComposable(
       props.note.title,
       currentContent,
-      editingTags.value
+      editingTags.value,
+      {
+        close: false,
+        isAuto: true,
+        isNewNote: false,
+        filename: props.note.filename.replace(noteConstants.MARKDOWN_EXTENSION, '')
+      }
     );
-    
-    // ✅ 修正: Props直接変更を避けてemitを使用
-    emit('note-updated', updatedNote);
-    
-    // Update local state
-    editingContent.value = currentContent;
-    editingTags.value = [...updatedNote.tags];
-    
-    // Clear timeouts
-    clearTimeout(autoSaveTimeout);
-    clearTimeout(contentChangedTimeout);
-    autoSaveTimeout = null;
-    contentChangedTimeout = null;
-    
   } catch (error) {
     console.error('Error saving note:', error);
     apiErrorHandler(error);
-  } finally {
-    resetAutoSaveState(); // ✅ 修正: 新しい関数を使用
+    // resetAutoSaveState()を削除（useNoteコンポーザブルが管理するため）
   }
 }
 
-function updateAutoSaveState(updates) {
-  Object.assign(autoSaveState.value, updates);
-}
+// Phase 1: 既存機能の統一 - updateAutoSaveStateはuseNoteコンポーザブルで管理
 
 function cleanup() {
-  clearContentChangedTimeout();
-  clearAutoSaveTimeout();
-  clearTitleGenerationTimeout();
+  // Phase 1: 既存機能の統一 - クリーンアップはコンポーザブルに移行
+  cleanupNote();
+  
+  // Clean up ToastUIEditor IME event listeners（不要な変更 - コメントアウト）
+  // if (toastEditor.value && toastEditor.value.cleanup) {
+  //   toastEditor.value.cleanup();
+  // }
 }
 
 // Initialize editing when modal becomes visible
@@ -522,9 +433,9 @@ watch(isVisible, async (visible) => {
     // Initialize editing state
     initializeEditing();
     
-    // Ensure scroll position is at top when modal opens
+    // Phase 1: 既存機能の統一 - スクロール制御をコンポーザブルに移行
     setTimeout(() => {
-      scrollToTop();
+      scrollToTop({ target: 'modal' });
     }, 50);
   }
 });
@@ -535,6 +446,14 @@ watch(isVisible, (visible) => {
     cleanup();
   }
 });
+
+// ✅ 修正: タグ変更の監視を追加（Note.vueと同様）
+watch([editingTags], () => {
+  if (isVisible.value) {
+    // タグ変更時に自動保存タイムアウトを開始
+    startContentChangedTimeout();
+  }
+}, { deep: true });
 
 // Handle keyboard events
 function handleKeydown(event) {
@@ -577,9 +496,9 @@ onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
   document.addEventListener('keydown', handleKeydownCapture, true); // Use capture phase
   
-  // Ensure scroll position is at top when component is mounted
+  // Phase 1: 既存機能の統一 - スクロール制御をコンポーザブルに移行
   setTimeout(() => {
-    scrollToTop();
+    scrollToTop({ target: 'modal' });
   }, 50);
 });
 

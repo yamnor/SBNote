@@ -38,10 +38,11 @@ export const noteConstants = {
   DEFAULT_TITLE: "Empty Note",
   DEFAULT_TAG: "_untagged",
   
-  // File extensions
+    // File extensions
   MARKDOWN_EXTENSION: ".md",
   
-
+  // Auto-save indicator minimum display time
+  AUTO_SAVE_INDICATOR_MIN_DISPLAY: 300,
   
   // Markdown formatting regex patterns
   MARKDOWN_PATTERNS: {

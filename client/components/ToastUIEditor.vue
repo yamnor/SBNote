@@ -19,7 +19,10 @@ const props = defineProps({
     type: String,
     default: "vertical",
   },
+
 });
+
+
 
 const emit = defineEmits(["change"]);
 
@@ -47,6 +50,8 @@ onMounted(async () => {
   if (props.initialValue) {
     toastEditor.setMarkdown(props.initialValue);
   }
+  
+
 });
 
 // Watch for changes in initialValue and update editor content
@@ -55,6 +60,7 @@ watch(() => props.initialValue, (newValue) => {
     const currentContent = toastEditor.getMarkdown();
     // Only update if content actually changed to preserve cursor position
     if (currentContent !== newValue) {
+
       toastEditor.setMarkdown(newValue || '');
     }
   }
@@ -74,6 +80,8 @@ function getMarkdown() {
 function isWysiwygMode() {
   return toastEditor.isWysiwygMode();
 }
+
+
 
 defineExpose({ getMarkdown, isWysiwygMode });
 </script>
