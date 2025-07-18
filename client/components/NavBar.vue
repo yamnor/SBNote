@@ -128,18 +128,6 @@
       <!-- Divider -->
       <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
       
-      <!-- Tag Configuration (only for authenticated users) -->
-      <DropdownMenuItem
-        v-if="globalStore.isAuthenticated"
-        :icon="Settings"
-        @click="showTagConfig"
-      >
-        Tag Configuration
-      </DropdownMenuItem>
-      
-      <!-- Divider -->
-      <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
-      
       <!-- Login Item -->
       <RouterLink
         v-if="!globalStore.isAuthenticated && globalStore.config.authType === 'password'"
@@ -367,8 +355,7 @@ import {
   Grip,
   ExternalLink,
   FileText,
-  History,
-  Settings
+  History
 } from "lucide-vue-next";
 
 import SearchInput from "./SearchInput.vue";
